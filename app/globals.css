@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 54% 8%; /* HSL for Hex #070B1E - very dark navy */
+    --foreground: 43 74% 95%; /* Creamy white */
+
+    --card: 220 54% 6%;
+    --card-foreground: 43 74% 95%;
+
+    --popover: 220 54% 6%;
+    --popover-foreground: 43 74% 95%;
+
+    --primary: 43 74% 53%; /* Hex #D4AF37 - Warm Gold */
+    --primary-foreground: 220 54% 8%;
+
+    --secondary: 220 30% 15%;
+    --secondary-foreground: 43 74% 95%;
+
+    --muted: 220 30% 12%;
+    --muted-foreground: 43 20% 75%;
+
+    --accent: 43 74% 53%;
+    --accent-foreground: 220 54% 8%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 43 30% 25%; /* Subtle Gold-brown border */
+    --input: 220 30% 12%;
+    --ring: 43 74% 53%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary selection:text-primary-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  
+  /* Focus outlines for accessibility */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer utilities {
+  /* Luxury gold text gradient representing premium Indian hospitality */
+  .text-gold-gradient {
+    @apply bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent;
+  }
+  
+  /* Luxury gold background gradient */
+  .bg-gold-gradient {
+    @apply bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728];
+  }
+  
+  /* Glassmorphic Panel styled subtly */
+  .glass-panel {
+    @apply bg-[#0A1128]/70 backdrop-blur-md border border-primary/20;
+  }
+  
+  /* Gold border glow on hover */
+  .gold-border-glow {
+    @apply transition-shadow duration-300;
+  }
+  .gold-border-glow:hover {
+    box-shadow: 0 0 12px rgba(212, 175, 55, 0.25);
+  }
+}
+
+/* Custom Scrollbar for unified dark/gold palette */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #050B1E;
+}
+::-webkit-scrollbar-thumb {
+  background: #D4AF37;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B38728;
+}
+
+/* KDS: one-shot pulse for new order alert */
+@keyframes pulse-once {
+  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
+  50% { box-shadow: 0 0 20px 6px rgba(245, 158, 11, 0.3); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+.animate-pulse-once {
+  animation: pulse-once 1.5s ease-out 1;
+}
+
+/* Respect user prefers-reduced-motion configuration */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

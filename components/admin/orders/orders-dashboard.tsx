@@ -1,0 +1,705 @@
+'use client';
+
+import React, { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import StatusPill from '@/components/ui/status-pill';
+import PremiumCard from '@/components/ui/premium-card';
+import GoldSpinner from '@/components/ui/gold-spinner';
+import {
+  confirmOrderAction,
+  rejectOrderAction,
+  cancelOrderAction,
+  markOrderReadyAction,
+  completeOrderAction,
+  updateOrderEtaAction,
+  startPreparingOrderAction
+} from '@/app/admin/orders/actions';
+import {
+  ConfirmOrderModal,
+  RejectOrderModal,
+  CancelOrderModal,
+  CompleteOrderModal,
+  UpdateEtaModal
+} from './order-modals';
+import { Search, RefreshCw, Eye, Calendar, Clock, ShoppingBag, ArrowRight, X } from 'lucide-react';
+
+type Order = {
+  id: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  order_type: 'delivery' | 'takeaway';
+  status: 'pending' | 'approved' | 'preparing' | 'ready_for_pickup' | 'out_for_delivery' | 'completed' | 'rejected' | 'cancelled';
+  delivery_address: string | null;
+  delivery_postal_code: string | null;
+  delivery_city: string | null;
+  delivery_fee: number;
+  items_subtotal: number;
+  packaging_total: number;
+  total_amount: number;
+  payment_status: 'pending' | 'paid' | 'failed';
+  payment_method: string;
+  token: string;
+  estimated_time: string | null;
+  rejection_reason: string | null;
+  cancellation_reason: string | null;
+  customer_notes: string | null;
+  created_at: string;
+};
+
+type Metrics = {
+  pendingCount: number;
+  confirmedCount: number;
+  readyCount: number;
+  completedCount: number;
+};
+
+type Props = {
+  initialOrders: Order[];
+  metrics: Metrics;
+  filters: {
+    status: string;
+    type: string;
+    date: string;
+    query: string;
+  };
+};
+
+export default function OrdersDashboard({ initialOrders, metrics, filters }: Props) {
+  const router = useRouter();
+  const t = useTranslations('adminOrders');
+  const [isPending, startTransition] = useTransition();
+
+  // Filter local states
+  const [search, setSearch] = useState(filters.query);
+  const [statusFilter, setStatusFilter] = useState(filters.status);
+  const [typeFilter, setTypeFilter] = useState(filters.type);
+  const [dateFilter, setDateFilter] = useState(filters.date);
+
+  // Dialog / Action States
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [modalType, setModalType] = useState<'confirm' | 'reject' | 'cancel' | 'updateEta' | 'complete' | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Trigger filters
+  const applyFilters = (status = statusFilter, type = typeFilter, date = dateFilter, query = search) => {
+    const params = new URLSearchParams();
+    if (status && status !== 'all') params.set('status', status);
+    if (type && type !== 'all') params.set('type', type);
+    if (date) params.set('date', date);
+    if (query) params.set('query', query);
+    router.push(`/admin/orders?${params.toString()}`);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      applyFilters();
+    }
+  };
+
+  const handleResetFilters = () => {
+    setSearch('');
+    setStatusFilter('all');
+    setTypeFilter('all');
+    setDateFilter('');
+    router.push('/admin/orders');
+  };
+
+  // Mutator triggers
+  const handleStartPreparing = async (id: string) => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    startTransition(async () => {
+      const res = await startPreparingOrderAction(id);
+      if (res.success) {
+        setSuccessMessage(t('successUpdate'));
+        router.refresh();
+      } else {
+        setErrorMessage(res.error || t('errorUpdate'));
+      }
+    });
+  };
+
+  const handleMarkReady = async (id: string) => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    startTransition(async () => {
+      const res = await markOrderReadyAction(id);
+      if (res.success) {
+        setSuccessMessage(t('successUpdate'));
+        router.refresh();
+      } else {
+        setErrorMessage(res.error || t('errorUpdate'));
+      }
+    });
+  };
+
+  const handleOpenModal = (order: Order, type: 'confirm' | 'reject' | 'cancel' | 'updateEta' | 'complete') => {
+    setSelectedOrder(order);
+    setModalType(type);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedOrder(null);
+    setModalType(null);
+  };
+
+  const handleModalSubmit = async (data: any) => {
+    if (!selectedOrder || !modalType) return;
+    
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    const id = selectedOrder.id;
+
+    startTransition(async () => {
+      let res: { success: boolean; error?: string } = { success: false };
+
+      if (modalType === 'confirm') {
+        res = await confirmOrderAction(id, data as number);
+      } else if (modalType === 'reject') {
+        res = await rejectOrderAction(id, data as string);
+      } else if (modalType === 'cancel') {
+        res = await cancelOrderAction(id, data as string);
+      } else if (modalType === 'updateEta') {
+        res = await updateOrderEtaAction(id, data as number);
+      } else if (modalType === 'complete') {
+        res = await completeOrderAction(id, data as boolean);
+      }
+
+      if (res.success) {
+        setSuccessMessage(t('successUpdate'));
+        handleCloseModal();
+        router.refresh();
+      } else {
+        setErrorMessage(res.error || t('errorUpdate'));
+      }
+    });
+  };
+
+  // Map database status to translation-ready keys
+  const mapDbStatusToKey = (status: string): string => {
+    return status === 'approved' ? 'confirmed' : status;
+  };
+
+  const getStatusPillType = (status: string): 'pending' | 'success' | 'warning' | 'error' | 'info' | 'neutral' => {
+    switch (status) {
+      case 'pending': return 'pending';
+      case 'approved':
+      case 'confirmed': return 'success';
+      case 'preparing': return 'info';
+      case 'ready_for_pickup': return 'success';
+      case 'out_for_delivery': return 'info';
+      case 'completed': return 'success';
+      case 'rejected': return 'error';
+      case 'cancelled': return 'warning';
+      default: return 'neutral';
+    }
+  };
+
+  return (
+    <div className="space-y-6 font-sans relative">
+      
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-primary/10 pb-5 gap-4">
+        <div>
+          <h1 className="text-3xl font-serif font-bold text-primary">{t('title')}</h1>
+          <p className="text-xs text-muted-foreground mt-1">Manage, confirm, and update customer order workflows</p>
+        </div>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => router.refresh()}
+            className="border border-primary/20 bg-[#070B1E] text-muted-foreground hover:text-foreground text-xs p-2.5 flex items-center gap-1.5"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isPending ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
+      </div>
+
+      {/* Alerts */}
+      {errorMessage && (
+        <div className="p-3 text-xs bg-red-500/10 border border-red-500/30 rounded text-red-400 text-center leading-relaxed">
+          {errorMessage}
+        </div>
+      )}
+      {successMessage && (
+        <div className="p-3 text-xs bg-green-500/10 border border-green-500/30 rounded text-green-400 text-center leading-relaxed">
+          {successMessage}
+        </div>
+      )}
+
+      {/* Metrics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <PremiumCard hoverable={false} className="border-yellow-500/20 bg-yellow-500/5">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/85 mb-1">
+            {t('pendingCount')}
+          </p>
+          <p className="text-3xl font-bold text-yellow-400 font-serif">{metrics.pendingCount}</p>
+        </PremiumCard>
+
+        <PremiumCard hoverable={false} className="border-green-500/20 bg-green-500/5">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/85 mb-1">
+            {t('confirmedCount')}
+          </p>
+          <p className="text-3xl font-bold text-green-400 font-serif">{metrics.confirmedCount}</p>
+        </PremiumCard>
+
+        <PremiumCard hoverable={false} className="border-primary/20 bg-primary/5">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/85 mb-1">
+            {t('readyCount')}
+          </p>
+          <p className="text-3xl font-bold text-primary font-serif">{metrics.readyCount}</p>
+        </PremiumCard>
+
+        <PremiumCard hoverable={false} className="border-orange-500/20 bg-orange-500/5">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/85 mb-1">
+            {t('completedCount')}
+          </p>
+          <p className="text-3xl font-bold text-orange-400 font-serif">{metrics.completedCount}</p>
+        </PremiumCard>
+      </div>
+
+      {/* Filters bar */}
+      <div className="flex flex-col lg:flex-row gap-4 p-4 bg-[#050B1E] border border-primary/10 rounded-lg items-end lg:items-center">
+        
+        {/* Search */}
+        <div className="w-full lg:w-72 relative space-y-1">
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 font-semibold block">Search Request</span>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder={t('searchPlaceholder')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+              className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary/35"
+            />
+          </div>
+        </div>
+
+        {/* Status */}
+        <div className="w-full lg:w-44 space-y-1">
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 font-semibold block">{t('filterStatus')}</span>
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              applyFilters(e.target.value, typeFilter, dateFilter, search);
+            }}
+            className="w-full bg-[#070B1E] border border-primary/10 rounded px-2.5 py-2 text-xs text-foreground cursor-pointer focus:outline-none focus:border-primary/35"
+          >
+            <option value="all">All statuses</option>
+            <option value="pending">Pending confirmation</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="preparing">Preparing</option>
+            <option value="ready_for_pickup">Ready for Pickup</option>
+            <option value="out_for_delivery">Out for Delivery</option>
+            <option value="completed">Completed</option>
+            <option value="rejected">Rejected</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        {/* Type */}
+        <div className="w-full lg:w-36 space-y-1">
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 font-semibold block">{t('filterType')}</span>
+          <select
+            value={typeFilter}
+            onChange={(e) => {
+              setTypeFilter(e.target.value);
+              applyFilters(statusFilter, e.target.value, dateFilter, search);
+            }}
+            className="w-full bg-[#070B1E] border border-primary/10 rounded px-2.5 py-2 text-xs text-foreground cursor-pointer focus:outline-none focus:border-primary/35"
+          >
+            <option value="all">All types</option>
+            <option value="takeaway">Takeaway</option>
+            <option value="delivery">Delivery</option>
+          </select>
+        </div>
+
+        {/* Date */}
+        <div className="w-full lg:w-40 space-y-1">
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 font-semibold block">{t('filterDate')}</span>
+          <input
+            type="date"
+            value={dateFilter}
+            onChange={(e) => {
+              setDateFilter(e.target.value);
+              applyFilters(statusFilter, typeFilter, e.target.value, search);
+            }}
+            className="w-full bg-[#070B1E] border border-primary/10 rounded px-2.5 py-2 text-xs text-foreground cursor-pointer focus:outline-none focus:border-primary/35"
+          />
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2 w-full lg:w-auto pt-2 lg:pt-0 justify-end lg:ml-auto">
+          <Button
+            onClick={() => applyFilters(statusFilter, typeFilter, dateFilter, search)}
+            className="bg-primary/20 hover:bg-primary/30 text-primary font-bold text-xs uppercase tracking-wider px-4 py-2"
+          >
+            Filter
+          </Button>
+          <Button
+            onClick={handleResetFilters}
+            className="border border-primary/15 bg-transparent hover:bg-primary/5 text-muted-foreground text-xs uppercase tracking-wider px-4 py-2"
+          >
+            Reset
+          </Button>
+        </div>
+
+      </div>
+
+      {/* Grid / Table */}
+      <div className="bg-[#050B1E] border border-primary/10 rounded-lg overflow-hidden">
+        
+        {/* Desktop Table */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-primary/15 bg-primary/5 text-muted-foreground uppercase tracking-widest text-[9px] font-bold">
+                <th className="p-4">{t('customer')}</th>
+                <th className="p-4">{t('type')}</th>
+                <th className="p-4">{t('payment')}</th>
+                <th className="p-4">{t('total')}</th>
+                <th className="p-4">{t('statusHeader')}</th>
+                <th className="p-4">{t('eta')}</th>
+                <th className="p-4 text-right">{t('actions')}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-primary/5">
+              {initialOrders.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-muted-foreground/60 italic">
+                    {t('noOrders')}
+                  </td>
+                </tr>
+              ) : (
+                initialOrders.map((order) => {
+                  const mappedStatus = mapDbStatusToKey(order.status);
+                  const isTakeaway = order.order_type === 'takeaway';
+                  
+                  return (
+                    <tr key={order.id} className="hover:bg-primary/[0.02] transition-colors">
+                      {/* Customer Info */}
+                      <td className="p-4 space-y-0.5">
+                        <div className="font-semibold text-foreground text-sm flex items-center gap-1.5">
+                          {order.customer_name}
+                          <Link href={`/admin/orders/${order.id}`} title="View order details">
+                            <Eye className="w-3.5 h-3.5 text-primary hover:text-white cursor-pointer" />
+                          </Link>
+                        </div>
+                        <div className="text-muted-foreground/60 font-mono text-[10px]">
+                          Ref: {order.token.substring(0, 8)}...
+                        </div>
+                        <div className="text-muted-foreground/60">{order.customer_phone}</div>
+                      </td>
+
+                      {/* Order Type */}
+                      <td className="p-4">
+                        <span className="font-semibold text-foreground capitalize">
+                          {order.order_type}
+                        </span>
+                      </td>
+
+                      {/* Payment */}
+                      <td className="p-4 space-y-0.5">
+                        <div className="text-foreground capitalize">{order.payment_method.replace(/_/g, ' ')}</div>
+                        <div className={`text-[9px] uppercase tracking-wider font-bold ${
+                          order.payment_status === 'paid' ? 'text-green-400' : 'text-yellow-500/80'
+                        }`}>
+                          {order.payment_status}
+                        </div>
+                      </td>
+
+                      {/* Total */}
+                      <td className="p-4 font-bold text-foreground font-mono">
+                        {order.total_amount.toFixed(2)} PLN
+                      </td>
+
+                      {/* Status */}
+                      <td className="p-4">
+                        <StatusPill status={getStatusPillType(order.status)} label={t(`status.${mappedStatus}` as any)} />
+                      </td>
+
+                      {/* ETA */}
+                      <td className="p-4 text-foreground font-mono">
+                        {order.estimated_time ? (
+                          <div className="flex flex-col">
+                            <span>{new Date(order.estimated_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                            <span className="text-[9px] text-muted-foreground">
+                              {Math.max(1, Math.round((new Date(order.estimated_time).getTime() - Date.now()) / 60000))} mins left
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground/45">-</span>
+                        )}
+                      </td>
+
+                      {/* Action buttons */}
+                      <td className="p-4 text-right">
+                        <div className="flex justify-end gap-1.5">
+                          
+                          {/* Confirm Button */}
+                          {order.status === 'pending' && (
+                            <>
+                              <Button
+                                onClick={() => handleOpenModal(order, 'confirm')}
+                                className="bg-green-600 hover:bg-green-700 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
+                              >
+                                {t('confirmButton')}
+                              </Button>
+                              <Button
+                                onClick={() => handleOpenModal(order, 'reject')}
+                                className="border border-red-500/25 bg-transparent hover:bg-red-500/10 text-red-400 font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
+                              >
+                                {t('rejectButton')}
+                              </Button>
+                            </>
+                          )}
+
+                          {/* Start preparing Button */}
+                          {order.status === 'approved' && (
+                            <Button
+                              onClick={() => handleStartPreparing(order.id)}
+                              className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
+                            >
+                              Start preparing
+                            </Button>
+                          )}
+
+                          {/* Mark ready / dispatch Button */}
+                          {(order.status === 'approved' || order.status === 'preparing') && (
+                            <Button
+                              onClick={() => handleMarkReady(order.id)}
+                              className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
+                            >
+                              {isTakeaway ? t('readyButton') : t('dispatchButton')}
+                            </Button>
+                          )}
+
+                          {/* Complete Button */}
+                          {((isTakeaway && order.status === 'ready_for_pickup') || 
+                            (!isTakeaway && order.status === 'out_for_delivery')) && (
+                            <Button
+                              onClick={() => handleOpenModal(order, 'complete')}
+                              className="bg-green-600 hover:bg-green-700 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
+                            >
+                              {t('completeButton')}
+                            </Button>
+                          )}
+
+                          {/* Update ETA */}
+                          {(order.status === 'approved' || order.status === 'preparing') && (
+                            <Button
+                              onClick={() => handleOpenModal(order, 'updateEta')}
+                              className="border border-primary/20 bg-transparent hover:bg-primary/5 text-primary font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
+                            >
+                              Update ETA
+                            </Button>
+                          )}
+
+                          {/* Cancel button */}
+                          {['approved', 'preparing', 'pending'].includes(order.status) && (
+                            <Button
+                              onClick={() => handleOpenModal(order, 'cancel')}
+                              className="text-muted-foreground/60 hover:text-red-400 p-1"
+                              title={t('cancelButton')}
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
+
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile Grid Layout (Under 768px) */}
+        <div className="md:hidden divide-y divide-primary/10">
+          {initialOrders.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground/60 italic">
+              {t('noOrders')}
+            </div>
+          ) : (
+            initialOrders.map((order) => {
+              const mappedStatus = mapDbStatusToKey(order.status);
+              const isTakeaway = order.order_type === 'takeaway';
+              
+              return (
+                <div key={order.id} className="p-4 space-y-3.5 text-left bg-[#050B1E]">
+                  {/* Top info */}
+                  <div className="flex justify-between items-start gap-2">
+                    <div>
+                      <div className="font-semibold text-foreground text-sm flex items-center gap-1.5">
+                        {order.customer_name}
+                        <Link href={`/admin/orders/${order.id}`}>
+                          <Eye className="w-3.5 h-3.5 text-primary hover:text-white" />
+                        </Link>
+                      </div>
+                      <span className="text-[10px] font-mono text-muted-foreground/60">
+                        Ref: {order.token.substring(0, 8)}...
+                      </span>
+                    </div>
+                    <StatusPill status={getStatusPillType(order.status)} label={t(`status.${mappedStatus}` as any)} />
+                  </div>
+
+                  {/* Pricing / Details */}
+                  <div className="grid grid-cols-2 gap-2 text-[11px] bg-[#070B1E] border border-primary/5 p-3 rounded">
+                    <div>
+                      <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block">Type</span>
+                      <span className="font-semibold text-foreground capitalize">{order.order_type}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block">Total</span>
+                      <span className="font-bold text-primary font-mono">{order.total_amount.toFixed(2)} PLN</span>
+                    </div>
+                    <div className="col-span-2 pt-1.5 border-t border-primary/5 flex justify-between items-center">
+                      <div>
+                        <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block">Payment</span>
+                        <span className="text-foreground capitalize text-[10px]">{order.payment_method.replace(/_/g, ' ')} ({order.payment_status})</span>
+                      </div>
+                      {order.estimated_time && (
+                        <div className="text-right">
+                          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block">ETA</span>
+                          <span className="font-semibold font-mono text-foreground">{new Date(order.estimated_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions footer */}
+                  <div className="flex flex-wrap gap-2 justify-end pt-1 border-t border-primary/5">
+                    {/* Confirm Button */}
+                    {order.status === 'pending' && (
+                      <>
+                        <Button
+                          onClick={() => handleOpenModal(order, 'confirm')}
+                          className="bg-green-600 hover:bg-green-700 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
+                        >
+                          {t('confirmButton')}
+                        </Button>
+                        <Button
+                          onClick={() => handleOpenModal(order, 'reject')}
+                          className="border border-red-500/25 bg-transparent hover:bg-red-500/10 text-red-400 font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
+                        >
+                          {t('rejectButton')}
+                        </Button>
+                      </>
+                    )}
+
+                    {/* Start preparing Button */}
+                    {order.status === 'approved' && (
+                      <Button
+                        onClick={() => handleStartPreparing(order.id)}
+                        className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
+                      >
+                        Start preparing
+                      </Button>
+                    )}
+
+                    {/* Mark ready / dispatch Button */}
+                    {(order.status === 'approved' || order.status === 'preparing') && (
+                      <Button
+                        onClick={() => handleMarkReady(order.id)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
+                      >
+                        {isTakeaway ? t('readyButton') : t('dispatchButton')}
+                      </Button>
+                    )}
+
+                    {/* Complete Button */}
+                    {((isTakeaway && order.status === 'ready_for_pickup') || 
+                      (!isTakeaway && order.status === 'out_for_delivery')) && (
+                      <Button
+                        onClick={() => handleOpenModal(order, 'complete')}
+                        className="bg-green-600 hover:bg-green-700 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
+                      >
+                        {t('completeButton')}
+                      </Button>
+                    )}
+
+                    {/* Update ETA */}
+                    {(order.status === 'approved' || order.status === 'preparing') && (
+                      <Button
+                        onClick={() => handleOpenModal(order, 'updateEta')}
+                        className="border border-primary/20 bg-transparent hover:bg-primary/5 text-primary font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
+                      >
+                        Update ETA
+                      </Button>
+                    )}
+
+                    {/* Cancel button */}
+                    {['approved', 'preparing', 'pending'].includes(order.status) && (
+                      <Button
+                        onClick={() => handleOpenModal(order, 'cancel')}
+                        className="border border-red-500/25 bg-transparent hover:bg-red-500/10 text-red-400 font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+      </div>
+
+      {/* Action Modals */}
+      {selectedOrder && modalType === 'confirm' && (
+        <ConfirmOrderModal
+          isOpen={true}
+          onClose={handleCloseModal}
+          orderType={selectedOrder.order_type}
+          onSubmit={handleModalSubmit}
+        />
+      )}
+
+      {selectedOrder && modalType === 'reject' && (
+        <RejectOrderModal
+          isOpen={true}
+          onClose={handleCloseModal}
+          onSubmit={handleModalSubmit}
+        />
+      )}
+
+      {selectedOrder && modalType === 'cancel' && (
+        <CancelOrderModal
+          isOpen={true}
+          onClose={handleCloseModal}
+          onSubmit={handleModalSubmit}
+        />
+      )}
+
+      {selectedOrder && modalType === 'updateEta' && (
+        <UpdateEtaModal
+          isOpen={true}
+          onClose={handleCloseModal}
+          orderType={selectedOrder.order_type}
+          onSubmit={handleModalSubmit}
+        />
+      )}
+
+      {selectedOrder && modalType === 'complete' && (
+        <CompleteOrderModal
+          isOpen={true}
+          onClose={handleCloseModal}
+          onSubmit={handleModalSubmit}
+        />
+      )}
+
+    </div>
+  );
+}

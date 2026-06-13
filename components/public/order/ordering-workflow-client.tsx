@@ -1,0 +1,932 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { createOrderRequestAction } from '@/app/[locale]/(public)/order/actions';
+import { orderRequestSchema } from '@/lib/validation/orders';
+import { Button } from '@/components/ui/button';
+import PremiumCard from '@/components/ui/premium-card';
+import GoldSpinner from '@/components/ui/gold-spinner';
+import StatusPill from '@/components/ui/status-pill';
+import { Plus, Minus, Trash2, ShoppingBag, MapPin, Phone, User, Mail, CreditCard, DollarSign, Clock } from 'lucide-react';
+
+type Category = {
+  id: string;
+  name_pl: string;
+  name_en: string;
+  slug: string;
+  display_order: number;
+};
+
+type MenuItem = {
+  id: string;
+  category_id: string;
+  name_pl: string;
+  name_en: string;
+  description_pl: string | null;
+  description_en: string | null;
+  price: number;
+  image_url: string | null;
+  signed_image_url?: string | null;
+  spiciness: number;
+  allergens: string[];
+  is_vegetarian: boolean;
+  is_vegan: boolean;
+  is_gluten_free: boolean;
+  is_chef_special: boolean;
+  is_popular: boolean;
+  is_new: boolean;
+};
+
+type BasketItem = {
+  menuItem: MenuItem;
+  quantity: number;
+  customerNotes: string;
+};
+
+type Props = {
+  categories: Category[];
+  items: MenuItem[];
+  operationalStatus: {
+    delivery_enabled: boolean;
+    takeaway_enabled: boolean;
+  };
+  locale: 'pl' | 'en';
+  restaurantInfo: {
+    address: string;
+    phone: string;
+  };
+};
+
+export default function OrderingWorkflowClient({ categories, items, operationalStatus, locale, restaurantInfo }: Props) {
+  const t = useTranslations('order');
+
+  // Order Type State (defaults to takeaway or whichever is enabled)
+  const defaultOrderType = operationalStatus.takeaway_enabled ? 'takeaway' : 'delivery';
+  const [orderType, setOrderType] = useState<'delivery' | 'takeaway'>(defaultOrderType);
+
+  // Form Fields State
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [notes, setNotes] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('');
+
+  // Delivery Fields State
+  const [streetAddress, setStreetAddress] = useState('');
+  const [apartment, setApartment] = useState('');
+  const [postalCode, setPostalCode] = useState('');
+  const [city, setCity] = useState('');
+
+  // Basket State
+  const [basket, setBasket] = useState<BasketItem[]>([]);
+  const [mobileCartOpen, setMobileCartOpen] = useState(false);
+
+  // Submission & Message States
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successData, setSuccessData] = useState<{
+    id: string;
+    token: string;
+    itemsSubtotal?: number;
+    packagingTotal?: number;
+    deliveryFee?: number;
+    totalAmount?: number;
+    orderType?: 'delivery' | 'takeaway';
+  } | null>(null);
+
+  // Set default payment method when order type changes
+  useEffect(() => {
+    if (orderType === 'takeaway') {
+      setPaymentMethod('cash_on_pickup');
+    } else {
+      setPaymentMethod('cash_on_delivery');
+    }
+  }, [orderType]);
+
+  // Group items by category
+  const getItemsByCategory = (categoryId: string) => {
+    return items.filter(item => item.category_id === categoryId);
+  };
+
+  // Add to basket helper
+  const handleAddToBasket = (menuItem: MenuItem) => {
+    setBasket(prev => {
+      const existing = prev.find(i => i.menuItem.id === menuItem.id);
+      if (existing) {
+        return prev.map(i => i.menuItem.id === menuItem.id ? { ...i, quantity: Math.min(i.quantity + 1, 50) } : i);
+      }
+      return [...prev, { menuItem, quantity: 1, customerNotes: '' }];
+    });
+  };
+
+  // Decrease quantity helper
+  const handleDecreaseQuantity = (itemId: string) => {
+    setBasket(prev => {
+      const existing = prev.find(i => i.menuItem.id === itemId);
+      if (existing && existing.quantity > 1) {
+        return prev.map(i => i.menuItem.id === itemId ? { ...i, quantity: i.quantity - 1 } : i);
+      }
+      return prev.filter(i => i.menuItem.id !== itemId);
+    });
+  };
+
+  // Update item notes helper
+  const handleUpdateItemNotes = (itemId: string, noteText: string) => {
+    setBasket(prev => prev.map(i => i.menuItem.id === itemId ? { ...i, customerNotes: noteText } : i));
+  };
+
+  // Calculate Subtotal
+  const itemsSubtotal = basket.reduce((sum, item) => sum + item.menuItem.price * item.quantity, 0);
+
+  // Submit Handler
+  const handleSubmitOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    if (basket.length === 0) {
+      setError(locale === 'pl' ? 'Twój koszyk jest pusty!' : 'Your basket is empty!');
+      setLoading(false);
+      return;
+    }
+
+    const payload = {
+      customer_name: name,
+      customer_email: email,
+      customer_phone: phone,
+      order_type: orderType,
+      customer_notes: notes || null,
+      payment_method: paymentMethod as any,
+      delivery_address: orderType === 'delivery' ? `${streetAddress}${apartment ? `, apt. ${apartment}` : ''}` : null,
+      delivery_postal_code: orderType === 'delivery' ? postalCode : null,
+      delivery_city: orderType === 'delivery' ? city : null,
+      items: basket.map(i => ({
+        menu_item_id: i.menuItem.id,
+        quantity: i.quantity,
+        customer_notes: i.customerNotes || null
+      })),
+      consent: true,
+      source_language: locale
+    };
+
+    // Client-side schema check
+    const validationResult = orderRequestSchema.safeParse(payload);
+    if (!validationResult.success) {
+      setError(validationResult.error.errors[0]?.message || t('errors.validation'));
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await createOrderRequestAction(payload);
+      if (res.success && res.id && res.token) {
+        setSuccessData({
+          id: res.id,
+          token: res.token,
+          itemsSubtotal: res.itemsSubtotal,
+          packagingTotal: res.packagingTotal,
+          deliveryFee: res.deliveryFee,
+          totalAmount: res.totalAmount,
+          orderType: res.orderType
+        });
+        setBasket([]);
+      } else {
+        setError(res.error || (locale === 'pl' ? 'Nie udało się zapisać zamówienia.' : 'Failed to submit order request.'));
+      }
+    } catch (err: any) {
+      setError(err.message || 'Server error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Check if ordering is closed completely
+  const isOrderingClosed = !operationalStatus.takeaway_enabled && !operationalStatus.delivery_enabled;
+
+  if (isOrderingClosed) {
+    return (
+      <PremiumCard hoverable={false} className="border-red-500/20 bg-red-500/5 p-8 text-center max-w-xl mx-auto space-y-4">
+        <h3 className="text-xl font-serif font-bold text-red-400">{t('errors.disabled')}</h3>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          {locale === 'pl' 
+            ? 'Zamówienia online w naszej restauracji są obecnie wstrzymane. Zapraszamy do kontaktu telefonicznego w celu uzyskania informacji.' 
+            : 'Online ordering is currently suspended at our restaurant. Please contact us by phone for inquiries.'}
+        </p>
+        <p className="text-sm text-primary font-bold">{restaurantInfo.phone}</p>
+      </PremiumCard>
+    );
+  }
+
+  // Success view
+  if (successData) {
+    const trackingUrl = `/${locale}/order/status?id=${successData.id}&token=${successData.token}`;
+    return (
+      <PremiumCard hoverable={false} className="border-green-500/20 bg-green-500/5 p-8 text-center space-y-6 max-w-xl mx-auto font-sans">
+        <div className="w-12 h-12 bg-green-500/10 border border-green-500/30 text-green-400 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+          ✓
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-xl font-serif font-bold text-green-400">{t('successTitle')}</h3>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {t('successDesc')}
+          </p>
+        </div>
+
+        {/* Order Summary on Success Page */}
+        {successData.itemsSubtotal !== undefined && (
+          <div className="p-4 bg-[#070B1E] border border-primary/15 rounded-lg space-y-2 text-xs text-left max-w-md mx-auto">
+            <h4 className="font-semibold text-primary uppercase tracking-wider text-[10px] border-b border-primary/10 pb-1.5 mb-2">
+              {locale === 'pl' ? 'Podsumowanie Zamówienia' : 'Order Summary'}
+            </h4>
+            <div className="flex justify-between text-muted-foreground">
+              <span>{t('subtotal')}</span>
+              <span className="font-mono">{successData.itemsSubtotal.toFixed(2)} PLN</span>
+            </div>
+            {successData.packagingTotal !== undefined && successData.packagingTotal > 0 && (
+              <div className="flex justify-between text-muted-foreground">
+                <span>{t('packagingFee')}</span>
+                <span className="font-mono">{successData.packagingTotal.toFixed(2)} PLN</span>
+              </div>
+            )}
+            {successData.orderType === 'delivery' && (
+              <div className="flex flex-col space-y-1 pt-1 border-t border-primary/5">
+                <div className="flex justify-between text-muted-foreground font-semibold">
+                  <span>{t('deliveryFee')}</span>
+                  <span className="text-primary italic">{t('deliveryFeeTbd')}</span>
+                </div>
+                <p className="text-[10px] text-primary/75 italic leading-tight">
+                  {t('deliveryFeeNotice')}
+                </p>
+              </div>
+            )}
+            <div className="flex justify-between text-foreground font-bold text-sm pt-2 border-t border-primary/15">
+              <span>
+                {successData.orderType === 'delivery' ? t('estimatedTotal') : t('finalTotal')}
+              </span>
+              <span className="text-primary font-mono font-bold">
+                {(successData.itemsSubtotal + (successData.packagingTotal || 0)).toFixed(2)} PLN
+              </span>
+            </div>
+          </div>
+        )}
+
+        <div className="p-4 bg-[#070B1E] border border-primary/20 rounded-lg space-y-3">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 block">
+            {t('trackingRef')}
+          </span>
+          <code className="text-sm text-primary font-mono select-all block break-all p-1 bg-primary/5 rounded">
+            {successData.token}
+          </code>
+          <p className="text-[10px] text-muted-foreground/50 leading-relaxed font-light">
+            {t('trackingText')}
+          </p>
+          <div className="pt-2">
+            <Link href={trackingUrl}>
+              <Button className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs uppercase tracking-wider py-2">
+                {t('trackLinkText')}
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        <p className="text-[10px] text-muted-foreground/50 pt-2 border-t border-primary/5">
+          {t('contactNote')}
+        </p>
+      </PremiumCard>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative max-w-6xl mx-auto font-sans">
+      
+      {/* Left Column: Catalog & Details form (8 cols) */}
+      <div className="lg:col-span-7 xl:col-span-8 space-y-8">
+        
+        {/* Menu Catalog Section */}
+        <section className="space-y-6">
+          <h2 className="text-2xl font-serif font-bold text-primary tracking-wide">
+            {locale === 'pl' ? 'Karta Dań' : 'Menu Selection'}
+          </h2>
+
+          <div className="space-y-10">
+            {categories.map((category) => {
+              const categoryItems = getItemsByCategory(category.id);
+              if (categoryItems.length === 0) return null;
+
+              return (
+                <div key={category.id} className="space-y-4">
+                  <h3 className="text-lg font-serif font-bold text-foreground border-b border-primary/15 pb-1">
+                    {locale === 'pl' ? category.name_pl : category.name_en}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {categoryItems.map((item) => {
+                      const basketQty = basket.find(b => b.menuItem.id === item.id)?.quantity || 0;
+                      return (
+                        <div 
+                          key={item.id} 
+                          className="bg-[#050B1E] border border-primary/10 rounded-lg p-4 flex gap-4 hover:border-primary/25 transition-colors relative"
+                        >
+                          {/* Image preview (placeholder if missing) */}
+                          <div className="w-20 h-20 bg-[#070B1E] border border-primary/15 rounded overflow-hidden flex-shrink-0 flex items-center justify-center">
+                            {item.signed_image_url ? (
+                              /* eslint-disable-next-line @next/next/no-img-element */
+                              <img 
+                                src={item.signed_image_url} 
+                                alt={locale === 'pl' ? item.name_pl : item.name_en} 
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <ShoppingBag className="w-6 h-6 text-primary/30" />
+                            )}
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1 flex flex-col justify-between text-left space-y-1">
+                            <div>
+                              <div className="flex justify-between items-start gap-1">
+                                <h4 className="font-semibold text-foreground text-sm">
+                                  {locale === 'pl' ? item.name_pl : item.name_en}
+                                </h4>
+                                <span className="text-xs text-primary font-bold whitespace-nowrap">
+                                  {item.price.toFixed(2)} PLN
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-muted-foreground/85 line-clamp-2 leading-relaxed font-light pt-0.5">
+                                {locale === 'pl' ? item.description_pl : item.description_en}
+                              </p>
+                            </div>
+
+                            {/* Spiciness Level & Add Button */}
+                            <div className="flex justify-between items-center pt-2">
+                              {/* Spiciness dots */}
+                              <div className="flex gap-0.5">
+                                {Array.from({ length: item.spiciness }).map((_, i) => (
+                                  <span key={i} className="text-red-500 text-[10px]" title="Spiciness">🌶️</span>
+                                ))}
+                              </div>
+
+                              {/* Quantity indicator or Add button */}
+                              {basketQty > 0 ? (
+                                <div className="flex items-center gap-2.5 bg-primary/15 border border-primary/30 px-2 py-0.5 rounded-full text-xs">
+                                  <button 
+                                    onClick={() => handleDecreaseQuantity(item.id)}
+                                    className="text-primary hover:text-white font-bold p-0.5 focus:outline-none"
+                                    aria-label="Decrease quantity"
+                                  >
+                                    <Minus className="w-3.5 h-3.5" />
+                                  </button>
+                                  <span className="font-bold text-foreground min-w-[12px] text-center">{basketQty}</span>
+                                  <button 
+                                    onClick={() => handleAddToBasket(item)}
+                                    className="text-primary hover:text-white font-bold p-0.5 focus:outline-none"
+                                    aria-label="Increase quantity"
+                                  >
+                                    <Plus className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => handleAddToBasket(item)}
+                                  className="border border-primary/20 bg-primary/5 hover:bg-primary/15 hover:border-primary/40 text-primary font-bold text-[10px] uppercase tracking-wider py-1 px-3 rounded transition-colors"
+                                >
+                                  + {locale === 'pl' ? 'Dodaj' : 'Add'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Checkout Details Form */}
+        <section className="space-y-6 pt-6 border-t border-primary/15">
+          <h2 className="text-2xl font-serif font-bold text-primary tracking-wide">
+            {t('detailsHeader')}
+          </h2>
+
+          <form onSubmit={handleSubmitOrder} className="space-y-5 bg-[#050B1E] p-6 sm:p-8 border border-primary/20 rounded-lg text-left">
+            {error && (
+              <div className="p-3 text-xs bg-red-500/10 border border-red-500/30 rounded text-red-400 text-center leading-relaxed">
+                {error}
+              </div>
+            )}
+
+            {/* Order Type Tabs */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                {t('typeLabel')}
+              </label>
+              <div className="grid grid-cols-2 gap-2 p-1 bg-[#070B1E] border border-primary/10 rounded-md">
+                <button
+                  type="button"
+                  disabled={!operationalStatus.takeaway_enabled}
+                  onClick={() => setOrderType('takeaway')}
+                  className={`py-2 text-xs font-bold uppercase tracking-wider rounded transition-colors ${
+                    orderType === 'takeaway' 
+                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md' 
+                      : 'text-muted-foreground hover:text-foreground hover:bg-primary/5'
+                  } ${!operationalStatus.takeaway_enabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+                >
+                  {t('takeaway')} {!operationalStatus.takeaway_enabled && `(${locale === 'pl' ? 'Wyłączone' : 'Disabled'})`}
+                </button>
+                <button
+                  type="button"
+                  disabled={!operationalStatus.delivery_enabled}
+                  onClick={() => setOrderType('delivery')}
+                  className={`py-2 text-xs font-bold uppercase tracking-wider rounded transition-colors ${
+                    orderType === 'delivery' 
+                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md' 
+                      : 'text-muted-foreground hover:text-foreground hover:bg-primary/5'
+                  } ${!operationalStatus.delivery_enabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+                >
+                  {t('delivery')} {!operationalStatus.delivery_enabled && `(${locale === 'pl' ? 'Wyłączone' : 'Disabled'})`}
+                </button>
+              </div>
+            </div>
+
+            {/* Customer Contact Details */}
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label htmlFor="customer_name" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-primary" />
+                  {t('nameLabel')} *
+                </label>
+                <input
+                  id="customer_name"
+                  type="text"
+                  required
+                  placeholder="Jan Kowalski"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/35"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="customer_phone" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 text-primary" />
+                    {t('phoneLabel')} *
+                  </label>
+                  <input
+                    id="customer_phone"
+                    type="tel"
+                    required
+                    placeholder="+48 123 456 789"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/35"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="customer_email" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-primary" />
+                    {t('emailLabel')} *
+                  </label>
+                  <input
+                    id="customer_email"
+                    type="email"
+                    required
+                    placeholder="jan.kowalski@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/35"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Delivery address (rendered only if Delivery is selected) */}
+            {orderType === 'delivery' && (
+              <div className="space-y-4 pt-4 border-t border-primary/10">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-primary">
+                  {t('addressHeader')}
+                </h3>
+                
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="col-span-2 space-y-1.5">
+                    <label htmlFor="street_address" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-primary" />
+                      {t('streetLabel')} *
+                    </label>
+                    <input
+                      id="street_address"
+                      type="text"
+                      required={orderType === 'delivery'}
+                      placeholder="ul. Warszawska 1/3"
+                      value={streetAddress}
+                      onChange={(e) => setStreetAddress(e.target.value)}
+                      className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/35"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label htmlFor="apartment" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                      {t('apartmentLabel')}
+                    </label>
+                    <input
+                      id="apartment"
+                      type="text"
+                      placeholder="12"
+                      value={apartment}
+                      onChange={(e) => setApartment(e.target.value)}
+                      className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/35"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label htmlFor="postal_code" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                      {t('postalCodeLabel')} *
+                    </label>
+                    <input
+                      id="postal_code"
+                      type="text"
+                      required={orderType === 'delivery'}
+                      placeholder="06-400"
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.target.value)}
+                      className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/35"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label htmlFor="city" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                      {t('cityLabel')} *
+                    </label>
+                    <input
+                      id="city"
+                      type="text"
+                      required={orderType === 'delivery'}
+                      placeholder="Ciechanów"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/35"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Payment Methods */}
+            <div className="space-y-3 pt-4 border-t border-primary/10">
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                <CreditCard className="w-3.5 h-3.5 text-primary" />
+                {t('paymentHeader')}
+              </label>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {orderType === 'takeaway' ? (
+                  <>
+                    <label className="flex items-center gap-3 p-3 bg-[#070B1E] border border-primary/10 rounded cursor-pointer hover:border-primary/30 select-none">
+                      <input
+                        type="radio"
+                        name="payment_method"
+                        value="cash_on_pickup"
+                        checked={paymentMethod === 'cash_on_pickup'}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="h-4 w-4 border-primary/20 bg-primary/10 text-primary focus:ring-primary/45"
+                      />
+                      <span className="text-xs font-semibold text-foreground flex items-center gap-1">
+                        <DollarSign className="w-3.5 h-3.5 text-primary" />
+                        {t('cash_on_pickup')}
+                      </span>
+                    </label>
+
+                    <label className="flex items-center gap-3 p-3 bg-[#070B1E] border border-primary/10 rounded cursor-pointer hover:border-primary/30 select-none">
+                      <input
+                        type="radio"
+                        name="payment_method"
+                        value="card_on_pickup"
+                        checked={paymentMethod === 'card_on_pickup'}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="h-4 w-4 border-primary/20 bg-primary/10 text-primary focus:ring-primary/45"
+                      />
+                      <span className="text-xs font-semibold text-foreground flex items-center gap-1">
+                        <CreditCard className="w-3.5 h-3.5 text-primary" />
+                        {t('card_on_pickup')}
+                      </span>
+                    </label>
+                  </>
+                ) : (
+                  <>
+                    <label className="flex items-center gap-3 p-3 bg-[#070B1E] border border-primary/10 rounded cursor-pointer hover:border-primary/30 select-none">
+                      <input
+                        type="radio"
+                        name="payment_method"
+                        value="cash_on_delivery"
+                        checked={paymentMethod === 'cash_on_delivery'}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="h-4 w-4 border-primary/20 bg-primary/10 text-primary focus:ring-primary/45"
+                      />
+                      <span className="text-xs font-semibold text-foreground flex items-center gap-1">
+                        <DollarSign className="w-3.5 h-3.5 text-primary" />
+                        {t('cash_on_delivery')}
+                      </span>
+                    </label>
+
+                    <label className="flex items-center gap-3 p-3 bg-[#070B1E] border border-primary/10 rounded cursor-pointer hover:border-primary/30 select-none">
+                      <input
+                        type="radio"
+                        name="payment_method"
+                        value="card_on_delivery"
+                        checked={paymentMethod === 'card_on_delivery'}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="h-4 w-4 border-primary/20 bg-primary/10 text-primary focus:ring-primary/45"
+                      />
+                      <span className="text-xs font-semibold text-foreground flex items-center gap-1">
+                        <CreditCard className="w-3.5 h-3.5 text-primary" />
+                        {t('card_on_delivery')}
+                      </span>
+                    </label>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Special notes */}
+            <div className="space-y-1.5 pt-2">
+              <label htmlFor="order_notes" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                {t('notesLabel')}
+              </label>
+              <textarea
+                id="order_notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+                placeholder={locale === 'pl' ? 'np. alergia na orzechy, sos na boku' : 'e.g. nut allergy, sauce on the side'}
+                className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary/35 resize-none"
+              />
+            </div>
+
+            {/* Offline notice & Submission notice */}
+            <div className="p-3 bg-primary/5 border border-primary/15 rounded text-xs space-y-1.5 text-primary/80">
+              <p className="font-semibold">{t('noOnlinePayment')}</p>
+              <p className="text-[10px] italic leading-normal font-sans font-light">
+                {t('pendingNotice')}
+              </p>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={loading || basket.length === 0}
+              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold tracking-wide uppercase text-xs py-3"
+            >
+              {loading ? <GoldSpinner size="sm" /> : t('submitButton')}
+            </Button>
+          </form>
+        </section>
+
+      </div>
+
+      {/* Right Column: Sticky Basket (4 cols on desktop) */}
+      <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-28 hidden lg:block space-y-4 text-left">
+        <PremiumCard hoverable={false} className="border-primary/20 bg-[#050B1E]/60 p-6 space-y-6">
+          <h3 className="text-lg font-serif font-bold text-primary border-b border-primary/20 pb-2 flex items-center justify-between">
+            <span>{t('basketHeader')}</span>
+            <span className="text-xs bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono">
+              {basket.reduce((sum, i) => sum + i.quantity, 0)}
+            </span>
+          </h3>
+
+          {basket.length === 0 ? (
+            <p className="text-xs text-muted-foreground/60 italic py-6 text-center">
+              {t('emptyBasket')}
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {/* Basket list */}
+              <div className="space-y-4 max-h-[35vh] overflow-y-auto pr-1">
+                {basket.map((item) => (
+                  <div key={item.menuItem.id} className="space-y-1.5 pb-3 border-b border-primary/5 text-xs">
+                    <div className="flex justify-between items-start gap-1">
+                      <div className="font-medium text-foreground">
+                        {locale === 'pl' ? item.menuItem.name_pl : item.menuItem.name_en}
+                      </div>
+                      <div className="font-bold text-primary">
+                        {(item.menuItem.price * item.quantity).toFixed(2)} PLN
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      {/* Quantity adjuster */}
+                      <div className="flex items-center gap-2 bg-primary/5 border border-primary/15 px-2 py-0.5 rounded-full">
+                        <button 
+                          onClick={() => handleDecreaseQuantity(item.menuItem.id)}
+                          className="text-primary hover:text-white p-0.5"
+                          title="Reduce"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="font-bold font-mono text-[10px] text-foreground w-4 text-center">{item.quantity}</span>
+                        <button 
+                          onClick={() => handleAddToBasket(item.menuItem)}
+                          className="text-primary hover:text-white p-0.5"
+                          title="Increase"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                      </div>
+
+                      {/* Remove button */}
+                      <button 
+                        onClick={() => setBasket(prev => prev.filter(i => i.menuItem.id !== item.menuItem.id))}
+                        className="text-muted-foreground/45 hover:text-red-400 p-1 rounded transition-colors"
+                        title="Remove Item"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Item Notes */}
+                    <input
+                      type="text"
+                      placeholder={t('itemNotePlaceholder')}
+                      value={item.customerNotes}
+                      onChange={(e) => handleUpdateItemNotes(item.menuItem.id, e.target.value)}
+                      className="w-full bg-[#070B1E] border border-primary/5 rounded px-2 py-1 text-[10px] text-muted-foreground/80 focus:outline-none focus:border-primary/25 placeholder:text-muted-foreground/35"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Totals */}
+              <div className="pt-2 space-y-2 text-xs border-t border-primary/10">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>{t('subtotal')}</span>
+                  <span>{itemsSubtotal.toFixed(2)} PLN</span>
+                </div>
+
+                {orderType === 'delivery' && (
+                  <div className="flex justify-between items-start gap-1">
+                    <span className="flex flex-col text-muted-foreground">
+                      <span>{t('deliveryFee')}</span>
+                      <span className="text-[9px] text-primary/75 italic leading-tight max-w-[170px]">
+                        {t('deliveryFeeNotice')}
+                      </span>
+                    </span>
+                    <span className="text-primary font-medium italic">
+                      {t('deliveryFeeTbd')}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex justify-between text-foreground font-bold text-sm pt-2 border-t border-primary/15">
+                  <span>
+                    {orderType === 'delivery' ? t('estimatedTotal') : t('finalTotal')}
+                  </span>
+                  <span className="text-primary">
+                    {itemsSubtotal.toFixed(2)} PLN
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+        </PremiumCard>
+      </div>
+
+      {/* Floating Bottom Drawer for Mobile View */}
+      {basket.length > 0 && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#050B1E] border-t border-primary/20 shadow-2xl p-4 flex justify-between items-center gap-4">
+          <div className="text-left">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground block">
+              {t('basketHeader')} ({basket.reduce((sum, i) => sum + i.quantity, 0)})
+            </span>
+            <span className="text-sm font-bold text-primary font-mono">
+              {itemsSubtotal.toFixed(2)} PLN
+            </span>
+          </div>
+
+          <Button 
+            onClick={() => setMobileCartOpen(true)}
+            className="bg-primary hover:bg-primary/95 text-white font-bold text-xs uppercase tracking-wider px-5 py-2.5 flex items-center gap-1.5 shadow"
+          >
+            <ShoppingBag className="w-4 h-4" />
+            {locale === 'pl' ? 'Zobacz koszyk' : 'View basket'}
+          </Button>
+        </div>
+      )}
+
+      {/* Mobile Drawer Modal */}
+      {mobileCartOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center lg:hidden">
+          <div className="w-full bg-[#050B1E] border-t border-primary/20 rounded-t-xl overflow-hidden max-h-[85vh] flex flex-col animate-slide-up">
+            {/* Header */}
+            <div className="p-4 border-b border-primary/10 flex justify-between items-center bg-primary/5">
+              <h3 className="text-sm font-serif font-bold text-primary uppercase tracking-wider">
+                {t('basketHeader')} ({basket.reduce((sum, i) => sum + i.quantity, 0)})
+              </h3>
+              <button 
+                onClick={() => setMobileCartOpen(false)}
+                className="text-muted-foreground hover:text-foreground font-bold text-sm focus:outline-none"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* List */}
+            <div className="p-4 overflow-y-auto flex-1 space-y-4 text-left">
+              {basket.map((item) => (
+                <div key={item.menuItem.id} className="space-y-1.5 pb-3 border-b border-primary/5 text-xs">
+                  <div className="flex justify-between items-start gap-1">
+                    <div className="font-semibold text-foreground text-sm">
+                      {locale === 'pl' ? item.menuItem.name_pl : item.menuItem.name_en}
+                    </div>
+                    <div className="font-bold text-primary text-sm whitespace-nowrap">
+                      {(item.menuItem.price * item.quantity).toFixed(2)} PLN
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2.5 bg-primary/10 border border-primary/25 px-2.5 py-0.5 rounded-full">
+                      <button 
+                        onClick={() => handleDecreaseQuantity(item.menuItem.id)}
+                        className="text-primary hover:text-white p-0.5"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="font-bold font-mono text-xs text-foreground w-4 text-center">{item.quantity}</span>
+                      <button 
+                        onClick={() => handleAddToBasket(item.menuItem)}
+                        className="text-primary hover:text-white p-0.5"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    <button 
+                      onClick={() => setBasket(prev => prev.filter(i => i.menuItem.id !== item.menuItem.id))}
+                      className="text-muted-foreground/50 hover:text-red-400 p-1"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <input
+                    type="text"
+                    placeholder={t('itemNotePlaceholder')}
+                    value={item.customerNotes}
+                    onChange={(e) => handleUpdateItemNotes(item.menuItem.id, e.target.value)}
+                    className="w-full bg-[#070B1E] border border-primary/10 rounded px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary/25"
+                  />
+                </div>
+              ))}
+
+              {/* Totals */}
+              <div className="pt-2 space-y-2.5 text-xs">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>{t('subtotal')}</span>
+                  <span>{itemsSubtotal.toFixed(2)} PLN</span>
+                </div>
+
+                {orderType === 'delivery' && (
+                  <div className="flex justify-between items-start gap-1">
+                    <span className="flex flex-col text-muted-foreground">
+                      <span>{t('deliveryFee')}</span>
+                      <span className="text-[9px] text-primary/75 italic leading-tight max-w-[220px]">
+                        {t('deliveryFeeNotice')}
+                      </span>
+                    </span>
+                    <span className="text-primary font-bold italic">
+                      {t('deliveryFeeTbd')}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex justify-between text-foreground font-bold text-sm pt-2 border-t border-primary/15">
+                  <span>
+                    {orderType === 'delivery' ? t('estimatedTotal') : t('finalTotal')}
+                  </span>
+                  <span className="text-primary">
+                    {itemsSubtotal.toFixed(2)} PLN
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Actions */}
+            <div className="p-4 border-t border-primary/10 bg-[#070B1E] flex gap-3">
+              <Button 
+                onClick={() => setMobileCartOpen(false)}
+                className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs uppercase tracking-wider py-2.5"
+              >
+                {locale === 'pl' ? 'Wróć do zamawiania' : 'Continue checkout'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}

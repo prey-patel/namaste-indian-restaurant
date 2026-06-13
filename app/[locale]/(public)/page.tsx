@@ -1,0 +1,549 @@
+import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { Link } from '@/i18n/routing';
+import { ROUTES } from '@/lib/routes/path';
+import PageTransition from '@/components/ui/page-transition';
+import MandalaWatermark from '@/components/ui/mandala-watermark';
+import SectionContainer from '@/components/ui/section-container';
+import PremiumCard from '@/components/ui/premium-card';
+import PremiumButton from '@/components/ui/premium-button';
+import GoldFrame from '@/components/ui/gold-frame';
+import { getPublicSystemSettings } from '@/lib/supabase/settings';
+import { getSiteContent } from '@/lib/supabase/content';
+
+type Props = {
+  params: Promise<{ locale: string }>;
+};
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'seo' });
+  return {
+    title: t('homeTitle'),
+    description: t('homeDesc'),
+    openGraph: {
+      title: t('homeTitle'),
+      description: t('homeDesc'),
+      locale: locale === 'pl' ? 'pl_PL' : 'en_US',
+      type: 'website',
+    },
+  };
+}
+
+export default async function HomePage({ params }: Props) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
+  const t = await getTranslations('home');
+  const tNav = await getTranslations('nav');
+
+  // Load public settings and CMS content server-side
+  const settings = await getPublicSystemSettings();
+  const cmsHero = await getSiteContent('home_hero');
+
+  // Dynamic content loading with fallback to translation dictionaries
+  const heroTitle = (cmsHero as any)?.[`value_${locale}`]?.title || t('heroTitle');
+  const heroTitleAccent = (cmsHero as any)?.[`value_${locale}`]?.titleAccent || t('heroTitleAccent');
+  const heroSubhead = (cmsHero as any)?.[`value_${locale}`]?.subhead || t('heroSubhead');
+  
+  const welcomeMessage = settings.public_messages?.welcome_message || t('infoOpening');
+  const alertBanner = settings.public_messages?.alert_banner;
+  
+  const address = settings.restaurant_address || 'Warszawska 1/3, 06-400 Ciechanów, Poland';
+  const phone = settings.restaurant_phone || '511984331';
+  const dineInHours = settings.public_service_hours?.dine_in || '12:00 - 22:00';
+  const deliveryHours = settings.public_service_hours?.delivery || '12:00 - 21:30';
+
+  // JSON-LD structured data for Restaurant / LocalBusiness (Confirmed information only)
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://namaste-ciechanow.pl';
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Restaurant',
+    'name': 'Namaste Indian Restaurant',
+    'image': `${siteUrl}/images/logo.png`,
+    '@id': siteUrl,
+    'url': siteUrl,
+    'telephone': `+48${phone}`,
+    'address': {
+      '@type': 'PostalAddress',
+      'streetAddress': 'Warszawska 1/3',
+      'addressLocality': 'Ciechanów',
+      'postalCode': '06-400',
+      'addressCountry': 'PL'
+    },
+    'servesCuisine': 'Indian',
+    'openingHoursSpecification': [
+      {
+        '@type': 'OpeningHoursSpecification',
+        'dayOfWeek': [
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+          'Sunday'
+        ],
+        'opens': '12:00',
+        'closes': '22:00'
+      }
+    ]
+  };
+
+  return (
+    <PageTransition>
+      {/* Inject JSON-LD structured data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
+      {/* 1. HERO SECTION */}
+      <section className="relative min-h-[90vh] flex flex-col justify-center items-center overflow-hidden bg-[#070B1E] px-4 pt-24 pb-16 text-center">
+        {/* Alert Banner if present in system settings */}
+        {alertBanner && (
+          <div className="absolute top-4 w-full max-w-2xl px-4 z-20">
+            <div className="bg-primary/20 border border-primary/50 text-primary-foreground text-xs py-2 px-4 rounded-full backdrop-blur-md shadow-lg animate-pulse">
+              {alertBanner}
+            </div>
+          </div>
+        )}
+
+        {/* Subtle background glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-primary/5 rounded-full blur-[80px] sm:blur-[140px] pointer-events-none" />
+
+        {/* Large Decorative Mandala Watermark */}
+        <MandalaWatermark className="w-[350px] h-[350px] sm:w-[600px] sm:h-[600px] -top-10 sm:-top-20 opacity-[0.03]" />
+
+        <div className="max-w-5xl w-full relative z-10 space-y-8">
+          {/* Opening Badge */}
+          <div className="inline-flex items-center space-x-2 bg-[#0A1128]/85 border border-primary/30 px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-sans tracking-widest text-primary font-bold uppercase shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <span>{welcomeMessage}</span>
+          </div>
+
+          {/* Luxury Frame Container */}
+          <div className="border border-primary/20 bg-card/15 backdrop-blur-sm p-8 sm:p-16 rounded-3xl relative shadow-2xl space-y-8">
+            {/* Gold corner ornaments */}
+            <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-primary/60" />
+            <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-primary/60" />
+            <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-primary/60" />
+            <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-primary/60" />
+
+            {/* Small brand signifier */}
+            <div className="flex justify-center items-center space-x-3 text-primary">
+              <div className="h-[1px] w-8 sm:w-16 bg-primary/30" />
+              <span className="text-[10px] tracking-[0.35em] font-extrabold uppercase">{tNav('home')}</span>
+              <div className="h-[1px] w-8 sm:w-16 bg-primary/30" />
+            </div>
+
+            {/* Main Headline */}
+            <h1 className="text-3xl sm:text-6xl md:text-7xl font-serif font-black tracking-wide text-foreground leading-tight">
+              {heroTitle} <br />
+              <span className="text-primary bg-gradient-to-r from-primary via-amber-300 to-primary bg-clip-text text-transparent">
+                {heroTitleAccent}
+              </span>
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-muted-foreground max-w-2xl mx-auto text-xs sm:text-base md:text-lg leading-relaxed font-light font-sans">
+              {heroSubhead}
+            </p>
+
+            {/* CTA Actions */}
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-4 max-w-md mx-auto">
+              <Link href={ROUTES.reservations} className="w-full sm:w-auto">
+                <PremiumButton variant="primary" size="lg" fullWidth>
+                  {t('reserveTable')}
+                </PremiumButton>
+              </Link>
+              <Link href={ROUTES.menu} className="w-full sm:w-auto">
+                <PremiumButton variant="outline" size="lg" fullWidth>
+                  {t('viewMenu')}
+                </PremiumButton>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. INFO STRIP */}
+      <section className="w-full bg-[#050918] border-y border-primary/10 relative z-10 py-6 sm:py-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center text-sans text-xs sm:text-sm">
+            {/* Hours */}
+            <div className="flex flex-col justify-center items-center space-y-1">
+              <span className="text-primary font-bold uppercase tracking-widest text-[10px] sm:text-xs">
+                {tNav('status')} / Hours
+              </span>
+              <span className="text-muted-foreground">
+                {locale === 'pl' ? 'Na miejscu' : 'Dine-in'}: {dineInHours} | {locale === 'pl' ? 'Dostawa' : 'Delivery'}: {deliveryHours}
+              </span>
+            </div>
+
+            {/* Address */}
+            <div className="flex flex-col justify-center items-center space-y-1 md:border-x md:border-primary/20 px-4">
+              <span className="text-primary font-bold uppercase tracking-widest text-[10px] sm:text-xs">
+                {tNav('contact')} / Address
+              </span>
+              <span className="text-muted-foreground">{address}</span>
+            </div>
+
+            {/* Phone */}
+            <div className="flex flex-col justify-center items-center space-y-1">
+              <span className="text-primary font-bold uppercase tracking-widest text-[10px] sm:text-xs">
+                Telefon / Phone
+              </span>
+              <span className="text-muted-foreground font-bold">{phone}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. WHY NAMASTE */}
+      <SectionContainer className="relative">
+        <MandalaWatermark className="w-[300px] h-[300px] right-5 bottom-5 opacity-[0.02]" />
+
+        <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+          <div className="flex justify-center items-center space-x-2 text-primary">
+            <span className="text-[10px] tracking-[0.25em] font-extrabold uppercase">Namaste Philosophy</span>
+          </div>
+          <h2 className="text-2xl sm:text-4xl font-serif font-bold tracking-wide text-foreground">
+            {t('whyTitle')}
+          </h2>
+          <div className="h-[1px] w-24 bg-primary/40 mx-auto" />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Card 1: Traditional Recipes */}
+          <PremiumCard hoverable className="flex flex-col items-center text-center space-y-4">
+            <div className="w-12 h-12 rounded-full border border-primary/30 flex items-center justify-center text-primary bg-primary/5">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-serif font-bold text-foreground">{t('whyRecipes')}</h3>
+            <p className="text-muted-foreground text-xs leading-relaxed">{t('whyRecipesDesc')}</p>
+          </PremiumCard>
+
+          {/* Card 2: Fresh Ingredients */}
+          <PremiumCard hoverable className="flex flex-col items-center text-center space-y-4">
+            <div className="w-12 h-12 rounded-full border border-primary/30 flex items-center justify-center text-primary bg-primary/5">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707-.707M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-serif font-bold text-foreground">{t('whyIngredients')}</h3>
+            <p className="text-muted-foreground text-xs leading-relaxed">{t('whyIngredientsDesc')}</p>
+          </PremiumCard>
+
+          {/* Card 3: Indian Hospitality */}
+          <PremiumCard hoverable className="flex flex-col items-center text-center space-y-4">
+            <div className="w-12 h-12 rounded-full border border-primary/30 flex items-center justify-center text-primary bg-primary/5">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-serif font-bold text-foreground">{t('whyHospitality')}</h3>
+            <p className="text-muted-foreground text-xs leading-relaxed">{t('whyHospitalityDesc')}</p>
+          </PremiumCard>
+
+          {/* Card 4: Vegetarian Options */}
+          <PremiumCard hoverable className="flex flex-col items-center text-center space-y-4">
+            <div className="w-12 h-12 rounded-full border border-primary/30 flex items-center justify-center text-primary bg-primary/5">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-serif font-bold text-foreground">{t('whyVegetarian')}</h3>
+            <p className="text-muted-foreground text-xs leading-relaxed">{t('whyVegetarianDesc')}</p>
+          </PremiumCard>
+
+          {/* Card 5: Crafted with Spices */}
+          <PremiumCard hoverable className="flex flex-col items-center text-center space-y-4 md:col-span-2 md:max-w-md md:mx-auto">
+            <div className="w-12 h-12 rounded-full border border-primary/30 flex items-center justify-center text-primary bg-primary/5">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-serif font-bold text-foreground">{t('whySpices')}</h3>
+            <p className="text-muted-foreground text-xs leading-relaxed">{t('whySpicesDesc')}</p>
+          </PremiumCard>
+        </div>
+      </SectionContainer>
+
+      {/* 4. SIGNATURE DISHES */}
+      <section className="w-full bg-[#050918] py-16 md:py-24 border-y border-primary/10">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+            <div className="flex justify-center items-center space-x-2 text-primary">
+              <span className="text-[10px] tracking-[0.25em] font-extrabold uppercase">Chef Recommends</span>
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-serif font-bold tracking-wide text-foreground">
+              {t('dishesTitle')}
+            </h2>
+            <p className="text-muted-foreground text-xs sm:text-sm font-light">
+              {t('dishesSub')}
+            </p>
+            <div className="h-[1px] w-24 bg-primary/40 mx-auto" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Dish 1: Butter Chicken */}
+            <PremiumCard hoverable className="flex flex-col h-full justify-between">
+              <div className="space-y-4">
+                <div className="aspect-video w-full rounded-lg bg-[#070B1E] border border-primary/15 relative overflow-hidden flex items-center justify-center text-primary/40">
+                  <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 3v1m0 16v1m9-9h-1M4 12H3" />
+                  </svg>
+                  <span className="absolute bottom-2 right-2 text-[8px] uppercase tracking-widest text-primary/60">Photo preview</span>
+                </div>
+                <h3 className="text-lg font-serif font-bold text-foreground">{t('dishButter')}</h3>
+                <p className="text-muted-foreground text-xs leading-relaxed">{t('dishButterDesc')}</p>
+              </div>
+              <div className="pt-6 border-t border-primary/10 mt-6 flex justify-between items-center text-xs">
+                <span className="text-primary tracking-wider font-bold uppercase">{t('placeholderPrice')}</span>
+              </div>
+            </PremiumCard>
+
+            {/* Dish 2: Dal Makhani */}
+            <PremiumCard hoverable className="flex flex-col h-full justify-between">
+              <div className="space-y-4">
+                <div className="aspect-video w-full rounded-lg bg-[#070B1E] border border-primary/15 relative overflow-hidden flex items-center justify-center text-primary/40">
+                  <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 3v1m0 16v1m9-9h-1M4 12H3" />
+                  </svg>
+                  <span className="absolute bottom-2 right-2 text-[8px] uppercase tracking-widest text-primary/60">Photo preview</span>
+                </div>
+                <h3 className="text-lg font-serif font-bold text-foreground">{t('dishDal')}</h3>
+                <p className="text-muted-foreground text-xs leading-relaxed">{t('dishDalDesc')}</p>
+              </div>
+              <div className="pt-6 border-t border-primary/10 mt-6 flex justify-between items-center text-xs">
+                <span className="text-primary tracking-wider font-bold uppercase">{t('placeholderPrice')}</span>
+              </div>
+            </PremiumCard>
+
+            {/* Dish 3: Chicken Biryani */}
+            <PremiumCard hoverable className="flex flex-col h-full justify-between">
+              <div className="space-y-4">
+                <div className="aspect-video w-full rounded-lg bg-[#070B1E] border border-primary/15 relative overflow-hidden flex items-center justify-center text-primary/40">
+                  <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 3v1m0 16v1m9-9h-1M4 12H3" />
+                  </svg>
+                  <span className="absolute bottom-2 right-2 text-[8px] uppercase tracking-widest text-primary/60">Photo preview</span>
+                </div>
+                <h3 className="text-lg font-serif font-bold text-foreground">{t('dishBiryani')}</h3>
+                <p className="text-muted-foreground text-xs leading-relaxed">{t('dishBiryaniDesc')}</p>
+              </div>
+              <div className="pt-6 border-t border-primary/10 mt-6 flex justify-between items-center text-xs">
+                <span className="text-primary tracking-wider font-bold uppercase">{t('placeholderPrice')}</span>
+              </div>
+            </PremiumCard>
+
+            {/* Dish 4: Garlic Naan */}
+            <PremiumCard hoverable className="flex flex-col h-full justify-between">
+              <div className="space-y-4">
+                <div className="aspect-video w-full rounded-lg bg-[#070B1E] border border-primary/15 relative overflow-hidden flex items-center justify-center text-primary/40">
+                  <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 3v1m0 16v1m9-9h-1M4 12H3" />
+                  </svg>
+                  <span className="absolute bottom-2 right-2 text-[8px] uppercase tracking-widest text-primary/60">Photo preview</span>
+                </div>
+                <h3 className="text-lg font-serif font-bold text-foreground">{t('dishNaan')}</h3>
+                <p className="text-muted-foreground text-xs leading-relaxed">{t('dishNaanDesc')}</p>
+              </div>
+              <div className="pt-6 border-t border-primary/10 mt-6 flex justify-between items-center text-xs">
+                <span className="text-primary tracking-wider font-bold uppercase">{t('placeholderPrice')}</span>
+              </div>
+            </PremiumCard>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. DINING EXPERIENCE */}
+      <SectionContainer className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="space-y-6">
+          <div className="flex items-center space-x-2 text-primary">
+            <span className="text-[10px] tracking-[0.25em] font-extrabold uppercase">Premium Experience</span>
+          </div>
+          <h2 className="text-2xl sm:text-4xl font-serif font-bold tracking-wide text-foreground">
+            {t('ambienceTitle')}
+          </h2>
+          <p className="text-muted-foreground text-sm leading-relaxed font-light font-sans">
+            {t('ambienceDesc')}
+          </p>
+          <div className="pt-4">
+            <Link href={ROUTES.reservations}>
+              <PremiumButton variant="primary" size="md">
+                {t('reserveTable')}
+              </PremiumButton>
+            </Link>
+          </div>
+        </div>
+
+        <GoldFrame className="w-full max-w-lg mx-auto">
+          <div className="aspect-[4/3] bg-[#070B1E]/40 flex items-center justify-center border border-primary/10 relative text-primary/30">
+            <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="absolute bottom-3 right-3 text-[9px] uppercase tracking-widest text-primary/50">Ambience Preview Frame</span>
+          </div>
+        </GoldFrame>
+      </SectionContainer>
+
+      {/* 6. CHEF CRAFT */}
+      <section className="w-full bg-[#050918] py-16 md:py-24 border-y border-primary/10 relative overflow-hidden">
+        <MandalaWatermark className="w-[400px] h-[400px] -left-20 -top-20 opacity-[0.02]" />
+
+        <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="order-2 lg:order-1">
+            <GoldFrame className="w-full max-w-lg mx-auto">
+              <div className="aspect-[4/3] bg-[#070B1E]/40 flex items-center justify-center border border-primary/10 relative text-primary/30">
+                <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                <span className="absolute bottom-3 right-3 text-[9px] uppercase tracking-widest text-primary/50">Chef Craft Frame</span>
+              </div>
+            </GoldFrame>
+          </div>
+
+          <div className="space-y-6 order-1 lg:order-2">
+            <div className="flex items-center space-x-2 text-primary">
+              <span className="text-[10px] tracking-[0.25em] font-extrabold uppercase">Traditional Kitchen</span>
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-serif font-bold tracking-wide text-foreground">
+              {t('chefTitle')}
+            </h2>
+            <p className="text-muted-foreground text-sm leading-relaxed font-light font-sans">
+              {t('chefDesc')}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. SERVICES PREVIEW */}
+      <SectionContainer>
+        <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+          <div className="flex justify-center items-center space-x-2 text-primary">
+            <span className="text-[10px] tracking-[0.25em] font-extrabold uppercase">Premium Offerings</span>
+          </div>
+          <h2 className="text-2xl sm:text-4xl font-serif font-bold tracking-wide text-foreground">
+            {t('servicesTitle')}
+          </h2>
+          <div className="h-[1px] w-24 bg-primary/40 mx-auto" />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {/* Service 1: Dine-In */}
+          <PremiumCard hoverable className="flex flex-col h-full justify-between">
+            <div className="space-y-4">
+              <h3 className="text-lg font-serif font-bold text-primary">{t('servicesDine')}</h3>
+              <p className="text-muted-foreground text-xs leading-relaxed">{t('servicesDineDesc')}</p>
+            </div>
+            <div className="pt-6 border-t border-primary/10 mt-6">
+              <Link href={ROUTES.reservations} className="text-primary text-[10px] uppercase font-bold tracking-wider hover:underline">
+                Book a Table &rarr;
+              </Link>
+            </div>
+          </PremiumCard>
+
+          {/* Service 2: Takeaway */}
+          <PremiumCard hoverable className="flex flex-col h-full justify-between">
+            <div className="space-y-4">
+              <h3 className="text-lg font-serif font-bold text-primary">{t('servicesTakeaway')}</h3>
+              <p className="text-muted-foreground text-xs leading-relaxed">{t('servicesTakeawayDesc')}</p>
+            </div>
+            <div className="pt-6 border-t border-primary/10 mt-6">
+              <Link href={ROUTES.menu} className="text-primary text-[10px] uppercase font-bold tracking-wider hover:underline">
+                View Menu &rarr;
+              </Link>
+            </div>
+          </PremiumCard>
+
+          {/* Service 3: Delivery */}
+          <PremiumCard hoverable className="flex flex-col h-full justify-between">
+            <div className="space-y-4">
+              <h3 className="text-lg font-serif font-bold text-primary">{t('servicesDelivery')}</h3>
+              <p className="text-muted-foreground text-xs leading-relaxed">{t('servicesDeliveryDesc')}</p>
+            </div>
+            <div className="pt-6 border-t border-primary/10 mt-6 text-[10px] text-muted-foreground italic">
+              Wdrożenie w Fazie 8 / Launch in Phase 8
+            </div>
+          </PremiumCard>
+
+          {/* Service 4: Reservations */}
+          <PremiumCard hoverable className="flex flex-col h-full justify-between">
+            <div className="space-y-4">
+              <h3 className="text-lg font-serif font-bold text-primary">{t('servicesReservations')}</h3>
+              <p className="text-muted-foreground text-xs leading-relaxed">{t('servicesReservationsDesc')}</p>
+            </div>
+            <div className="pt-6 border-t border-primary/10 mt-6">
+              <Link href={ROUTES.reservations} className="text-primary text-[10px] uppercase font-bold tracking-wider hover:underline">
+                Reserve Online &rarr;
+              </Link>
+            </div>
+          </PremiumCard>
+        </div>
+      </SectionContainer>
+
+      {/* 8. LOCATION */}
+      <section className="w-full bg-[#050918] py-16 md:py-24 border-y border-primary/10">
+        <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="space-y-6">
+            <div className="flex items-center space-x-2 text-primary">
+              <span className="text-[10px] tracking-[0.25em] font-extrabold uppercase">Visit Us</span>
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-serif font-bold tracking-wide text-foreground">
+              {t('locationTitle')}
+            </h2>
+            <div className="space-y-3 font-sans text-sm text-muted-foreground">
+              <p className="font-bold text-foreground">Namaste Indian Restaurant</p>
+              <p>{address}</p>
+              <p>Telefon: {phone}</p>
+              <p>Email: contact@namaste-ciechanow.pl</p>
+            </div>
+            <div className="pt-4">
+              <Link href={ROUTES.contact}>
+                <PremiumButton variant="outline" size="md">
+                  {t('locationContact')}
+                </PremiumButton>
+              </Link>
+            </div>
+          </div>
+
+          <div className="w-full h-80 rounded-2xl border border-primary/20 overflow-hidden relative bg-[#070B1E] flex items-center justify-center text-primary/30">
+            <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            </svg>
+            <span className="absolute bottom-3 right-3 text-[9px] uppercase tracking-widest text-primary/50">Map View Placeholder</span>
+          </div>
+        </div>
+      </section>
+
+      {/* 9. FINAL CTA */}
+      <SectionContainer className="text-center relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] sm:w-[500px] h-[250px] sm:h-[500px] bg-primary/5 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none" />
+
+        <div className="max-w-3xl mx-auto space-y-8 relative z-10">
+          <h2 className="text-3xl sm:text-5xl font-serif font-bold tracking-wide text-foreground">
+            {t('finalCtaTitle')}
+          </h2>
+          <p className="text-muted-foreground text-xs sm:text-base font-light font-sans max-w-xl mx-auto leading-relaxed">
+            {t('finalCtaSub')}
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 max-w-md mx-auto">
+            <Link href={ROUTES.reservations} className="w-full sm:w-auto">
+              <PremiumButton variant="primary" size="lg" fullWidth>
+                {t('reserveTable')}
+              </PremiumButton>
+            </Link>
+            <Link href={ROUTES.menu} className="w-full sm:w-auto">
+              <PremiumButton variant="outline" size="lg" fullWidth>
+                {t('viewMenu')}
+              </PremiumButton>
+            </Link>
+          </div>
+        </div>
+      </SectionContainer>
+    </PageTransition>
+  );
+}
