@@ -150,9 +150,14 @@ export default async function HomePage({ params }: Props) {
             </p>
 
             {/* CTA Actions */}
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-4 max-w-md mx-auto">
-              <Link href={ROUTES.reservations} className="w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-4 max-w-lg mx-auto">
+              <Link href={ROUTES.order} className="w-full sm:w-auto">
                 <PremiumButton variant="primary" size="lg" fullWidth>
+                  {t('orderOnline')}
+                </PremiumButton>
+              </Link>
+              <Link href={ROUTES.reservations} className="w-full sm:w-auto">
+                <PremiumButton variant="outline" size="lg" fullWidth>
                   {t('reserveTable')}
                 </PremiumButton>
               </Link>

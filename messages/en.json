@@ -15,7 +15,8 @@
     "story": "Our Story",
     "contact": "Contact",
     "status": "My Status",
-    "admin": "Admin Panel"
+    "admin": "Admin Panel",
+    "orderOnline": "Order Online"
   },
   "home": {
     "heroTitle": "Authentic Indian Flavours",
@@ -23,6 +24,7 @@
     "heroSubhead": "Discover an exceptional, exquisite experience of traditional Indian cuisine prepared by masters of culinary arts.",
     "viewMenu": "View Menu",
     "reserveTable": "Reserve a Table",
+    "orderOnline": "Order Online",
     "infoOpening": "Opening soon!",
     "infoAddress": "Warszawska 1/3, Ciechanów",
     "infoPhone": "511 984 331",

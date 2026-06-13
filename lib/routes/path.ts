@@ -10,6 +10,7 @@ export const ROUTES = {
   story: '/our-story',
   contact: '/contact',
   status: '/my-status',
+  order: '/order',
   privacy: '/privacy-policy',
   cookie: '/cookie-policy',
   terms: '/terms',

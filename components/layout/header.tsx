@@ -116,10 +116,10 @@ export default function Header() {
         <div className="hidden md:flex items-center space-x-6">
           <LanguageSwitcher />
           <Link
-            href={ROUTES.admin.login}
-            className="text-[10px] font-sans font-bold uppercase tracking-widest border border-primary/40 text-primary hover:bg-primary hover:text-primary-foreground px-4 py-2 rounded transition-all duration-300"
+            href={ROUTES.order}
+            className="text-[10px] font-sans font-bold uppercase tracking-widest bg-primary text-[#070B1E] border border-primary hover:bg-transparent hover:text-primary px-4 py-2.5 rounded shadow-[0_0_12px_rgba(212,175,55,0.25)] transition-all duration-300"
           >
-            {t('admin')}
+            {t('orderOnline')}
           </Link>
         </div>
 
@@ -239,11 +239,11 @@ export default function Header() {
                   <LanguageSwitcher />
                 </div>
                 <Link
-                  href={ROUTES.admin.login}
+                  href={ROUTES.order}
                   onClick={() => setIsDrawerOpen(false)}
-                  className="text-center text-xs font-sans font-bold uppercase tracking-widest border border-primary/40 text-primary hover:bg-primary hover:text-primary-foreground py-3 rounded transition-all duration-300"
+                  className="text-center text-xs font-sans font-bold uppercase tracking-widest bg-primary text-[#070B1E] border border-primary hover:bg-transparent hover:text-primary py-3 rounded transition-all duration-300"
                 >
-                  {t('admin')}
+                  {t('orderOnline')}
                 </Link>
               </div>
             </motion.div>
