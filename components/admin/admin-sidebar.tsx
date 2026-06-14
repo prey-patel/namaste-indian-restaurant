@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ROUTES } from '@/lib/routes/path';
-import { LayoutDashboard, ShoppingCart, CalendarDays, ChefHat, BookOpen, Settings, Users } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, CalendarDays, ChefHat, BookOpen, Settings, Users, BarChart3, Activity } from 'lucide-react';
 
 export default function AdminSidebar() {
   const pathname = usePathname();
@@ -27,6 +27,8 @@ export default function AdminSidebar() {
   const administrationItems = [
     { href: ROUTES.admin.settings.root, label: 'Settings', icon: Settings },
     { href: ROUTES.admin.users, label: 'Users & Roles', icon: Users },
+    { href: ROUTES.admin.analytics, label: 'Raporty i Analizy / Analytics', icon: BarChart3 },
+    { href: ROUTES.admin.performance, label: 'Wydajność / Performance', icon: Activity },
   ];
 
   return (

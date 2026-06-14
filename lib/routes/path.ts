@@ -24,6 +24,8 @@ export const ROUTES = {
     tables: '/admin/tables',
     menu: '/admin/menu',
     users: '/admin/users',
+    analytics: '/admin/analytics',
+    performance: '/admin/performance',
     settings: {
       root: '/admin/settings',
       serviceHours: '/admin/settings/service-hours',
