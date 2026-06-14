@@ -613,84 +613,86 @@ export default function ManualOrderForm({ menuItems, categories }: Props) {
             </div>
 
             {/* Address fields (Conditional on Delivery) */}
-            {orderType === "delivery" ? (
-              <div className="space-y-3 pt-2 border-t border-[#FAF9F5]">
+            <div className={orderType === "delivery" ? "space-y-3 pt-2 border-t border-[#FAF9F5]" : "hidden"}>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-muted-foreground block">Street Address *</label>
+                <input 
+                  type="text" 
+                  required={orderType === "delivery"}
+                  placeholder="e.g. Warszawska 10/2"
+                  value={deliveryAddress}
+                  onChange={(e) => setDeliveryAddress(e.target.value)}
+                  autoComplete="new-password"
+                  className="w-full h-10 px-3 border border-[#EAE3D2] rounded-md text-sm focus:outline-none focus:border-[#9E690A] bg-white text-black"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-muted-foreground block">Street Address *</label>
+                  <label className="text-xs font-semibold text-muted-foreground block">Postal Code *</label>
                   <input 
                     type="text" 
                     required={orderType === "delivery"}
-                    placeholder="e.g. Warszawska 10/2"
-                    value={deliveryAddress}
-                    onChange={(e) => setDeliveryAddress(e.target.value)}
+                    placeholder="XX-XXX (e.g. 06-400)"
+                    value={deliveryPostalCode}
+                    onChange={handlePostalCodeChange}
+                    autoComplete="new-password"
                     className="w-full h-10 px-3 border border-[#EAE3D2] rounded-md text-sm focus:outline-none focus:border-[#9E690A] bg-white text-black"
                   />
                 </div>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-muted-foreground block">Postal Code *</label>
-                    <input 
-                      type="text" 
-                      required={orderType === "delivery"}
-                      placeholder="XX-XXX (e.g. 06-400)"
-                      value={deliveryPostalCode}
-                      onChange={handlePostalCodeChange}
-                      className="w-full h-10 px-3 border border-[#EAE3D2] rounded-md text-sm focus:outline-none focus:border-[#9E690A] bg-white text-black"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-muted-foreground block">City *</label>
-                    <input 
-                      type="text" 
-                      required={orderType === "delivery"}
-                      placeholder="e.g. Ciechanów"
-                      value={deliveryCity}
-                      onChange={(e) => setDeliveryCity(e.target.value)}
-                      className="w-full h-10 px-3 border border-[#EAE3D2] rounded-md text-sm focus:outline-none focus:border-[#9E690A] bg-white text-black"
-                    />
-                  </div>
-                </div>
-
-                {/* Delivery Fee Input */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-muted-foreground block">Delivery Fee (PLN)</label>
-                    {feeStatus.calculated && (
-                      <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full">
-                        Zone Match
-                      </span>
-                    )}
-                    {isFeeManuallySet && (
-                      <span className="text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full">
-                        Manually Set
-                      </span>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <input 
-                      type="number" 
-                      step="0.01"
-                      min="0"
-                      placeholder="0.00"
-                      value={deliveryFee || ""}
-                      onChange={(e) => {
-                        setDeliveryFee(Number(e.target.value));
-                        setIsFeeManuallySet(true);
-                      }}
-                      className="w-full h-10 pl-3 pr-10 border border-[#EAE3D2] rounded-md text-sm focus:outline-none focus:border-[#9E690A] bg-white text-black"
-                    />
-                    <span className="absolute right-3 top-3 text-xs text-muted-foreground">PLN</span>
-                  </div>
-                  {feeStatus.error && (
-                    <p className="text-[10px] text-amber-700 flex items-center gap-1">
-                      <Info className="w-3 h-3" />
-                      {feeStatus.error} Entering manually.
-                    </p>
-                  )}
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground block">City *</label>
+                  <input 
+                    type="text" 
+                    required={orderType === "delivery"}
+                    placeholder="e.g. Ciechanów"
+                    value={deliveryCity}
+                    onChange={(e) => setDeliveryCity(e.target.value)}
+                    autoComplete="new-password"
+                    className="w-full h-10 px-3 border border-[#EAE3D2] rounded-md text-sm focus:outline-none focus:border-[#9E690A] bg-white text-black"
+                  />
                 </div>
               </div>
-            ) : null}
+
+              {/* Delivery Fee Input */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-muted-foreground block">Delivery Fee (PLN)</label>
+                  {feeStatus.calculated && (
+                    <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full">
+                      Zone Match
+                    </span>
+                  )}
+                  {isFeeManuallySet && (
+                    <span className="text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full">
+                      Manually Set
+                    </span>
+                  )}
+                </div>
+                <div className="relative">
+                  <input 
+                    type="number" 
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={deliveryFee || ""}
+                    onChange={(e) => {
+                      setDeliveryFee(Number(e.target.value));
+                      setIsFeeManuallySet(true);
+                    }}
+                    autoComplete="new-password"
+                    className="w-full h-10 pl-3 pr-10 border border-[#EAE3D2] rounded-md text-sm focus:outline-none focus:border-[#9E690A] bg-white text-black"
+                  />
+                  <span className="absolute right-3 top-3 text-xs text-muted-foreground">PLN</span>
+                </div>
+                {feeStatus.error && (
+                  <p className="text-[10px] text-amber-700 flex items-center gap-1">
+                    <Info className="w-3 h-3" />
+                    {feeStatus.error} Entering manually.
+                  </p>
+                )}
+              </div>
+            </div>
 
             {/* Payment Method Selector */}
             <div className="space-y-1 pt-2 border-t border-[#FAF9F5]">
