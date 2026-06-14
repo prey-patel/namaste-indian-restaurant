@@ -17,6 +17,8 @@ import {
   ChefHat,
   Clock,
   CheckCircle,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 type Props = {
@@ -64,6 +66,7 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [newOrderIds, setNewOrderIds] = useState<Set<string>>(new Set());
 
@@ -72,12 +75,25 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
   const soundEnabledRef = useRef(soundEnabled);
   soundEnabledRef.current = soundEnabled;
 
-  // Load sound preference from localStorage
+  // Load preferences from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem('kds_sound_enabled');
-    if (stored === 'true') {
+    const storedSound = localStorage.getItem('kds_sound_enabled');
+    if (storedSound === 'true') {
       setSoundEnabled(true);
     }
+    const storedTheme = localStorage.getItem('kds_theme') as 'dark' | 'light';
+    if (storedTheme) {
+      setTheme(storedTheme);
+    }
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('kds_theme', next);
+      window.dispatchEvent(new CustomEvent('kds-theme-change', { detail: next }));
+      return next;
+    });
   }, []);
 
   // Toggle sound preference
@@ -251,10 +267,16 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
     });
 
   return (
-    <div className={`${isFullscreen ? 'fixed inset-0 z-50 bg-[#070B1E] overflow-auto' : ''}`}>
+    <div className={`${
+      isFullscreen 
+        ? `fixed inset-0 z-50 overflow-auto p-6 transition-colors duration-300 ${
+            theme === 'light' ? 'admin-theme bg-background text-foreground' : 'bg-[#070B1E] text-white'
+          }`
+        : ''
+    }`}>
       {/* KDS Header Bar */}
       <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-        isFullscreen ? 'px-6 pt-5 pb-3' : 'mb-6'
+        isFullscreen ? 'mb-6' : 'mb-6'
       }`}>
         <div className="flex items-center gap-3">
           <ChefHat className="w-7 h-7 text-primary" />
@@ -277,24 +299,22 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
           {/* Last Updated */}
           <span className="text-[10px] text-muted-foreground/50 font-mono">
             {t('lastUpdated')}: {formatTime(lastUpdated)}
-          </span>
-
-          {/* Refresh */}
+          </span>          {/* Refresh */}
           <button
             onClick={handleRefresh}
-            className="p-2 rounded-lg border border-white/10 hover:bg-white/5 text-muted-foreground hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+            className="p-2 rounded-lg border border-border dark:border-white/10 hover:bg-muted dark:hover:bg-white/5 text-muted-foreground hover:text-foreground dark:hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label={t('refresh')}
           >
             <RefreshCw className="w-4 h-4" />
           </button>
-
+ 
           {/* Sound Toggle */}
           <button
             onClick={toggleSound}
             className={`p-2 rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
               soundEnabled
-                ? 'border-green-500/30 bg-green-500/10 text-green-400'
-                : 'border-white/10 text-muted-foreground hover:text-white hover:bg-white/5'
+                ? 'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400'
+                : 'border-border dark:border-white/10 hover:bg-muted dark:hover:bg-white/5 text-muted-foreground hover:text-foreground dark:hover:text-white'
             }`}
             aria-label={soundEnabled ? t('soundOn') : t('soundOff')}
             title={soundEnabled ? t('soundOn') : t('soundOff')}
@@ -302,10 +322,20 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
             {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </button>
 
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg border border-border dark:border-white/10 hover:bg-muted dark:hover:bg-white/5 text-muted-foreground hover:text-foreground dark:hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+            aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-primary" />}
+          </button>
+ 
           {/* Fullscreen Toggle */}
           <button
             onClick={toggleFullscreen}
-            className="p-2 rounded-lg border border-white/10 hover:bg-white/5 text-muted-foreground hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+            className="p-2 rounded-lg border border-border dark:border-white/10 hover:bg-muted dark:hover:bg-white/5 text-muted-foreground hover:text-foreground dark:hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label={isFullscreen ? t('exitFullscreen') : t('fullscreen')}
           >
             {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
@@ -332,12 +362,12 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
       }`}>
         {/* Column 1: New / Confirmed */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 border-b-2 border-amber-400/40 pb-2">
-            <div className="w-3 h-3 rounded-full bg-amber-400" />
-            <h2 className="text-lg font-bold text-amber-400 uppercase tracking-widest">
+          <div className="flex items-center gap-2 border-b-2 border-amber-500/30 dark:border-amber-400/40 pb-2">
+            <div className="w-3 h-3 rounded-full bg-amber-600 dark:bg-amber-400" />
+            <h2 className="text-lg font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest">
               {t('columnNew')}
             </h2>
-            <span className="ml-auto bg-amber-500/20 text-amber-400 text-xs font-mono font-bold px-2 py-0.5 rounded-full">
+            <span className="ml-auto bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-mono font-bold px-2 py-0.5 rounded-full">
               {newOrders.length}
             </span>
           </div>
@@ -356,6 +386,7 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
                 onMarkReady={handleMarkReady}
                 isPending={isPending}
                 isNew={newOrderIds.has(order.id)}
+                theme={theme}
               />
             ))
           )}
@@ -363,12 +394,12 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
 
         {/* Column 2: Preparing */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 border-b-2 border-blue-400/40 pb-2">
-            <div className="w-3 h-3 rounded-full bg-blue-400" />
-            <h2 className="text-lg font-bold text-blue-400 uppercase tracking-widest">
+          <div className="flex items-center gap-2 border-b-2 border-blue-500/30 dark:border-blue-400/40 pb-2">
+            <div className="w-3 h-3 rounded-full bg-blue-600 dark:bg-blue-400" />
+            <h2 className="text-lg font-bold text-blue-700 dark:text-blue-400 uppercase tracking-widest">
               {t('columnPreparing')}
             </h2>
-            <span className="ml-auto bg-blue-500/20 text-blue-400 text-xs font-mono font-bold px-2 py-0.5 rounded-full">
+            <span className="ml-auto bg-blue-500/10 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 text-xs font-mono font-bold px-2 py-0.5 rounded-full">
               {preparingOrders.length}
             </span>
           </div>
@@ -386,6 +417,7 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
                 onStartPreparing={handleStartPreparing}
                 onMarkReady={handleMarkReady}
                 isPending={isPending}
+                theme={theme}
               />
             ))
           )}
@@ -393,12 +425,12 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
 
         {/* Column 3: Ready / Handoff */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 border-b-2 border-green-400/40 pb-2">
-            <div className="w-3 h-3 rounded-full bg-green-400" />
-            <h2 className="text-lg font-bold text-green-400 uppercase tracking-widest">
+          <div className="flex items-center gap-2 border-b-2 border-green-500/30 dark:border-green-400/40 pb-2">
+            <div className="w-3 h-3 rounded-full bg-green-600 dark:bg-green-400" />
+            <h2 className="text-lg font-bold text-green-700 dark:text-green-400 uppercase tracking-widest">
               {t('columnReady')}
             </h2>
-            <span className="ml-auto bg-green-500/20 text-green-400 text-xs font-mono font-bold px-2 py-0.5 rounded-full">
+            <span className="ml-auto bg-green-500/10 dark:bg-green-500/20 text-green-700 dark:text-green-400 text-xs font-mono font-bold px-2 py-0.5 rounded-full">
               {readyOrders.length}
             </span>
           </div>
@@ -416,6 +448,7 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
                 onStartPreparing={handleStartPreparing}
                 onMarkReady={handleMarkReady}
                 isPending={isPending}
+                theme={theme}
               />
             ))
           )}

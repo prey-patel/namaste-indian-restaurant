@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import AdminSidebar from './admin-sidebar';
 import AdminTopbar from './admin-topbar';
@@ -9,6 +9,25 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
   const pathname = usePathname();
   const isLoginPage = pathname === '/admin/login';
   const isKdsPage = pathname === '/admin/kds';
+  const [kdsTheme, setKdsTheme] = useState<'dark' | 'light'>('dark');
+
+  useEffect(() => {
+    if (!isKdsPage) return;
+    const stored = localStorage.getItem('kds_theme') as 'dark' | 'light';
+    if (stored) {
+      setKdsTheme(stored);
+    }
+
+    const handleThemeChange = (e: Event) => {
+      const customEvent = e as CustomEvent<'dark' | 'light'>;
+      setKdsTheme(customEvent.detail);
+    };
+
+    window.addEventListener('kds-theme-change', handleThemeChange);
+    return () => {
+      window.removeEventListener('kds-theme-change', handleThemeChange);
+    };
+  }, [isKdsPage]);
 
   if (isLoginPage) {
     return (
@@ -20,8 +39,11 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
 
   // KDS page: minimal chrome for kitchen display
   if (isKdsPage) {
+    const isLight = kdsTheme === 'light';
     return (
-      <div className="min-h-screen bg-[#070B1E]">
+      <div className={`min-h-screen transition-colors duration-300 ${
+        isLight ? 'admin-theme bg-background text-foreground' : 'bg-[#070B1E] text-white'
+      }`}>
         <main className="p-4 sm:p-6">
           {children}
         </main>

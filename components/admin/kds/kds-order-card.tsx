@@ -47,6 +47,7 @@ type Props = {
   onMarkReady: (id: string) => void;
   isPending: boolean;
   isNew?: boolean;
+  theme?: 'dark' | 'light';
 };
 
 /** Spice level indicator */
@@ -130,6 +131,7 @@ export default function KdsOrderCard({
   onMarkReady,
   isPending,
   isNew,
+  theme = 'dark',
 }: Props) {
   const t = useTranslations('kds');
   const elapsed = useElapsedTime(order.approved_at || order.created_at);
@@ -156,10 +158,18 @@ export default function KdsOrderCard({
     return 'border-l-amber-400';
   };
 
+  const isLight = theme === 'light';
+  const bgClass = isLight ? 'bg-card border border-border text-foreground rounded-lg' : 'bg-[#0B1128] border border-white/10 text-white rounded-lg';
+  const borderClass = isLight ? 'border-border' : 'border-white/5';
+  const textClass = isLight ? 'text-foreground font-semibold' : 'text-white font-mono font-black';
+  const subBgClass = isLight ? 'bg-muted/30' : 'bg-white/[0.02]';
+  const qtyBgClass = isLight ? 'bg-muted text-foreground' : 'bg-white/10 text-white';
+  const offsetRingClass = isLight ? 'focus:ring-offset-white' : 'focus:ring-offset-[#0B1128]';
+
   return (
     <div
       className={`
-        bg-[#0B1128] border border-white/10 rounded-lg overflow-hidden
+        ${bgClass} overflow-hidden
         border-l-4 ${getUrgencyClass()}
         ${isNew ? 'ring-2 ring-amber-400/50 animate-pulse-once' : ''}
         transition-all duration-300
@@ -168,10 +178,10 @@ export default function KdsOrderCard({
       aria-label={`${t('order')} ${orderRef} — ${isDelivery ? t('delivery') : t('takeaway')}`}
     >
       {/* Header */}
-      <div className="p-4 pb-3 flex items-center justify-between gap-2 border-b border-white/5">
+      <div className={`p-4 pb-3 flex items-center justify-between gap-2 border-b ${borderClass}`}>
         <div className="flex items-center gap-3">
           {/* Order Ref */}
-          <span className="text-xl font-mono font-black text-white tracking-wider">
+          <span className={`text-xl tracking-wider ${textClass}`}>
             {orderRef}
           </span>
 
@@ -199,10 +209,10 @@ export default function KdsOrderCard({
       </div>
 
       {/* Time Bar */}
-      <div className="px-4 py-2.5 flex items-center justify-between text-xs bg-white/[0.02] border-b border-white/5">
+      <div className={`px-4 py-2.5 flex items-center justify-between text-xs ${subBgClass} border-b ${borderClass}`}>
         <div className="flex items-center gap-1.5 text-muted-foreground/70">
           <Clock className="w-3.5 h-3.5" />
-          <span>{t('elapsed')}: <strong className="text-white/80">{elapsed}</strong></span>
+          <span>{t('elapsed')}: <strong className={isLight ? "text-foreground font-bold" : "text-white/80"}>{elapsed}</strong></span>
         </div>
 
         {order.estimated_time && (
@@ -221,13 +231,13 @@ export default function KdsOrderCard({
         {order.items.map((item) => (
           <div key={item.id} className="flex items-start gap-3">
             {/* Quantity Badge */}
-            <span className="flex-shrink-0 w-8 h-8 rounded bg-white/10 flex items-center justify-center text-base font-black text-white">
+            <span className={`flex-shrink-0 w-8 h-8 rounded flex items-center justify-center text-base font-black ${qtyBgClass}`}>
               {item.quantity}
             </span>
 
             <div className="flex-1 min-w-0">
               {/* Item Name */}
-              <p className="text-sm font-semibold text-white leading-tight">
+              <p className={`text-sm font-semibold leading-tight ${isLight ? "text-foreground" : "text-white"}`}>
                 {item.item_name_en}
               </p>
               {item.item_name_pl && item.item_name_pl !== item.item_name_en && (
@@ -239,24 +249,24 @@ export default function KdsOrderCard({
               {/* Allergens + Spice */}
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                 {item.allergens_snapshot && item.allergens_snapshot.length > 0 && (
-                  <span className="text-[10px] font-bold text-red-400/90 uppercase tracking-wide bg-red-500/10 px-1.5 py-0.5 rounded">
+                  <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${isLight ? "bg-red-50 text-red-700 border border-red-200" : "bg-red-500/10 text-red-400/90"}`}>
                     ⚠ {item.allergens_snapshot.join(', ')}
                   </span>
                 )}
                 <SpiceIndicator level={item.spice_level_snapshot} />
               </div>
-
+ 
               {/* Item Notes */}
               {(item.customer_notes || item.kitchen_notes) && (
                 <div className="mt-1 space-y-0.5">
                   {item.customer_notes && (
-                    <p className="text-[11px] text-amber-300/80 italic flex items-start gap-1">
+                    <p className={`text-[11px] italic flex items-start gap-1 ${isLight ? "text-amber-800" : "text-amber-300/80"}`}>
                       <MessageSquare className="w-3 h-3 mt-0.5 flex-shrink-0" />
                       {item.customer_notes}
                     </p>
                   )}
                   {item.kitchen_notes && (
-                    <p className="text-[11px] text-cyan-300/80 italic flex items-start gap-1">
+                    <p className={`text-[11px] italic flex items-start gap-1 ${isLight ? "text-cyan-800" : "text-cyan-300/80"}`}>
                       <ChefHat className="w-3 h-3 mt-0.5 flex-shrink-0" />
                       {item.kitchen_notes}
                     </p>
@@ -271,8 +281,8 @@ export default function KdsOrderCard({
       {/* Order-level customer notes */}
       {order.customer_notes && (
         <div className="px-4 pb-3">
-          <div className="p-2.5 rounded bg-amber-500/5 border border-amber-500/15 text-[11px] text-amber-300/80 italic">
-            <span className="font-bold text-amber-400 uppercase text-[9px] tracking-wider block mb-0.5 not-italic">
+          <div className={`p-2.5 rounded text-[11px] italic ${isLight ? "bg-amber-50 border border-amber-200 text-amber-800" : "bg-amber-500/5 border border-amber-500/15 text-amber-300/80"}`}>
+            <span className="font-bold text-amber-600 dark:text-amber-400 uppercase text-[9px] tracking-wider block mb-0.5 not-italic">
               {t('customerNote')}
             </span>
             {order.customer_notes}
@@ -281,12 +291,12 @@ export default function KdsOrderCard({
       )}
 
       {/* Action Buttons */}
-      <div className="p-4 pt-2 border-t border-white/5">
+      <div className={`p-4 pt-2 border-t ${borderClass}`}>
         {order.status === 'approved' && (
           <button
             onClick={() => onStartPreparing(order.id)}
             disabled={isPending}
-            className="w-full py-3.5 rounded-lg bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-black font-black text-sm uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-[#0B1128]"
+            className={`w-full py-3.5 rounded-lg bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-black font-black text-sm uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 ${offsetRingClass}`}
             aria-label={`${t('startPreparing')} ${orderRef}`}
           >
             <span className="flex items-center justify-center gap-2">
@@ -300,7 +310,7 @@ export default function KdsOrderCard({
           <button
             onClick={() => onMarkReady(order.id)}
             disabled={isPending}
-            className={`w-full py-3.5 rounded-lg font-black text-sm uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0B1128] ${
+            className={`w-full py-3.5 rounded-lg font-black text-sm uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 ${offsetRingClass} ${
               isDelivery
                 ? 'bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white focus:ring-blue-400'
                 : 'bg-green-500 hover:bg-green-600 active:bg-green-700 text-white focus:ring-green-400'
@@ -317,7 +327,7 @@ export default function KdsOrderCard({
         {(order.status === 'ready_for_pickup' || order.status === 'out_for_delivery') && (
           <div className="text-center py-2">
             <span className={`text-xs font-bold uppercase tracking-widest ${
-              order.status === 'ready_for_pickup' ? 'text-green-400' : 'text-blue-400'
+              order.status === 'ready_for_pickup' ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400'
             }`}>
               {order.status === 'ready_for_pickup' ? t('readyForPickup') : t('outForDelivery')}
             </span>
