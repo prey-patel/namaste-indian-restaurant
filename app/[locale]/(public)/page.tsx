@@ -10,6 +10,7 @@ import GoldFrame from '@/components/ui/gold-frame';
 import { getPublicSystemSettings } from '@/lib/supabase/settings';
 import { getSiteContent } from '@/lib/supabase/content';
 import WhyChooseNamaste from '@/components/public/why-choose-namaste';
+import HeroSection from '@/components/public/hero-section';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -98,112 +99,20 @@ export default async function HomePage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* 1. HERO SECTION */}
-      <section className="relative min-h-[90vh] flex flex-col justify-center items-center overflow-hidden bg-[#070B1E] px-4 pt-24 pb-16 text-center">
-        {/* Alert Banner if present in system settings */}
-        {alertBanner && (
-          <div className="absolute top-4 w-full max-w-2xl px-4 z-20">
-            <div className="bg-primary/20 border border-primary/50 text-primary-foreground text-xs py-2 px-4 rounded-full backdrop-blur-md shadow-lg animate-pulse">
-              {alertBanner}
-            </div>
-          </div>
-        )}
-
-        {/* Subtle background glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-primary/5 rounded-full blur-[80px] sm:blur-[140px] pointer-events-none" />
-
-        {/* Large Decorative Mandala Watermark */}
-        <MandalaWatermark className="w-[350px] h-[350px] sm:w-[600px] sm:h-[600px] -top-10 sm:-top-20 opacity-[0.03]" />
-
-        <div className="max-w-5xl w-full relative z-10 space-y-8">
-          {/* Opening Badge */}
-          <div className="inline-flex items-center space-x-2 bg-[#0A1128]/85 border border-primary/30 px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-sans tracking-widest text-primary font-bold uppercase shadow-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span>{welcomeMessage}</span>
-          </div>
-
-          {/* Luxury Frame Container */}
-          <div className="border border-primary/20 bg-card/15 backdrop-blur-sm p-8 sm:p-16 rounded-3xl relative shadow-2xl space-y-8">
-            {/* Gold corner ornaments */}
-            <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-primary/60" />
-            <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-primary/60" />
-            <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-primary/60" />
-            <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-primary/60" />
-
-            {/* Small brand signifier */}
-            <div className="flex justify-center items-center space-x-3 text-primary">
-              <div className="h-[1px] w-8 sm:w-16 bg-primary/30" />
-              <span className="text-[10px] tracking-[0.35em] font-extrabold uppercase">{tNav('home')}</span>
-              <div className="h-[1px] w-8 sm:w-16 bg-primary/30" />
-            </div>
-
-            {/* Main Headline */}
-            <h1 className="text-3xl sm:text-6xl md:text-7xl font-serif font-black tracking-wide text-foreground leading-tight">
-              {heroTitle} <br />
-              <span className="text-primary bg-gradient-to-r from-primary via-amber-300 to-primary bg-clip-text text-transparent">
-                {heroTitleAccent}
-              </span>
-            </h1>
-
-            {/* Subtitle */}
-            <p className="text-muted-foreground max-w-2xl mx-auto text-xs sm:text-base md:text-lg leading-relaxed font-light font-sans">
-              {heroSubhead}
-            </p>
-
-            {/* CTA Actions */}
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-4 max-w-lg mx-auto">
-              <Link href={ROUTES.order} className="w-full sm:w-auto">
-                <PremiumButton variant="primary" size="lg" fullWidth>
-                  {t('orderOnline')}
-                </PremiumButton>
-              </Link>
-              <Link href={ROUTES.reservations} className="w-full sm:w-auto">
-                <PremiumButton variant="outline" size="lg" fullWidth>
-                  {t('reserveTable')}
-                </PremiumButton>
-              </Link>
-              <Link href={ROUTES.menu} className="w-full sm:w-auto">
-                <PremiumButton variant="outline" size="lg" fullWidth>
-                  {t('viewMenu')}
-                </PremiumButton>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. INFO STRIP */}
-      <section className="w-full bg-[#050918] border-y border-primary/10 relative z-10 py-6 sm:py-8">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center text-sans text-xs sm:text-sm">
-            {/* Hours */}
-            <div className="flex flex-col justify-center items-center space-y-1">
-              <span className="text-primary font-bold uppercase tracking-widest text-[10px] sm:text-xs">
-                {tNav('status')} / Hours
-              </span>
-              <span className="text-muted-foreground">
-                {locale === 'pl' ? 'Na miejscu' : 'Dine-in'}: {dineInHours} | {locale === 'pl' ? 'Dostawa' : 'Delivery'}: {deliveryHours}
-              </span>
-            </div>
-
-            {/* Address */}
-            <div className="flex flex-col justify-center items-center space-y-1 md:border-x md:border-primary/20 px-4">
-              <span className="text-primary font-bold uppercase tracking-widest text-[10px] sm:text-xs">
-                {tNav('contact')} / Address
-              </span>
-              <span className="text-muted-foreground">{address}</span>
-            </div>
-
-            {/* Phone */}
-            <div className="flex flex-col justify-center items-center space-y-1">
-              <span className="text-primary font-bold uppercase tracking-widest text-[10px] sm:text-xs">
-                Telefon / Phone
-              </span>
-              <span className="text-muted-foreground font-bold">{phone}</span>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* 1. HERO & INFO STRIP SECTION (Redesigned matching mock-ups) */}
+      <HeroSection
+        heroTitle={heroTitle}
+        heroTitleAccent={heroTitleAccent}
+        heroSubhead={heroSubhead}
+        welcomeMessage={welcomeMessage}
+        alertBanner={alertBanner}
+        address={address}
+        phone={phone}
+        orderOnlineText={t('orderOnline')}
+        reserveTableText={t('reserveTable')}
+        viewMenuText={t('viewMenu')}
+        locale={locale}
+      />
 
       {/* 3. WHY NAMASTE */}
       <WhyChooseNamaste
