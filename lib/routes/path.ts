@@ -23,6 +23,7 @@ export const ROUTES = {
     reservations: '/admin/reservations',
     tables: '/admin/tables',
     menu: '/admin/menu',
+    users: '/admin/users',
     settings: {
       root: '/admin/settings',
       serviceHours: '/admin/settings/service-hours',
