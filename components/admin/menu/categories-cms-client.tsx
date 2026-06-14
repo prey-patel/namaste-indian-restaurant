@@ -82,8 +82,8 @@ export default function CategoriesCmsClient({ categories }: CategoriesCmsClientP
         <div className="lg:col-span-7 space-y-4">
           <GoldFrame className="overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-primary/10 text-left">
-                <thead className="bg-[#050B1E] text-[10px] uppercase tracking-wider text-primary font-bold">
+              <table className="min-w-full divide-y divide-border text-left">
+                <thead className="bg-muted/50 text-[10px] uppercase tracking-wider text-primary font-bold">
                   <tr>
                     <th className="px-6 py-4">Nazwa / Name</th>
                     <th className="px-6 py-4">Slug</th>
@@ -92,7 +92,7 @@ export default function CategoriesCmsClient({ categories }: CategoriesCmsClientP
                     <th className="px-6 py-4 text-right">Akcje / Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-primary/5 bg-[#070B1E]/40 text-xs">
+                <tbody className="divide-y divide-border bg-card/40 text-xs">
                   {categories.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
@@ -103,7 +103,7 @@ export default function CategoriesCmsClient({ categories }: CategoriesCmsClientP
                     categories.map((cat) => (
                       <tr
                         key={cat.id}
-                        className={`hover:bg-primary/5 transition-colors ${
+                        className={`hover:bg-muted/50 transition-colors ${
                           editingCategory?.id === cat.id ? 'bg-primary/10' : ''
                         }`}
                       >
@@ -129,13 +129,13 @@ export default function CategoriesCmsClient({ categories }: CategoriesCmsClientP
                         <td className="px-6 py-4 text-right space-x-2.5">
                           <button
                             onClick={() => setEditingCategory(cat)}
-                            className="text-primary hover:text-primary-foreground font-bold uppercase tracking-wider text-[10px]"
+                            className="text-primary hover:opacity-80 font-bold uppercase tracking-wider text-[10px]"
                           >
                             Edytuj / Edit
                           </button>
                           <button
                             onClick={() => setDeletingId(cat.id)}
-                            className="text-red-400 hover:text-red-300 font-bold uppercase tracking-wider text-[10px]"
+                            className="text-red-600 [.admin-theme_&]:text-red-700 hover:opacity-80 dark:text-red-400 font-bold uppercase tracking-wider text-[10px]"
                           >
                             {t('deleteButton')}
                           </button>
@@ -174,16 +174,16 @@ export default function CategoriesCmsClient({ categories }: CategoriesCmsClientP
 
       {/* Confirmation Modal */}
       {deletingId && (
-        <div className="fixed inset-0 bg-[#070B1E]/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-[#050B1E] border border-red-500/25 p-6 rounded-lg max-w-sm w-full space-y-4">
-            <h3 className="text-lg font-serif font-bold text-red-400">
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-card border border-red-500/30 [.admin-theme_&]:border-red-200 p-6 rounded-lg max-w-sm w-full space-y-4 text-foreground">
+            <h3 className="text-lg font-serif font-bold text-red-600 [.admin-theme_&]:text-red-800 dark:text-red-400">
               {t('confirmDeleteTitle')}
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
               {t('confirmDeleteDesc')}
             </p>
             {deleteError && (
-              <p className="text-xs text-red-400 bg-red-500/10 p-2 rounded text-center">
+              <p className="text-xs text-red-600 [.admin-theme_&]:text-red-800 dark:text-red-400 bg-red-500/10 p-2 rounded text-center">
                 {deleteError}
               </p>
             )}
@@ -203,7 +203,7 @@ export default function CategoriesCmsClient({ categories }: CategoriesCmsClientP
                   setDeletingId(null);
                   setDeleteError(null);
                 }}
-                className="flex-1 border-primary/20 hover:bg-primary/5 text-muted-foreground hover:text-foreground text-xs uppercase tracking-wider"
+                className="flex-1 border-border hover:bg-muted text-muted-foreground hover:text-foreground text-xs uppercase tracking-wider"
               >
                 {t('cancelButton')}
               </Button>

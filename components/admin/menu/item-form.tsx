@@ -155,13 +155,13 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start font-sans">
       
       {/* Form Area */}
-      <form onSubmit={handleSubmit} className="lg:col-span-8 space-y-6 bg-[#050B1E] p-6 border border-primary/20 rounded-lg">
-        <h3 className="text-xl font-serif font-bold text-primary border-b border-primary/10 pb-3">
+      <form onSubmit={handleSubmit} className="lg:col-span-8 space-y-6 bg-card p-6 border border-border rounded-lg">
+        <h3 className="text-xl font-serif font-bold text-primary border-b border-border pb-3">
           {initialData ? t('editItem') : t('createItem')}
         </h3>
 
         {error && (
-          <div className="p-3 text-xs bg-red-500/10 border border-red-500/30 rounded text-red-400 text-center">
+          <div className="p-3 text-xs bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded text-red-600 dark:text-red-400 text-center">
             {error}
           </div>
         )}
@@ -175,7 +175,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
             id="category"
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
-            className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/40"
+            className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           >
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
@@ -197,7 +197,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
               value={namePl}
               onChange={(e) => setNamePl(e.target.value)}
               required
-              className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/40"
+              className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
           </div>
 
@@ -211,7 +211,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
               value={nameEn}
               onChange={(e) => setNameEn(e.target.value)}
               required
-              className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/40"
+              className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
           </div>
         </div>
@@ -227,7 +227,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
               value={descriptionPl}
               onChange={(e) => setDescriptionPl(e.target.value)}
               rows={3}
-              className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/40 resize-none"
+              className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
             />
           </div>
 
@@ -240,7 +240,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
               value={descriptionEn}
               onChange={(e) => setDescriptionEn(e.target.value)}
               rows={3}
-              className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/40 resize-none"
+              className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
             />
           </div>
         </div>
@@ -259,7 +259,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
               onChange={(e) => setPrice(e.target.value)}
               required
               min="0"
-              className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/40"
+              className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
           </div>
 
@@ -274,7 +274,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
               onChange={(e) => setSortOrder(e.target.value)}
               required
               min="0"
-              className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/40"
+              className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
           </div>
 
@@ -290,7 +290,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
               value={spiciness}
               onChange={(e) => setSpiciness(e.target.value)}
               required
-              className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/40"
+              className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
           </div>
         </div>
@@ -306,12 +306,12 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
             value={allergensText}
             onChange={(e) => setAllergensText(e.target.value)}
             placeholder="np. nerkowce, gluten, nabiał / e.g. cashews, gluten, dairy"
-            className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/40"
+            className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
         </div>
 
         {/* Section: Image Uploader */}
-        <div className="space-y-1.5 border-t border-primary/10 pt-4">
+        <div className="space-y-1.5 border-t border-border pt-4">
           <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium block mb-2">
             {t('imageLabel')}
           </label>
@@ -319,7 +319,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
         </div>
 
         {/* Section: Dietary Flags */}
-        <div className="border-t border-primary/10 pt-4 space-y-3">
+        <div className="border-t border-border pt-4 space-y-3">
           <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium block">
             Cechy potrawy / Dietary & Promo Tags
           </span>
@@ -329,7 +329,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
                 type="checkbox"
                 checked={isVegetarian}
                 onChange={(e) => setIsVegetarian(e.target.checked)}
-                className="h-4 w-4 rounded border-primary/20 bg-[#070B1E] text-primary focus:ring-primary/40"
+                className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary"
               />
               <span>{t('vegetarianLabel')}</span>
             </label>
@@ -339,7 +339,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
                 type="checkbox"
                 checked={isVegan}
                 onChange={(e) => setIsVegan(e.target.checked)}
-                className="h-4 w-4 rounded border-primary/20 bg-[#070B1E] text-primary focus:ring-primary/40"
+                className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary"
               />
               <span>{t('veganLabel')}</span>
             </label>
@@ -349,7 +349,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
                 type="checkbox"
                 checked={isGlutenFree}
                 onChange={(e) => setIsGlutenFree(e.target.checked)}
-                className="h-4 w-4 rounded border-primary/20 bg-[#070B1E] text-primary focus:ring-primary/40"
+                className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary"
               />
               <span>{t('glutenFreeLabel')}</span>
             </label>
@@ -359,7 +359,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
                 type="checkbox"
                 checked={isChefSpecial}
                 onChange={(e) => setIsChefSpecial(e.target.checked)}
-                className="h-4 w-4 rounded border-primary/20 bg-[#070B1E] text-primary focus:ring-primary/40"
+                className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary"
               />
               <span>{t('chefSpecialLabel')}</span>
             </label>
@@ -369,7 +369,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
                 type="checkbox"
                 checked={isPopular}
                 onChange={(e) => setIsPopular(e.target.checked)}
-                className="h-4 w-4 rounded border-primary/20 bg-[#070B1E] text-primary focus:ring-primary/40"
+                className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary"
               />
               <span>{t('popularLabel')}</span>
             </label>
@@ -379,7 +379,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
                 type="checkbox"
                 checked={isNew}
                 onChange={(e) => setIsNew(e.target.checked)}
-                className="h-4 w-4 rounded border-primary/20 bg-[#070B1E] text-primary focus:ring-primary/40"
+                className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary"
               />
               <span>{t('newLabel')}</span>
             </label>
@@ -387,7 +387,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
         </div>
 
         {/* Section: Status (Available & Active) */}
-        <div className="border-t border-primary/10 pt-4 space-y-3">
+        <div className="border-t border-border pt-4 space-y-3">
           <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium block">
             Status Widoczności i Dostępności / Visibility & Availability
           </span>
@@ -397,7 +397,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
                 type="checkbox"
                 checked={isAvailable}
                 onChange={(e) => setIsAvailable(e.target.checked)}
-                className="h-4 w-4 rounded border-primary/20 bg-[#070B1E] text-primary focus:ring-primary/40"
+                className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary"
               />
               <span>{t('availableLabel')}</span>
             </label>
@@ -407,7 +407,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
                 type="checkbox"
                 checked={isActive}
                 onChange={(e) => setIsActive(e.target.checked)}
-                className="h-4 w-4 rounded border-primary/20 bg-[#070B1E] text-primary focus:ring-primary/40"
+                className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary"
               />
               <span>{t('activeLabel')}</span>
             </label>
@@ -415,7 +415,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
         </div>
 
         {/* Form Actions */}
-        <div className="flex space-x-3 pt-6 border-t border-primary/10">
+        <div className="flex space-x-3 pt-6 border-t border-border">
           <Button
             type="submit"
             disabled={loading}
@@ -427,7 +427,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
             type="button"
             variant="outline"
             onClick={() => router.push('/admin/menu')}
-            className="border-primary/20 hover:bg-primary/5 text-muted-foreground hover:text-foreground text-xs uppercase tracking-wide px-6"
+            className="border-border hover:bg-muted text-muted-foreground hover:text-foreground text-xs uppercase tracking-wide px-6"
           >
             {t('cancelButton')}
           </Button>

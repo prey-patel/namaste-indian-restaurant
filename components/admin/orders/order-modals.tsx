@@ -63,20 +63,20 @@ export function ConfirmOrderModal({ isOpen, onClose, orderType, onSubmit, title 
       <div 
         ref={modalRef}
         tabIndex={-1}
-        className="bg-[#050B1E] border border-primary/20 rounded-lg max-w-md w-full p-6 space-y-4 shadow-2xl relative animate-scale-in focus:outline-none text-left"
+        className="bg-card border border-border rounded-lg max-w-md w-full p-6 space-y-4 shadow-2xl relative animate-scale-in focus:outline-none text-left text-foreground"
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirm-modal-title"
       >
         {/* Header */}
-        <div className="flex justify-between items-center border-b border-primary/10 pb-3">
+        <div className="flex justify-between items-center border-b border-border pb-3">
           <h3 id="confirm-modal-title" className="text-lg font-serif font-bold text-primary">
             {modalTitle}
           </h3>
           <button 
             type="button" 
             onClick={onClose}
-            className="text-muted-foreground/60 hover:text-foreground p-1 transition-colors"
+            className="text-muted-foreground hover:text-foreground p-1 transition-colors"
             aria-label="Close dialog"
           >
             <X className="w-4 h-4" />
@@ -102,7 +102,7 @@ export function ConfirmOrderModal({ isOpen, onClose, orderType, onSubmit, title 
                   className={`py-2 text-xs font-semibold rounded border transition-all ${
                     !useCustom && selectedMins === opt
                       ? 'bg-gradient-to-r from-amber-500 to-amber-600 border-amber-600 text-white shadow-md'
-                      : 'bg-[#070B1E] border-primary/10 text-muted-foreground hover:text-foreground hover:border-primary/20'
+                      : 'bg-background border-border text-muted-foreground hover:text-foreground hover:border-primary'
                   }`}
                 >
                   {opt} min
@@ -118,7 +118,7 @@ export function ConfirmOrderModal({ isOpen, onClose, orderType, onSubmit, title 
                 className={`text-xs font-semibold px-3 py-1.5 rounded border transition-all ${
                   useCustom
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 border-amber-600 text-white'
-                    : 'bg-[#070B1E] border-primary/10 text-muted-foreground hover:text-foreground'
+                    : 'bg-background border-border text-muted-foreground hover:text-foreground'
                 }`}
               >
                 Custom duration
@@ -136,23 +136,23 @@ export function ConfirmOrderModal({ isOpen, onClose, orderType, onSubmit, title 
                   placeholder="Enter minutes (1-360)"
                   value={customMins}
                   onChange={(e) => setCustomMins(e.target.value)}
-                  className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary/35 font-mono"
+                  className="w-full bg-background border border-border rounded px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-mono"
                   aria-label="Custom minutes duration"
                 />
               </div>
             )}
           </div>
 
-          <div className="p-3 bg-primary/5 border border-primary/15 rounded text-[11px] leading-relaxed text-primary/80">
+          <div className="p-3 bg-primary/5 border border-primary/20 rounded text-[11px] leading-relaxed text-primary/80">
             Confirming this order sets its status to <strong className="text-foreground">Confirmed</strong> and commits to the estimated time target.
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-2.5 pt-2 border-t border-primary/10">
+          <div className="flex justify-end gap-2.5 pt-2 border-t border-border">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-primary/15 bg-transparent hover:bg-primary/5 text-muted-foreground text-xs uppercase tracking-wider rounded font-bold transition-colors"
+              className="px-4 py-2 border border-border bg-transparent hover:bg-muted text-muted-foreground text-xs uppercase tracking-wider rounded font-bold transition-colors"
             >
               Cancel
             </button>
@@ -206,20 +206,20 @@ export function RejectOrderModal({ isOpen, onClose, onSubmit }: RejectOrderModal
       <div 
         ref={modalRef}
         tabIndex={-1}
-        className="bg-[#050B1E] border border-red-500/20 rounded-lg max-w-md w-full p-6 space-y-4 shadow-2xl relative animate-scale-in focus:outline-none text-left"
+        className="bg-card border border-red-500/30 [.admin-theme_&]:border-red-200 rounded-lg max-w-md w-full p-6 space-y-4 shadow-2xl relative animate-scale-in focus:outline-none text-left text-foreground"
         role="dialog"
         aria-modal="true"
         aria-labelledby="reject-modal-title"
       >
         <div className="flex justify-between items-center border-b border-red-500/10 pb-3">
-          <h3 id="reject-modal-title" className="text-lg font-serif font-bold text-red-400 flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-red-400" />
+          <h3 id="reject-modal-title" className="text-lg font-serif font-bold text-red-600 [.admin-theme_&]:text-red-800 dark:text-red-400 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-red-500 [.admin-theme_&]:text-red-700 dark:text-red-400" />
             Reject Order Request
           </h3>
           <button 
             type="button" 
             onClick={onClose}
-            className="text-muted-foreground/60 hover:text-foreground p-1 transition-colors"
+            className="text-muted-foreground hover:text-foreground p-1 transition-colors"
             aria-label="Close dialog"
           >
             <X className="w-4 h-4" />
@@ -238,19 +238,19 @@ export function RejectOrderModal({ isOpen, onClose, onSubmit }: RejectOrderModal
               placeholder="e.g. Unfortunately we are out of ingredients for major items in your order..."
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-xs text-foreground focus:outline-none focus:border-red-500/35 resize-none"
+              className="w-full bg-background border border-border rounded px-3 py-2 text-xs text-foreground focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 resize-none"
             />
           </div>
 
-          <div className="p-3 bg-red-500/5 border border-red-500/10 rounded text-[11px] leading-relaxed text-red-300/80">
+          <div className="p-3 bg-red-500/5 border border-red-500/10 rounded text-[11px] leading-relaxed text-red-600 [.admin-theme_&]:text-red-800 dark:text-red-300/80">
             Warning: Rejecting this order is irreversible and will send a cancellation/rejection update to the customer tracking interface.
           </div>
 
-          <div className="flex justify-end gap-2.5 pt-2 border-t border-primary/10">
+          <div className="flex justify-end gap-2.5 pt-2 border-t border-border">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-primary/15 bg-transparent hover:bg-primary/5 text-muted-foreground text-xs uppercase tracking-wider rounded font-bold transition-colors"
+              className="px-4 py-2 border border-border bg-transparent hover:bg-muted text-muted-foreground text-xs uppercase tracking-wider rounded font-bold transition-colors"
             >
               Cancel
             </button>
@@ -304,20 +304,20 @@ export function CancelOrderModal({ isOpen, onClose, onSubmit }: CancelOrderModal
       <div 
         ref={modalRef}
         tabIndex={-1}
-        className="bg-[#050B1E] border border-red-500/20 rounded-lg max-w-md w-full p-6 space-y-4 shadow-2xl relative animate-scale-in focus:outline-none text-left"
+        className="bg-card border border-red-500/30 [.admin-theme_&]:border-red-200 rounded-lg max-w-md w-full p-6 space-y-4 shadow-2xl relative animate-scale-in focus:outline-none text-left text-foreground"
         role="dialog"
         aria-modal="true"
         aria-labelledby="cancel-modal-title"
       >
         <div className="flex justify-between items-center border-b border-red-500/10 pb-3">
-          <h3 id="cancel-modal-title" className="text-lg font-serif font-bold text-red-400 flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-red-400" />
+          <h3 id="cancel-modal-title" className="text-lg font-serif font-bold text-red-600 [.admin-theme_&]:text-red-800 dark:text-red-400 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-red-500 [.admin-theme_&]:text-red-700 dark:text-red-400" />
             Cancel Active Order
           </h3>
           <button 
             type="button" 
             onClick={onClose}
-            className="text-muted-foreground/60 hover:text-foreground p-1 transition-colors"
+            className="text-muted-foreground hover:text-foreground p-1 transition-colors"
             aria-label="Close dialog"
           >
             <X className="w-4 h-4" />
@@ -336,15 +336,15 @@ export function CancelOrderModal({ isOpen, onClose, onSubmit }: CancelOrderModal
               placeholder="e.g. Courier transport issue or customer requested cancellation..."
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-xs text-foreground focus:outline-none focus:border-red-500/35 resize-none"
+              className="w-full bg-background border border-border rounded px-3 py-2 text-xs text-foreground focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 resize-none"
             />
           </div>
 
-          <div className="flex justify-end gap-2.5 pt-2 border-t border-primary/10">
+          <div className="flex justify-end gap-2.5 pt-2 border-t border-border">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-primary/15 bg-transparent hover:bg-primary/5 text-muted-foreground text-xs uppercase tracking-wider rounded font-bold transition-colors"
+              className="px-4 py-2 border border-border bg-transparent hover:bg-muted text-muted-foreground text-xs uppercase tracking-wider rounded font-bold transition-colors"
             >
               Back
             </button>
@@ -416,20 +416,20 @@ export function CompleteOrderModal({ isOpen, onClose, onSubmit }: CompleteOrderM
       <div 
         ref={modalRef}
         tabIndex={-1}
-        className="bg-[#050B1E] border border-green-500/20 rounded-lg max-w-md w-full p-6 space-y-4 shadow-2xl relative animate-scale-in focus:outline-none text-left"
+        className="bg-card border border-green-500/30 [.admin-theme_&]:border-green-200 rounded-lg max-w-md w-full p-6 space-y-4 shadow-2xl relative animate-scale-in focus:outline-none text-left text-foreground"
         role="dialog"
         aria-modal="true"
         aria-labelledby="complete-modal-title"
       >
         <div className="flex justify-between items-center border-b border-green-500/10 pb-3">
-          <h3 id="complete-modal-title" className="text-lg font-serif font-bold text-green-400 flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-green-400" />
+          <h3 id="complete-modal-title" className="text-lg font-serif font-bold text-green-600 [.admin-theme_&]:text-green-800 dark:text-green-400 flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-green-500 [.admin-theme_&]:text-green-700 dark:text-green-400" />
             Complete Order
           </h3>
           <button 
             type="button" 
             onClick={onClose}
-            className="text-muted-foreground/60 hover:text-foreground p-1 transition-colors"
+            className="text-muted-foreground hover:text-foreground p-1 transition-colors"
             aria-label="Close dialog"
           >
             <X className="w-4 h-4" />
@@ -441,12 +441,12 @@ export function CompleteOrderModal({ isOpen, onClose, onSubmit }: CompleteOrderM
             You are marking this order request as completed. This moves the order into its final archive state.
           </p>
 
-          <label className="flex items-center gap-3 p-3.5 bg-[#070B1E] border border-primary/15 rounded cursor-pointer hover:border-primary/30 select-none transition-colors">
+          <label className="flex items-center gap-3 p-3.5 bg-background border border-border rounded cursor-pointer hover:border-primary select-none transition-colors">
             <input
               type="checkbox"
               checked={paymentReceived}
               onChange={(e) => setPaymentReceived(e.target.checked)}
-              className="h-4 w-4 border-primary/20 bg-primary/10 text-primary focus:ring-primary/45 rounded cursor-pointer"
+              className="h-4 w-4 border-border bg-background text-primary focus:ring-primary rounded cursor-pointer"
             />
             <span className="text-xs font-semibold text-foreground">
               Confirm payment was received (Marks payment status as paid)
@@ -457,11 +457,11 @@ export function CompleteOrderModal({ isOpen, onClose, onSubmit }: CompleteOrderM
             * If unchecked, the order payment status will remain pending.
           </p>
 
-          <div className="flex justify-end gap-2.5 pt-2 border-t border-primary/10">
+          <div className="flex justify-end gap-2.5 pt-2 border-t border-border">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-primary/15 bg-transparent hover:bg-primary/5 text-muted-foreground text-xs uppercase tracking-wider rounded font-bold transition-colors"
+              className="px-4 py-2 border border-border bg-transparent hover:bg-muted text-muted-foreground text-xs uppercase tracking-wider rounded font-bold transition-colors"
             >
               Cancel
             </button>

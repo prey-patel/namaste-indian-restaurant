@@ -12,7 +12,7 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
 
   if (isLoginPage) {
     return (
-      <div className="min-h-screen bg-[#070B1E] flex items-center justify-center">
+      <div className="min-h-screen admin-theme bg-background text-foreground flex items-center justify-center">
         {children}
       </div>
     );
@@ -30,11 +30,11 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
   }
 
   return (
-    <div className="flex w-full min-h-screen">
+    <div className="flex w-full min-h-screen admin-theme bg-background text-foreground">
       <AdminSidebar />
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         <AdminTopbar />
-        <main className="flex-1 p-8 overflow-y-auto bg-[#070B1E]">
+        <main className="flex-1 p-8 overflow-y-auto bg-background">
           {children}
         </main>
       </div>

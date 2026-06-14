@@ -72,7 +72,7 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleLogin} className="space-y-4 font-sans text-left">
       {error && (
-        <div className="p-3 text-xs bg-red-500/10 border border-red-500/30 rounded text-red-400 text-center leading-relaxed">
+        <div className="p-3 text-xs bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded text-red-600 dark:text-red-400 text-center leading-relaxed">
           {error}
         </div>
       )}
@@ -88,7 +88,7 @@ export default function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
           required
           placeholder="admin@namaste.com"
-          className="w-full bg-[#0a0f26]/60 border border-primary/20 rounded px-3 py-2 text-sm text-foreground placeholder-muted-foreground/30 focus:outline-none focus:border-primary/50 transition-colors"
+          className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground placeholder-muted-foreground/45 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
         />
       </div>
 
@@ -103,7 +103,7 @@ export default function LoginForm() {
           onChange={(e) => setPassword(e.target.value)}
           required
           placeholder="••••••••"
-          className="w-full bg-[#0a0f26]/60 border border-primary/20 rounded px-3 py-2 text-sm text-foreground placeholder-muted-foreground/30 focus:outline-none focus:border-primary/50 transition-colors"
+          className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground placeholder-muted-foreground/45 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
         />
       </div>
 

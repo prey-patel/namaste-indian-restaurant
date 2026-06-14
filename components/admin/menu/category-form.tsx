@@ -94,13 +94,13 @@ export default function CategoryForm({ initialData, onSuccess }: CategoryFormPro
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 font-sans text-left bg-[#050B1E] p-6 border border-primary/20 rounded-lg max-w-lg w-full">
+    <form onSubmit={handleSubmit} className="space-y-4 font-sans text-left bg-card p-6 border border-border rounded-lg max-w-lg w-full">
       <h3 className="text-lg font-serif font-bold text-primary mb-2">
         {initialData ? t('editCategory') : t('createCategory')}
       </h3>
 
       {error && (
-        <div className="p-3 text-xs bg-red-500/10 border border-red-500/30 rounded text-red-400 text-center">
+        <div className="p-3 text-xs bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded text-red-600 dark:text-red-400 text-center">
           {error}
         </div>
       )}
@@ -116,7 +116,7 @@ export default function CategoryForm({ initialData, onSuccess }: CategoryFormPro
             value={namePl}
             onChange={(e) => setNamePl(e.target.value)}
             required
-            className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/40"
+            className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
         </div>
 
@@ -130,7 +130,7 @@ export default function CategoryForm({ initialData, onSuccess }: CategoryFormPro
             value={nameEn}
             onChange={(e) => handleNameEnChange(e.target.value)}
             required
-            className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/40"
+            className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
         </div>
       </div>
@@ -146,7 +146,7 @@ export default function CategoryForm({ initialData, onSuccess }: CategoryFormPro
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
             required
-            className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/40"
+            className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
         </div>
 
@@ -161,7 +161,7 @@ export default function CategoryForm({ initialData, onSuccess }: CategoryFormPro
             onChange={(e) => setDisplayOrder(e.target.value)}
             required
             min="0"
-            className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/40"
+            className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
         </div>
       </div>
@@ -172,14 +172,14 @@ export default function CategoryForm({ initialData, onSuccess }: CategoryFormPro
           type="checkbox"
           checked={isActive}
           onChange={(e) => setIsActive(e.target.checked)}
-          className="h-4 w-4 rounded border-primary/20 bg-[#070B1E] text-primary focus:ring-primary/40"
+          className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary"
         />
         <label htmlFor="is_active" className="text-sm font-medium text-foreground cursor-pointer">
           {t('activeLabel')}
         </label>
       </div>
 
-      <div className="flex space-x-3 pt-4 border-t border-primary/10">
+      <div className="flex space-x-3 pt-4 border-t border-border">
         <Button
           type="submit"
           disabled={loading}

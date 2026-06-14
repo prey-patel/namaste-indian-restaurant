@@ -252,10 +252,10 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
   return (
     <div className="space-y-6 font-sans relative">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-primary/10 pb-5 gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-border pb-5 gap-4">
         <div className="flex items-center gap-3">
           <Link href="/admin/orders">
-            <Button className="border border-primary/20 bg-[#070B1E] text-muted-foreground hover:text-foreground text-xs p-2.5">
+            <Button className="border border-border bg-background text-muted-foreground hover:text-foreground text-xs p-2.5">
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>
@@ -276,12 +276,12 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
 
       {/* Alerts */}
       {errorMessage && (
-        <div className="p-3 text-xs bg-red-500/10 border border-red-500/30 rounded text-red-400 text-center leading-relaxed">
+        <div className="p-3 text-xs bg-red-500/10 border border-red-500/30 rounded text-red-600 [.admin-theme_&]:text-red-800 dark:text-red-400 text-center leading-relaxed">
           {errorMessage}
         </div>
       )}
       {successMessage && (
-        <div className="p-3 text-xs bg-green-500/10 border border-green-500/30 rounded text-green-400 text-center leading-relaxed">
+        <div className="p-3 text-xs bg-green-500/10 border border-green-500/30 rounded text-green-600 [.admin-theme_&]:text-green-800 dark:text-green-400 text-center leading-relaxed">
           {successMessage}
         </div>
       )}
@@ -298,14 +298,14 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
         {/* Left Column — Customer + Items (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
           {/* Customer Details */}
-          <PremiumCard hoverable={false} className="border-primary/20 bg-[#050B1E]/60 p-6 space-y-5">
-            <h3 className="text-lg font-serif font-bold text-primary tracking-wide border-b border-primary/20 pb-2">
+          <PremiumCard hoverable={false} className="border-border bg-card p-6 space-y-5">
+            <h3 className="text-lg font-serif font-bold text-primary tracking-wide border-b border-border pb-2">
               {t('customerDetails')}
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Name */}
-              <div className="p-3.5 bg-[#070B1E] border border-primary/10 rounded-lg flex gap-3 items-center">
+              <div className="p-3.5 bg-background border border-border rounded-lg flex gap-3 items-center">
                 <div className="w-9 h-9 rounded-full bg-primary/5 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0">
                   <User className="w-4 h-4" />
                 </div>
@@ -320,7 +320,7 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
               </div>
 
               {/* Phone */}
-              <div className="p-3.5 bg-[#070B1E] border border-primary/10 rounded-lg flex gap-3 items-center">
+              <div className="p-3.5 bg-background border border-border rounded-lg flex gap-3 items-center">
                 <div className="w-9 h-9 rounded-full bg-primary/5 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0">
                   <Phone className="w-4 h-4" />
                 </div>
@@ -335,8 +335,8 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
               </div>
 
               {/* Email */}
-              <div className="p-3.5 bg-[#070B1E] border border-primary/10 rounded-lg flex gap-3 items-center">
-                <div className="w-9 h-9 rounded-full bg-primary/5 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0">
+              <div className="p-3.5 bg-background border border-border rounded-lg flex gap-3 items-center">
+                <div className="w-9 h-9 rounded-full bg-primary/5 border border-border flex items-center justify-center text-primary flex-shrink-0">
                   <Mail className="w-4 h-4" />
                 </div>
                 <div>
@@ -350,8 +350,8 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
               </div>
 
               {/* Order Type */}
-              <div className="p-3.5 bg-[#070B1E] border border-primary/10 rounded-lg flex gap-3 items-center">
-                <div className="w-9 h-9 rounded-full bg-primary/5 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0">
+              <div className="p-3.5 bg-background border border-border rounded-lg flex gap-3 items-center">
+                <div className="w-9 h-9 rounded-full bg-primary/5 border border-border flex items-center justify-center text-primary flex-shrink-0">
                   <ShoppingBag className="w-4 h-4" />
                 </div>
                 <div>
@@ -367,8 +367,8 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
 
             {/* Delivery Address (if delivery) */}
             {order.order_type === 'delivery' && (
-              <div className="p-4 bg-[#070B1E] border border-primary/10 rounded-lg flex gap-3 items-start">
-                <div className="w-9 h-9 rounded-full bg-primary/5 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0 mt-0.5">
+              <div className="p-4 bg-background border border-border rounded-lg flex gap-3 items-start">
+                <div className="w-9 h-9 rounded-full bg-primary/5 border border-border flex items-center justify-center text-primary flex-shrink-0 mt-0.5">
                   <MapPin className="w-4 h-4" />
                 </div>
                 <div>
@@ -387,8 +387,8 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
 
             {/* Payment */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-3.5 bg-[#070B1E] border border-primary/10 rounded-lg flex gap-3 items-center">
-                <div className="w-9 h-9 rounded-full bg-primary/5 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0">
+              <div className="p-3.5 bg-background border border-border rounded-lg flex gap-3 items-center">
+                <div className="w-9 h-9 rounded-full bg-primary/5 border border-border flex items-center justify-center text-primary flex-shrink-0">
                   <CreditCard className="w-4 h-4" />
                 </div>
                 <div>
@@ -401,11 +401,11 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
                 </div>
               </div>
 
-              <div className="p-3.5 bg-[#070B1E] border border-primary/10 rounded-lg flex gap-3 items-center">
+              <div className="p-3.5 bg-background border border-border rounded-lg flex gap-3 items-center">
                 <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
                   order.payment_status === 'paid'
-                    ? 'bg-green-500/10 border border-green-500/20 text-green-400'
-                    : 'bg-yellow-500/10 border border-yellow-500/20 text-yellow-500'
+                    ? 'bg-green-500/10 border border-border text-green-400'
+                    : 'bg-yellow-500/10 border border-border text-yellow-500'
                 }`}>
                   {order.payment_status === 'paid' ? (
                     <CheckCircle className="w-4 h-4" />
@@ -417,8 +417,8 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
                   <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block">
                     {t('paymentStatus')}
                   </span>
-                  <span className={`text-sm font-bold uppercase tracking-wider ${
-                    order.payment_status === 'paid' ? 'text-green-400' : 'text-yellow-500'
+                   <span className={`text-sm font-bold uppercase tracking-wider ${
+                    order.payment_status === 'paid' ? 'text-green-600 [.admin-theme_&]:text-green-800 dark:text-green-400' : 'text-yellow-600 [.admin-theme_&]:text-yellow-800 dark:text-yellow-400'
                   }`}>
                     {order.payment_status}
                   </span>
@@ -428,7 +428,7 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
 
             {/* Customer Notes */}
             {order.customer_notes && (
-              <div className="p-4 bg-[#070B1E] border border-primary/10 rounded-lg flex gap-3 items-start">
+              <div className="p-4 bg-background border border-border rounded-lg flex gap-3 items-start sm:col-span-2">
                 <div className="w-9 h-9 rounded-full bg-primary/5 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0 mt-0.5">
                   <MessageSquare className="w-4 h-4" />
                 </div>
@@ -509,8 +509,8 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
           </PremiumCard>
 
           {/* Order Items */}
-          <PremiumCard hoverable={false} className="border-primary/20 bg-[#050B1E]/60 p-6 space-y-5">
-            <h3 className="text-lg font-serif font-bold text-primary tracking-wide border-b border-primary/20 pb-2">
+          <PremiumCard hoverable={false} className="border-border bg-card p-6 space-y-5">
+            <h3 className="text-lg font-serif font-bold text-primary tracking-wide border-b border-border pb-2">
               {t('items')} ({items.length})
             </h3>
 
@@ -518,7 +518,7 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex justify-between items-start gap-4 p-3.5 bg-[#070B1E] border border-primary/5 rounded text-xs"
+                  className="flex justify-between items-start gap-4 p-3.5 bg-background border border-border rounded text-xs"
                 >
                   <div className="space-y-1">
                     <span className="font-semibold text-foreground text-sm">
@@ -551,7 +551,7 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
             </div>
 
             {/* Pricing Summary */}
-            <div className="space-y-3 pt-4 border-t border-primary/10 text-xs">
+            <div className="space-y-3 pt-4 border-t border-border text-xs">
               <h4 className="text-sm font-bold uppercase tracking-wider text-primary">
                 {t('pricingSummary')}
               </h4>
@@ -583,7 +583,7 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
                 </div>
               )}
 
-              <div className="flex justify-between text-foreground font-bold text-sm pt-3 border-t border-primary/15">
+              <div className="flex justify-between text-foreground font-bold text-sm pt-3 border-t border-border">
                 <span>{isDeliveryUnresolved ? t('estimatedTotal') : t('finalTotal')}</span>
                 <span className="text-primary font-mono text-base font-bold">
                   {Number(order.total_amount).toFixed(2)} PLN
@@ -596,8 +596,8 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
         {/* Right Column — Timeline + Actions (5 cols) */}
         <div className="lg:col-span-5 space-y-6">
           {/* Action Buttons */}
-          <PremiumCard hoverable={false} className="border-primary/20 bg-[#050B1E]/60 p-6 space-y-4">
-            <h3 className="text-lg font-serif font-bold text-primary tracking-wide border-b border-primary/20 pb-2">
+          <PremiumCard hoverable={false} className="border-border bg-card p-6 space-y-4">
+            <h3 className="text-lg font-serif font-bold text-primary tracking-wide border-b border-border pb-2">
               {t('actions')}
             </h3>
 
@@ -688,12 +688,12 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
           </PremiumCard>
 
           {/* Timeline */}
-          <PremiumCard hoverable={false} className="border-primary/20 bg-[#050B1E]/45 p-6 space-y-6">
-            <h3 className="text-lg font-serif font-bold text-primary tracking-wide border-b border-primary/20 pb-2">
+          <PremiumCard hoverable={false} className="border-border bg-card p-6 space-y-6">
+            <h3 className="text-lg font-serif font-bold text-primary tracking-wide border-b border-border pb-2">
               {t('orderTimeline')}
             </h3>
 
-            <div className="relative pl-6 space-y-6 border-l border-primary/15 py-1">
+            <div className="relative pl-6 space-y-6 border-l border-border py-1">
               {timeline.map((event, idx) => {
                 const eventMappedStatus =
                   event.status === 'approved' ? 'confirmed' : event.status;
@@ -744,7 +744,7 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
           </PremiumCard>
 
           {/* Order Reference Info */}
-          <PremiumCard hoverable={false} className="border-primary/20 bg-[#050B1E]/60 p-6 space-y-3">
+          <PremiumCard hoverable={false} className="border-border bg-card p-6 space-y-3">
             <h3 className="text-sm font-bold uppercase tracking-wider text-primary">
               {t('orderRef')}
             </h3>

@@ -7,7 +7,7 @@ type GoldFrameProps = {
 
 export default function GoldFrame({ children, className = '' }: GoldFrameProps) {
   return (
-    <div className={`relative p-4 border border-primary/10 rounded-lg bg-[#0A1128]/45 ${className}`}>
+    <div className={`relative p-4 border border-border rounded-lg bg-card ${className}`}>
       {/* Decorative Gold corner brackets representing premium Indian hospitality */}
       <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-primary rounded-tl-sm pointer-events-none" />
       <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-primary rounded-tr-sm pointer-events-none" />
@@ -15,7 +15,7 @@ export default function GoldFrame({ children, className = '' }: GoldFrameProps) 
       <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-primary rounded-br-sm pointer-events-none" />
       
       {/* Inner containment */}
-      <div className="relative border border-primary/5 rounded p-2 bg-[#070B1E]/60 overflow-hidden">
+      <div className="relative border border-border rounded p-2 bg-background overflow-hidden text-foreground">
         {children}
       </div>
     </div>

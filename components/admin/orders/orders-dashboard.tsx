@@ -206,7 +206,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
     <div className="space-y-6 font-sans relative">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-primary/10 pb-5 gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-border pb-5 gap-4">
         <div>
           <h1 className="text-3xl font-serif font-bold text-primary">{t('title')}</h1>
           <p className="text-xs text-muted-foreground mt-1">Manage, confirm, and update customer order workflows</p>
@@ -214,7 +214,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
         <div className="flex gap-2">
           <Button 
             onClick={() => router.refresh()}
-            className="border border-primary/20 bg-[#070B1E] text-muted-foreground hover:text-foreground text-xs p-2.5 flex items-center gap-1.5"
+            className="border border-border bg-background text-muted-foreground hover:text-foreground text-xs p-2.5 flex items-center gap-1.5"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isPending ? 'animate-spin' : ''}`} />
             Refresh
@@ -224,53 +224,53 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
 
       {/* Alerts */}
       {errorMessage && (
-        <div className="p-3 text-xs bg-red-500/10 border border-red-500/30 rounded text-red-400 text-center leading-relaxed">
+        <div className="p-3 text-xs bg-red-500/10 border border-red-500/30 rounded text-red-600 [.admin-theme_&]:text-red-800 dark:text-red-400 text-center leading-relaxed">
           {errorMessage}
         </div>
       )}
       {successMessage && (
-        <div className="p-3 text-xs bg-green-500/10 border border-green-500/30 rounded text-green-400 text-center leading-relaxed">
+        <div className="p-3 text-xs bg-green-500/10 border border-green-500/30 rounded text-green-600 [.admin-theme_&]:text-green-800 dark:text-green-400 text-center leading-relaxed">
           {successMessage}
         </div>
       )}
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <PremiumCard hoverable={false} className="border-yellow-500/20 bg-yellow-500/5">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/85 mb-1">
+        <PremiumCard hoverable={false} className="border-yellow-500/25 bg-yellow-500/5 [.admin-theme_&]:border-yellow-300/60 [.admin-theme_&]:bg-yellow-50/50">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
             {t('pendingCount')}
           </p>
-          <p className="text-3xl font-bold text-yellow-400 font-serif">{metrics.pendingCount}</p>
+          <p className="text-3xl font-bold text-yellow-600 [.admin-theme_&]:text-yellow-800 dark:text-yellow-400 font-serif">{metrics.pendingCount}</p>
         </PremiumCard>
 
-        <PremiumCard hoverable={false} className="border-green-500/20 bg-green-500/5">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/85 mb-1">
+        <PremiumCard hoverable={false} className="border-green-500/25 bg-green-500/5 [.admin-theme_&]:border-green-300/60 [.admin-theme_&]:bg-green-50/50">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
             {t('confirmedCount')}
           </p>
-          <p className="text-3xl font-bold text-green-400 font-serif">{metrics.confirmedCount}</p>
+          <p className="text-3xl font-bold text-green-600 [.admin-theme_&]:text-green-800 dark:text-green-400 font-serif">{metrics.confirmedCount}</p>
         </PremiumCard>
 
-        <PremiumCard hoverable={false} className="border-primary/20 bg-primary/5">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/85 mb-1">
+        <PremiumCard hoverable={false} className="border-primary/25 bg-primary/5 [.admin-theme_&]:border-primary/30/60 [.admin-theme_&]:bg-primary/5/50">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
             {t('readyCount')}
           </p>
           <p className="text-3xl font-bold text-primary font-serif">{metrics.readyCount}</p>
         </PremiumCard>
 
-        <PremiumCard hoverable={false} className="border-orange-500/20 bg-orange-500/5">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/85 mb-1">
+        <PremiumCard hoverable={false} className="border-orange-500/25 bg-orange-500/5 [.admin-theme_&]:border-orange-300/60 [.admin-theme_&]:bg-orange-50/50">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
             {t('completedCount')}
           </p>
-          <p className="text-3xl font-bold text-orange-400 font-serif">{metrics.completedCount}</p>
+          <p className="text-3xl font-bold text-orange-600 [.admin-theme_&]:text-orange-800 dark:text-orange-400 font-serif">{metrics.completedCount}</p>
         </PremiumCard>
       </div>
 
       {/* Filters bar */}
-      <div className="flex flex-col lg:flex-row gap-4 p-4 bg-[#050B1E] border border-primary/10 rounded-lg items-end lg:items-center">
+      <div className="flex flex-col lg:flex-row gap-4 p-4 bg-card border border-border rounded-lg items-end lg:items-center">
         
         {/* Search */}
         <div className="w-full lg:w-72 relative space-y-1">
-          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 font-semibold block">Search Request</span>
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/75 font-semibold block">Search Request</span>
           <div className="relative">
             <input
               type="text"
@@ -278,21 +278,21 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={handleSearchKeyDown}
-              className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary/35"
+              className="w-full bg-background border border-border rounded px-3 py-2 text-xs text-foreground placeholder-muted-foreground/60 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
           </div>
         </div>
 
         {/* Status */}
         <div className="w-full lg:w-44 space-y-1">
-          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 font-semibold block">{t('filterStatus')}</span>
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/75 font-semibold block">{t('filterStatus')}</span>
           <select
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value);
               applyFilters(e.target.value, typeFilter, dateFilter, search);
             }}
-            className="w-full bg-[#070B1E] border border-primary/10 rounded px-2.5 py-2 text-xs text-foreground cursor-pointer focus:outline-none focus:border-primary/35"
+            className="w-full bg-background border border-border rounded px-2.5 py-2 text-xs text-foreground cursor-pointer focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           >
             <option value="all">All statuses</option>
             <option value="pending">Pending confirmation</option>
@@ -308,14 +308,14 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
 
         {/* Type */}
         <div className="w-full lg:w-36 space-y-1">
-          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 font-semibold block">{t('filterType')}</span>
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/75 font-semibold block">{t('filterType')}</span>
           <select
             value={typeFilter}
             onChange={(e) => {
               setTypeFilter(e.target.value);
               applyFilters(statusFilter, e.target.value, dateFilter, search);
             }}
-            className="w-full bg-[#070B1E] border border-primary/10 rounded px-2.5 py-2 text-xs text-foreground cursor-pointer focus:outline-none focus:border-primary/35"
+            className="w-full bg-background border border-border rounded px-2.5 py-2 text-xs text-foreground cursor-pointer focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           >
             <option value="all">All types</option>
             <option value="takeaway">Takeaway</option>
@@ -325,7 +325,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
 
         {/* Date */}
         <div className="w-full lg:w-40 space-y-1">
-          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 font-semibold block">{t('filterDate')}</span>
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/75 font-semibold block">{t('filterDate')}</span>
           <input
             type="date"
             value={dateFilter}
@@ -333,7 +333,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
               setDateFilter(e.target.value);
               applyFilters(statusFilter, typeFilter, e.target.value, search);
             }}
-            className="w-full bg-[#070B1E] border border-primary/10 rounded px-2.5 py-2 text-xs text-foreground cursor-pointer focus:outline-none focus:border-primary/35"
+            className="w-full bg-background border border-border rounded px-2.5 py-2 text-xs text-foreground cursor-pointer focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
         </div>
 
@@ -341,13 +341,13 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
         <div className="flex gap-2 w-full lg:w-auto pt-2 lg:pt-0 justify-end lg:ml-auto">
           <Button
             onClick={() => applyFilters(statusFilter, typeFilter, dateFilter, search)}
-            className="bg-primary/20 hover:bg-primary/30 text-primary font-bold text-xs uppercase tracking-wider px-4 py-2"
+            className="bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs uppercase tracking-wider px-4 py-2 border border-primary/20"
           >
             Filter
           </Button>
           <Button
             onClick={handleResetFilters}
-            className="border border-primary/15 bg-transparent hover:bg-primary/5 text-muted-foreground text-xs uppercase tracking-wider px-4 py-2"
+            className="border border-border bg-transparent hover:bg-muted text-muted-foreground text-xs uppercase tracking-wider px-4 py-2"
           >
             Reset
           </Button>
@@ -356,13 +356,13 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
       </div>
 
       {/* Grid / Table */}
-      <div className="bg-[#050B1E] border border-primary/10 rounded-lg overflow-hidden">
+      <div className="bg-card border border-border rounded-lg overflow-hidden">
         
         {/* Desktop Table */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-primary/15 bg-primary/5 text-muted-foreground uppercase tracking-widest text-[9px] font-bold">
+              <tr className="border-b border-border bg-muted/50 text-muted-foreground uppercase tracking-widest text-[9px] font-bold">
                 <th className="p-4">{t('customer')}</th>
                 <th className="p-4">{t('type')}</th>
                 <th className="p-4">{t('payment')}</th>
@@ -372,7 +372,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                 <th className="p-4 text-right">{t('actions')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-primary/5">
+            <tbody className="divide-y divide-border">
               {initialOrders.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-muted-foreground/60 italic">
@@ -385,13 +385,13 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                   const isTakeaway = order.order_type === 'takeaway';
                   
                   return (
-                    <tr key={order.id} className="hover:bg-primary/[0.02] transition-colors">
+                    <tr key={order.id} className="hover:bg-muted/50 transition-colors">
                       {/* Customer Info */}
                       <td className="p-4 space-y-0.5">
                         <div className="font-semibold text-foreground text-sm flex items-center gap-1.5">
                           {order.customer_name}
                           <Link href={`/admin/orders/${order.id}`} title="View order details">
-                            <Eye className="w-3.5 h-3.5 text-primary hover:text-white cursor-pointer" />
+                            <Eye className="w-3.5 h-3.5 text-primary hover:opacity-80 cursor-pointer" />
                           </Link>
                         </div>
                         <div className="text-muted-foreground/60 font-mono text-[10px]">
@@ -411,7 +411,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                       <td className="p-4 space-y-0.5">
                         <div className="text-foreground capitalize">{order.payment_method.replace(/_/g, ' ')}</div>
                         <div className={`text-[9px] uppercase tracking-wider font-bold ${
-                          order.payment_status === 'paid' ? 'text-green-400' : 'text-yellow-500/80'
+                          order.payment_status === 'paid' ? 'text-green-600 [.admin-theme_&]:text-green-800 dark:text-green-400' : 'text-yellow-600 [.admin-theme_&]:text-yellow-800 dark:text-yellow-400'
                         }`}>
                           {order.payment_status}
                         </div>
@@ -498,7 +498,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                           {(order.status === 'approved' || order.status === 'preparing') && (
                             <Button
                               onClick={() => handleOpenModal(order, 'updateEta')}
-                              className="border border-primary/20 bg-transparent hover:bg-primary/5 text-primary font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
+                              className="border border-primary/30 hover:bg-primary/10 text-primary font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
                             >
                               Update ETA
                             </Button>
@@ -526,7 +526,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
         </div>
 
         {/* Mobile Grid Layout (Under 768px) */}
-        <div className="md:hidden divide-y divide-primary/10">
+        <div className="md:hidden divide-y divide-border">
           {initialOrders.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground/60 italic">
               {t('noOrders')}
@@ -537,14 +537,14 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
               const isTakeaway = order.order_type === 'takeaway';
               
               return (
-                <div key={order.id} className="p-4 space-y-3.5 text-left bg-[#050B1E]">
+                <div key={order.id} className="p-4 space-y-3.5 text-left bg-card">
                   {/* Top info */}
                   <div className="flex justify-between items-start gap-2">
                     <div>
                       <div className="font-semibold text-foreground text-sm flex items-center gap-1.5">
                         {order.customer_name}
                         <Link href={`/admin/orders/${order.id}`}>
-                          <Eye className="w-3.5 h-3.5 text-primary hover:text-white" />
+                          <Eye className="w-3.5 h-3.5 text-primary hover:opacity-80" />
                         </Link>
                       </div>
                       <span className="text-[10px] font-mono text-muted-foreground/60">
@@ -555,7 +555,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                   </div>
 
                   {/* Pricing / Details */}
-                  <div className="grid grid-cols-2 gap-2 text-[11px] bg-[#070B1E] border border-primary/5 p-3 rounded">
+                  <div className="grid grid-cols-2 gap-2 text-[11px] bg-background border border-border p-3 rounded">
                     <div>
                       <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block">Type</span>
                       <span className="font-semibold text-foreground capitalize">{order.order_type}</span>
@@ -564,7 +564,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                       <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block">Total</span>
                       <span className="font-bold text-primary font-mono">{order.total_amount.toFixed(2)} PLN</span>
                     </div>
-                    <div className="col-span-2 pt-1.5 border-t border-primary/5 flex justify-between items-center">
+                    <div className="col-span-2 pt-1.5 border-t border-border flex justify-between items-center">
                       <div>
                         <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block">Payment</span>
                         <span className="text-foreground capitalize text-[10px]">{order.payment_method.replace(/_/g, ' ')} ({order.payment_status})</span>
@@ -579,7 +579,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                   </div>
 
                   {/* Actions footer */}
-                  <div className="flex flex-wrap gap-2 justify-end pt-1 border-t border-primary/5">
+                  <div className="flex flex-wrap gap-2 justify-end pt-1 border-t border-border">
                     {/* Confirm Button */}
                     {order.status === 'pending' && (
                       <>
@@ -591,7 +591,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                         </Button>
                         <Button
                           onClick={() => handleOpenModal(order, 'reject')}
-                          className="border border-red-500/25 bg-transparent hover:bg-red-500/10 text-red-400 font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
+                          className="border border-red-500/30 text-red-600 [.admin-theme_&]:text-red-700 hover:bg-red-500/10 dark:text-red-400 font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
                         >
                           {t('rejectButton')}
                         </Button>
@@ -633,7 +633,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                     {(order.status === 'approved' || order.status === 'preparing') && (
                       <Button
                         onClick={() => handleOpenModal(order, 'updateEta')}
-                        className="border border-primary/20 bg-transparent hover:bg-primary/5 text-primary font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
+                        className="border border-primary/30 hover:bg-primary/10 text-primary font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
                       >
                         Update ETA
                       </Button>
@@ -643,7 +643,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                     {['approved', 'preparing', 'pending'].includes(order.status) && (
                       <Button
                         onClick={() => handleOpenModal(order, 'cancel')}
-                        className="border border-red-500/25 bg-transparent hover:bg-red-500/10 text-red-400 font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
+                        className="border border-red-500/30 text-red-600 [.admin-theme_&]:text-red-700 hover:bg-red-500/10 dark:text-red-400 font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
                       >
                         Cancel
                       </Button>

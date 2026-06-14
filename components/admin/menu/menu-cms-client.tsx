@@ -131,7 +131,7 @@ export default function MenuCmsClient({ categories, items }: MenuCmsClientProps)
       </div>
 
       {/* Filter panel */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-[#050B1E] p-4 border border-primary/10 rounded-lg">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-card p-4 border border-border rounded-lg">
         
         {/* Search */}
         <div className="space-y-1">
@@ -144,7 +144,7 @@ export default function MenuCmsClient({ categories, items }: MenuCmsClientProps)
             placeholder={t('searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-xs text-foreground placeholder-muted-foreground/30 focus:outline-none focus:border-primary/40"
+            className="w-full bg-background border border-border rounded px-3 py-2 text-xs text-foreground placeholder-muted-foreground/60 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
         </div>
 
@@ -157,7 +157,7 @@ export default function MenuCmsClient({ categories, items }: MenuCmsClientProps)
             id="categoryFilter"
             value={catFilter}
             onChange={(e) => setCatFilter(e.target.value)}
-            className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary/40"
+            className="w-full bg-background border border-border rounded px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           >
             <option value="all">{t('all')}</option>
             {categories.map((c) => (
@@ -177,7 +177,7 @@ export default function MenuCmsClient({ categories, items }: MenuCmsClientProps)
             id="statusFilter"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary/40"
+            className="w-full bg-background border border-border rounded px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           >
             <option value="all">{t('all')}</option>
             <option value="visible">{t('visibleOnly')}</option>
@@ -194,7 +194,7 @@ export default function MenuCmsClient({ categories, items }: MenuCmsClientProps)
             id="availFilter"
             value={availFilter}
             onChange={(e) => setAvailFilter(e.target.value)}
-            className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary/40"
+            className="w-full bg-background border border-border rounded px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           >
             <option value="all">{t('all')}</option>
             <option value="available">{t('availableOnly')}</option>
@@ -207,8 +207,8 @@ export default function MenuCmsClient({ categories, items }: MenuCmsClientProps)
       {/* Main Table */}
       <GoldFrame className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-primary/10 text-left">
-            <thead className="bg-[#050B1E] text-[10px] uppercase tracking-wider text-primary font-bold">
+          <table className="min-w-full divide-y divide-border text-left">
+            <thead className="bg-muted/50 text-[10px] uppercase tracking-wider text-primary font-bold">
               <tr>
                 <th className="px-6 py-4">Nazwa Dań / Dish Name</th>
                 <th className="px-6 py-4">Kategoria / Category</th>
@@ -219,7 +219,7 @@ export default function MenuCmsClient({ categories, items }: MenuCmsClientProps)
                 <th className="px-6 py-4 text-right">Akcje / Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-primary/5 bg-[#070B1E]/40 text-xs">
+            <tbody className="divide-y divide-border bg-card/40 text-xs">
               {filteredItems.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-10 text-center text-muted-foreground">
@@ -281,16 +281,16 @@ export default function MenuCmsClient({ categories, items }: MenuCmsClientProps)
 
       {/* Confirmation Modal */}
       {deletingId && (
-        <div className="fixed inset-0 bg-[#070B1E]/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-[#050B1E] border border-red-500/25 p-6 rounded-lg max-w-sm w-full space-y-4">
-            <h3 className="text-lg font-serif font-bold text-red-400">
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-card border border-red-500/30 [.admin-theme_&]:border-red-200 p-6 rounded-lg max-w-sm w-full space-y-4 text-foreground">
+            <h3 className="text-lg font-serif font-bold text-red-600 [.admin-theme_&]:text-red-800 dark:text-red-400">
               {t('confirmDeleteTitle')}
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
               {t('confirmDeleteDesc')}
             </p>
             {deleteError && (
-              <p className="text-xs text-red-400 bg-red-500/10 p-2 rounded text-center">
+              <p className="text-xs text-red-600 [.admin-theme_&]:text-red-800 dark:text-red-400 bg-red-500/10 p-2 rounded text-center">
                 {deleteError}
               </p>
             )}
@@ -310,7 +310,7 @@ export default function MenuCmsClient({ categories, items }: MenuCmsClientProps)
                   setDeletingId(null);
                   setDeleteError(null);
                 }}
-                className="flex-1 border-primary/20 hover:bg-primary/5 text-muted-foreground hover:text-foreground text-xs uppercase tracking-wider"
+                className="flex-1 border-border hover:bg-muted text-muted-foreground hover:text-foreground text-xs uppercase tracking-wider"
               >
                 {t('cancelButton')}
               </Button>

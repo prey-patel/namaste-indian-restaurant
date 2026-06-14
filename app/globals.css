@@ -34,6 +34,36 @@
 
     --radius: 0.5rem;
   }
+
+  .admin-theme {
+    --background: 40 33% 98%; /* Warm off-white / ivory #FAF9F5 */
+    --foreground: 220 40% 12%; /* Deep navy / charcoal #121826 */
+
+    --card: 0 0% 100%; /* Pure white */
+    --card-foreground: 220 40% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 40% 12%;
+
+    --primary: 40 83% 32%; /* Refined saffron gold accent (contrast compliant on warm off-white) */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 40 10% 93%;
+    --secondary-foreground: 220 40% 12%;
+
+    --muted: 40 10% 93%;
+    --muted-foreground: 215 16% 47%; /* Slate neutral gray */
+
+    --accent: 40 83% 32%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 43 30% 88%; /* Soft champagne / light gold */
+    --input: 40 10% 93%;
+    --ring: 40 83% 32%;
+  }
 }
 
 @layer base {
@@ -94,6 +124,18 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #B38728;
+}
+
+/* Light Mode scrollbars for Admin panel */
+.admin-theme ::-webkit-scrollbar-track {
+  background: #FAF9F5;
+}
+.admin-theme ::-webkit-scrollbar-thumb {
+  background: #EBE4D5;
+  border-radius: 4px;
+}
+.admin-theme ::-webkit-scrollbar-thumb:hover {
+  background: #9E690A;
 }
 
 /* KDS: one-shot pulse for new order alert */

@@ -67,7 +67,7 @@ export default function ImageUploader({ value, onChange }: ImageUploaderProps) {
 
   return (
     <div className="space-y-4 font-sans">
-      <div className="flex border-b border-primary/20">
+      <div className="flex border-b border-border">
         <button
           type="button"
           onClick={() => setTab('upload')}
@@ -89,13 +89,13 @@ export default function ImageUploader({ value, onChange }: ImageUploaderProps) {
       </div>
 
       {error && (
-        <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 p-2.5 rounded text-center">
+        <p className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 p-2.5 rounded text-center">
           {error}
         </p>
       )}
 
       {tab === 'upload' && (
-        <div className="border border-dashed border-primary/30 rounded-lg p-8 text-center bg-[#070B1E]/40 hover:border-primary/60 transition-colors relative">
+        <div className="border border-dashed border-border rounded-lg p-8 text-center bg-muted/30 hover:border-primary transition-colors relative">
           {uploading ? (
             <div className="flex flex-col items-center justify-center space-y-2 py-4">
               <GoldSpinner size="md" />
@@ -147,16 +147,16 @@ export default function ImageUploader({ value, onChange }: ImageUploaderProps) {
                     key={img.id}
                     type="button"
                     onClick={() => onChange(img.file_path)}
-                    className={`aspect-square relative rounded overflow-hidden border bg-[#050B1E] flex flex-col justify-end p-1 transition-all ${
-                      isSelected ? 'border-primary ring-2 ring-primary/45' : 'border-primary/10 hover:border-primary/40'
+                    className={`aspect-square relative rounded overflow-hidden border bg-background flex flex-col justify-end p-1 transition-all ${
+                      isSelected ? 'border-primary ring-2 ring-primary/45' : 'border-border hover:border-primary'
                     }`}
                   >
                     {/* Display filename */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-[#070B1E]/60 text-[9px] text-muted-foreground truncate p-1 text-center font-mono">
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/80 text-[9px] text-muted-foreground truncate p-1 text-center font-mono">
                       {img.file_path.split('/').pop()}
                     </div>
                     {isSelected && (
-                      <div className="absolute top-1 right-1 bg-primary text-black rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-bold z-10">
+                      <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-bold z-10">
                         ✓
                       </div>
                     )}
@@ -169,7 +169,7 @@ export default function ImageUploader({ value, onChange }: ImageUploaderProps) {
       )}
 
       {value && (
-        <div className="flex items-center justify-between p-3 bg-primary/5 border border-primary/20 rounded-lg">
+        <div className="flex items-center justify-between p-3 bg-primary/5 border border-border rounded-lg">
           <div className="flex items-center space-x-2 truncate">
             <span className="text-xs text-primary font-bold">✓</span>
             <span className="text-xs text-muted-foreground font-mono truncate" title={value}>
@@ -179,7 +179,7 @@ export default function ImageUploader({ value, onChange }: ImageUploaderProps) {
           <button
             type="button"
             onClick={() => onChange(null)}
-            className="text-[10px] text-red-400 hover:text-red-300 font-bold uppercase tracking-wider"
+            className="text-[10px] text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-bold uppercase tracking-wider"
           >
             Usuń / Remove
           </button>

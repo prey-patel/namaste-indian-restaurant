@@ -10,12 +10,12 @@ type StatusPillProps = {
 
 export default function StatusPill({ status, label, className = '' }: StatusPillProps) {
   const styles = {
-    pending: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-    success: 'bg-green-500/10 text-green-400 border-green-500/20',
-    warning: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
-    error: 'bg-red-500/10 text-red-400 border-red-500/20',
-    info: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    neutral: 'bg-primary/10 text-primary border-primary/20'
+    pending: 'bg-yellow-500/10 text-yellow-500 dark:text-yellow-400 border-yellow-500/20 [.admin-theme_&]:bg-yellow-100/80 [.admin-theme_&]:text-yellow-800 [.admin-theme_&]:border-yellow-300',
+    success: 'bg-green-500/10 text-green-500 dark:text-green-400 border-green-500/20 [.admin-theme_&]:bg-green-100/80 [.admin-theme_&]:text-green-800 [.admin-theme_&]:border-green-300',
+    warning: 'bg-orange-500/10 text-orange-500 dark:text-orange-400 border-orange-500/20 [.admin-theme_&]:bg-orange-100/80 [.admin-theme_&]:text-orange-800 [.admin-theme_&]:border-orange-300',
+    error: 'bg-red-500/10 text-red-500 dark:text-red-400 border-red-500/20 [.admin-theme_&]:bg-red-100/80 [.admin-theme_&]:text-red-800 [.admin-theme_&]:border-red-300',
+    info: 'bg-blue-500/10 text-blue-500 dark:text-blue-400 border-blue-500/20 [.admin-theme_&]:bg-blue-100/80 [.admin-theme_&]:text-blue-800 [.admin-theme_&]:border-blue-300',
+    neutral: 'bg-primary/10 text-primary border-primary/20 [.admin-theme_&]:bg-muted/80 [.admin-theme_&]:text-muted-foreground [.admin-theme_&]:border-border'
   };
 
   return (

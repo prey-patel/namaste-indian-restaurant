@@ -78,7 +78,7 @@ export default function PreviewCard({ itemData }: PreviewCardProps) {
 
   return (
     <div className="space-y-4 font-sans text-left">
-      <div className="flex border-b border-primary/20 pb-2">
+      <div className="flex border-b border-border pb-2">
         <span className="text-xs uppercase tracking-wider text-primary font-bold">
           Podgląd Menu (PL) / Polish Preview
         </span>

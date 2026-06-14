@@ -215,7 +215,7 @@ export default function ReservationsDashboard({ initialReservations, tables, met
     <div className="space-y-6 font-sans relative">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-primary/10 pb-5 gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-border pb-5 gap-4">
         <div>
           <h1 className="text-3xl font-serif font-bold text-primary">{t('title')}</h1>
           <p className="text-xs text-muted-foreground mt-1">Manage and track guest table reservations</p>
@@ -223,7 +223,7 @@ export default function ReservationsDashboard({ initialReservations, tables, met
         <div className="flex gap-2">
           <Button 
             onClick={() => router.refresh()}
-            className="border border-primary/20 bg-[#070B1E] text-muted-foreground hover:text-foreground text-xs p-2.5 flex items-center gap-1.5"
+            className="border border-border bg-background text-muted-foreground hover:text-foreground text-xs p-2.5 flex items-center gap-1.5"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isPending ? 'animate-spin' : ''}`} />
             Refresh
@@ -233,53 +233,53 @@ export default function ReservationsDashboard({ initialReservations, tables, met
 
       {/* Global Alerts */}
       {errorMessage && (
-        <div className="p-3 text-xs bg-red-500/10 border border-red-500/30 rounded text-red-400 text-center leading-relaxed">
+        <div className="p-3 text-xs bg-red-500/10 border border-red-500/30 rounded text-red-600 [.admin-theme_&]:text-red-800 dark:text-red-400 text-center leading-relaxed">
           {errorMessage}
         </div>
       )}
       {successMessage && (
-        <div className="p-3 text-xs bg-green-500/10 border border-green-500/30 rounded text-green-400 text-center leading-relaxed">
+        <div className="p-3 text-xs bg-green-500/10 border border-green-500/30 rounded text-green-600 [.admin-theme_&]:text-green-800 dark:text-green-400 text-center leading-relaxed">
           {successMessage}
         </div>
       )}
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <PremiumCard hoverable={false} className="border-yellow-500/20 bg-yellow-500/5">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/85 mb-1">
+        <PremiumCard hoverable={false} className="border-yellow-500/25 bg-yellow-500/5 [.admin-theme_&]:border-yellow-300/60 [.admin-theme_&]:bg-yellow-50/50">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
             {t('pendingCount')}
           </p>
-          <p className="text-3xl font-bold text-yellow-400 font-serif">{metrics.pendingCount}</p>
+          <p className="text-3xl font-bold text-yellow-600 [.admin-theme_&]:text-yellow-800 dark:text-yellow-400 font-serif">{metrics.pendingCount}</p>
         </PremiumCard>
 
-        <PremiumCard hoverable={false} className="border-green-500/20 bg-green-500/5">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/85 mb-1">
+        <PremiumCard hoverable={false} className="border-green-500/25 bg-green-500/5 [.admin-theme_&]:border-green-300/60 [.admin-theme_&]:bg-green-50/50">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
             {t('confirmedToday')}
           </p>
-          <p className="text-3xl font-bold text-green-400 font-serif">{metrics.confirmedToday}</p>
+          <p className="text-3xl font-bold text-green-600 [.admin-theme_&]:text-green-800 dark:text-green-400 font-serif">{metrics.confirmedToday}</p>
         </PremiumCard>
 
-        <PremiumCard hoverable={false} className="border-primary/20 bg-primary/5">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/85 mb-1">
+        <PremiumCard hoverable={false} className="border-primary/25 bg-primary/5 [.admin-theme_&]:border-primary/30/60 [.admin-theme_&]:bg-primary/5/50">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
             {t('upcomingCount')}
           </p>
           <p className="text-3xl font-bold text-primary font-serif">{metrics.upcomingCount}</p>
         </PremiumCard>
 
-        <PremiumCard hoverable={false} className="border-orange-500/20 bg-orange-500/5">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/85 mb-1">
+        <PremiumCard hoverable={false} className="border-orange-500/25 bg-orange-500/5 [.admin-theme_&]:border-orange-300/60 [.admin-theme_&]:bg-orange-50/50">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
             {t('cancelledCount')}
           </p>
-          <p className="text-3xl font-bold text-orange-400 font-serif">{metrics.cancelledCount}</p>
+          <p className="text-3xl font-bold text-orange-600 [.admin-theme_&]:text-orange-800 dark:text-orange-400 font-serif">{metrics.cancelledCount}</p>
         </PremiumCard>
       </div>
 
       {/* Filters bar */}
-      <div className="flex flex-col lg:flex-row gap-4 p-4 bg-[#050B1E] border border-primary/10 rounded-lg items-end lg:items-center">
+      <div className="flex flex-col lg:flex-row gap-4 p-4 bg-card border border-border rounded-lg items-end lg:items-center">
         
         {/* Search */}
         <div className="w-full lg:w-72 relative space-y-1">
-          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 font-semibold block">Search Request</span>
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/75 font-semibold block">Search Request</span>
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground/50" />
             <input
@@ -288,21 +288,21 @@ export default function ReservationsDashboard({ initialReservations, tables, met
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={handleSearchKeyDown}
-              className="w-full bg-[#070B1E] border border-primary/10 rounded pl-9 pr-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary/35"
+              className="w-full bg-background border border-border rounded pl-9 pr-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
           </div>
         </div>
 
         {/* Status */}
         <div className="w-full lg:w-48 space-y-1">
-          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 font-semibold block">{t('filterStatus')}</span>
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/75 font-semibold block">{t('filterStatus')}</span>
           <select
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value);
               applyFilters(e.target.value, dateFilter, search);
             }}
-            className="w-full bg-[#070B1E] border border-primary/10 rounded px-2.5 py-2 text-xs text-foreground cursor-pointer focus:outline-none focus:border-primary/35"
+            className="w-full bg-background border border-border rounded px-2.5 py-2 text-xs text-foreground cursor-pointer focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           >
             <option value="all">All statuses</option>
             <option value="pending">Pending confirmation</option>
@@ -316,7 +316,7 @@ export default function ReservationsDashboard({ initialReservations, tables, met
 
         {/* Date */}
         <div className="w-full lg:w-48 space-y-1">
-          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 font-semibold block">{t('filterDate')}</span>
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/75 font-semibold block">{t('filterDate')}</span>
           <input
             type="date"
             value={dateFilter}
@@ -324,7 +324,7 @@ export default function ReservationsDashboard({ initialReservations, tables, met
               setDateFilter(e.target.value);
               applyFilters(statusFilter, e.target.value, search);
             }}
-            className="w-full bg-[#070B1E] border border-primary/10 rounded px-2.5 py-2 text-xs text-foreground cursor-pointer focus:outline-none focus:border-primary/35"
+            className="w-full bg-background border border-border rounded px-2.5 py-2 text-xs text-foreground cursor-pointer focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
         </div>
 
@@ -332,13 +332,13 @@ export default function ReservationsDashboard({ initialReservations, tables, met
         <div className="flex gap-2 w-full lg:w-auto pt-2 lg:pt-0 justify-end lg:ml-auto">
           <Button
             onClick={() => applyFilters(statusFilter, dateFilter, search)}
-            className="bg-primary/20 hover:bg-primary/30 text-primary font-bold text-xs uppercase tracking-wider px-4 py-2"
+            className="bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs uppercase tracking-wider px-4 py-2 border border-primary/20"
           >
             Filter
           </Button>
           <Button
             onClick={handleResetFilters}
-            className="border border-primary/15 bg-transparent hover:bg-primary/5 text-muted-foreground text-xs uppercase tracking-wider px-4 py-2"
+            className="border border-border bg-transparent hover:bg-muted text-muted-foreground text-xs uppercase tracking-wider px-4 py-2"
           >
             Reset
           </Button>
@@ -347,11 +347,11 @@ export default function ReservationsDashboard({ initialReservations, tables, met
       </div>
 
       {/* Grid / Table Container */}
-      <div className="bg-[#050B1E] border border-primary/10 rounded-lg overflow-hidden">
+      <div className="bg-card border border-border rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-primary/15 bg-primary/5 text-muted-foreground uppercase tracking-widest text-[9px] font-bold">
+              <tr className="border-b border-border bg-muted/50 text-muted-foreground uppercase tracking-widest text-[9px] font-bold">
                 <th className="p-4">Customer</th>
                 <th className="p-4">Date & Time</th>
                 <th className="p-4 text-center">Guests</th>
@@ -360,7 +360,7 @@ export default function ReservationsDashboard({ initialReservations, tables, met
                 <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-primary/5">
+            <tbody className="divide-y divide-border">
               {initialReservations.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="p-8 text-center text-muted-foreground/60 italic">
@@ -374,7 +374,7 @@ export default function ReservationsDashboard({ initialReservations, tables, met
                   const dateStr = startDate.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
 
                   return (
-                    <tr key={res.id} className="hover:bg-primary/[0.02] transition-colors">
+                    <tr key={res.id} className="hover:bg-muted/50 transition-colors">
                       {/* Customer Info */}
                       <td className="p-4 space-y-0.5">
                         <div className="font-semibold text-foreground text-sm">{res.customer_name}</div>
@@ -431,7 +431,7 @@ export default function ReservationsDashboard({ initialReservations, tables, met
                         {/* View details */}
                         <Button
                           onClick={() => handleOpenActionModal(res, 'details')}
-                          className="border border-primary/20 bg-[#070B1E] hover:bg-primary/5 text-muted-foreground hover:text-foreground text-[10px] py-1 px-2 font-medium"
+                          className="border border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground text-[10px] py-1 px-2 font-medium"
                           title="View Full Details"
                         >
                           <Eye className="w-3.5 h-3.5 mr-1 inline" />
@@ -479,7 +479,7 @@ export default function ReservationsDashboard({ initialReservations, tables, met
                             <Button
                               onClick={() => handleOpenActionModal(res, 'cancel')}
                               disabled={isPending}
-                              className="border border-orange-500/30 bg-transparent hover:bg-orange-500/10 text-orange-400 text-[10px] py-1 px-2.5 font-semibold"
+                              className="border border-orange-500/30 text-orange-600 [.admin-theme_&]:text-orange-700 dark:text-orange-400 bg-transparent hover:bg-orange-500/10 text-[10px] py-1 px-2.5 font-semibold"
                             >
                               Cancel
                             </Button>
@@ -487,7 +487,7 @@ export default function ReservationsDashboard({ initialReservations, tables, met
                             <Button
                               onClick={() => handleMarkNoShow(res.id)}
                               disabled={isPending}
-                              className="border border-red-500/30 bg-transparent hover:bg-red-500/10 text-red-400 text-[10px] py-1 px-2.5 font-semibold"
+                              className="border border-red-500/30 text-red-600 [.admin-theme_&]:text-red-700 dark:text-red-400 bg-transparent hover:bg-red-500/10 text-[10px] py-1 px-2.5 font-semibold"
                             >
                               No-Show
                             </Button>
@@ -517,11 +517,11 @@ export default function ReservationsDashboard({ initialReservations, tables, met
 
       {/* Action / Detail Modal */}
       {actionType && selectedRes && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-[#050B1E] border border-primary/20 rounded-lg overflow-hidden shadow-2xl animate-scale-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-card border border-border rounded-lg overflow-hidden shadow-2xl animate-scale-up text-foreground">
             
             {/* Header */}
-            <div className="flex justify-between items-center p-4 border-b border-primary/10 bg-primary/5">
+            <div className="flex justify-between items-center p-4 border-b border-border bg-muted/50">
               <h3 className="text-sm uppercase tracking-wider text-primary font-bold font-serif">
                 {actionType === 'details' && 'Reservation Details'}
                 {actionType === 'reject' && t('rejectDialogTitle')}
@@ -542,7 +542,7 @@ export default function ReservationsDashboard({ initialReservations, tables, met
               {/* DETAILS MODE */}
               {actionType === 'details' && (
                 <div className="space-y-3.5 text-xs">
-                  <div className="grid grid-cols-2 gap-4 pb-3 border-b border-primary/5">
+                  <div className="grid grid-cols-2 gap-4 pb-3 border-b border-border">
                     <div>
                       <span className="text-[10px] uppercase text-muted-foreground/60 block">Customer</span>
                       <strong className="text-foreground text-sm block">{selectedRes.customer_name}</strong>
@@ -553,7 +553,7 @@ export default function ReservationsDashboard({ initialReservations, tables, met
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 pb-3 border-b border-primary/5">
+                  <div className="grid grid-cols-2 gap-4 pb-3 border-b border-border">
                     <div>
                       <span className="text-[10px] uppercase text-muted-foreground/60 block">Phone</span>
                       <span className="text-foreground block">{selectedRes.customer_phone}</span>
@@ -564,7 +564,7 @@ export default function ReservationsDashboard({ initialReservations, tables, met
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 pb-3 border-b border-primary/5">
+                  <div className="grid grid-cols-2 gap-4 pb-3 border-b border-border">
                     <div>
                       <span className="text-[10px] uppercase text-muted-foreground/60 block">Date & Time</span>
                       <span className="text-foreground block font-medium">
@@ -581,7 +581,7 @@ export default function ReservationsDashboard({ initialReservations, tables, met
                   </div>
 
                   {selectedRes.dining_tables && (
-                    <div className="pb-3 border-b border-primary/5">
+                    <div className="pb-3 border-b border-border">
                       <span className="text-[10px] uppercase text-muted-foreground/60 block">Assigned Table</span>
                       <span className="text-primary font-medium">
                         Table {selectedRes.dining_tables.table_number} ({selectedRes.dining_tables.section}, Cap: {selectedRes.dining_tables.capacity})
@@ -592,7 +592,7 @@ export default function ReservationsDashboard({ initialReservations, tables, met
                   {selectedRes.customer_notes && (
                     <div>
                       <span className="text-[10px] uppercase text-muted-foreground/60 block mb-1">Customer Notes</span>
-                      <p className="p-2.5 bg-[#070B1E] border border-primary/10 rounded italic font-light text-muted-foreground/90 leading-relaxed">
+                      <p className="p-2.5 bg-background border border-border rounded italic font-light text-muted-foreground/90 leading-relaxed">
                         {selectedRes.customer_notes}
                       </p>
                     </div>
@@ -601,31 +601,31 @@ export default function ReservationsDashboard({ initialReservations, tables, met
                   {selectedRes.admin_notes && (
                     <div>
                       <span className="text-[10px] uppercase text-muted-foreground/60 block mb-1">Admin Metadata</span>
-                      <p className="p-2.5 bg-[#070B1E]/60 border border-primary/5 rounded font-mono text-[10px] text-muted-foreground/70 select-all leading-tight">
+                      <p className="p-2.5 bg-background border border-border rounded font-mono text-[10px] text-muted-foreground select-all leading-tight">
                         {selectedRes.admin_notes}
                       </p>
                     </div>
                   )}
 
                   {selectedRes.rejection_reason && (
-                    <div className="p-3 bg-red-500/5 border border-red-500/20 rounded text-red-400 text-xs">
+                    <div className="p-3 bg-red-500/5 border border-red-500/20 rounded text-red-600 [.admin-theme_&]:text-red-800 dark:text-red-400 text-xs">
                       <span className="font-semibold block mb-0.5">Rejection Reason:</span>
                       &quot;{selectedRes.rejection_reason}&quot;
                     </div>
                   )}
 
                   {selectedRes.cancellation_reason && (
-                    <div className="p-3 bg-orange-500/5 border border-orange-500/20 rounded text-orange-400 text-xs">
+                    <div className="p-3 bg-orange-500/5 border border-orange-500/20 rounded text-orange-600 [.admin-theme_&]:text-orange-800 dark:text-orange-400 text-xs">
                       <span className="font-semibold block mb-0.5">Cancellation Reason:</span>
                       &quot;{selectedRes.cancellation_reason}&quot;
                     </div>
                   )}
 
-                  <div className="pt-4 border-t border-primary/10 flex justify-end">
+                  <div className="pt-4 border-t border-border flex justify-end">
                     <Button 
                       type="button" 
                       onClick={handleCloseModal}
-                      className="bg-primary/20 hover:bg-primary/30 text-primary font-bold text-xs uppercase tracking-wider py-2"
+                      className="bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs uppercase tracking-wider py-2 border border-primary/20"
                     >
                       Close
                     </Button>
@@ -636,10 +636,10 @@ export default function ReservationsDashboard({ initialReservations, tables, met
               {/* REJECT MODE */}
               {actionType === 'reject' && (
                 <div className="space-y-4">
-                  <div className="text-xs text-muted-foreground leading-relaxed">
+                  <div className="text-xs text-muted-foreground leading-relaxed text-left">
                     Rejecting table request for <strong className="text-foreground">{selectedRes.customer_name}</strong> ({selectedRes.guests_count} guests) on {new Date(selectedRes.reservation_start_at).toLocaleDateString()}.
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 text-left">
                     <label htmlFor="reject_reason" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
                       {t('reasonLabel')}
                     </label>
@@ -650,14 +650,14 @@ export default function ReservationsDashboard({ initialReservations, tables, met
                       placeholder="e.g. Fully booked for this time slot. Please contact us for alternative slots."
                       value={actionReason}
                       onChange={(e) => setActionReason(e.target.value)}
-                      className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary/35 resize-none"
+                      className="w-full bg-background border border-border rounded px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
                     />
                   </div>
-                  <div className="flex justify-end gap-2 pt-2 border-t border-primary/10">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-border">
                     <Button 
                       type="button" 
                       onClick={handleCloseModal}
-                      className="border border-primary/15 bg-transparent hover:bg-primary/5 text-muted-foreground text-xs uppercase tracking-wider py-2"
+                      className="border border-border bg-transparent hover:bg-muted text-muted-foreground text-xs uppercase tracking-wider py-2"
                     >
                       Cancel
                     </Button>
@@ -675,10 +675,10 @@ export default function ReservationsDashboard({ initialReservations, tables, met
               {/* CANCEL MODE */}
               {actionType === 'cancel' && (
                 <div className="space-y-4">
-                  <div className="text-xs text-muted-foreground leading-relaxed">
+                  <div className="text-xs text-muted-foreground leading-relaxed text-left">
                     Cancelling reservation for <strong className="text-foreground">{selectedRes.customer_name}</strong> ({selectedRes.guests_count} guests) on {new Date(selectedRes.reservation_start_at).toLocaleDateString()}.
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 text-left">
                     <label htmlFor="cancel_reason" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
                       {t('reasonLabel')}
                     </label>
@@ -689,14 +689,14 @@ export default function ReservationsDashboard({ initialReservations, tables, met
                       placeholder="e.g. Cancelled per customer request."
                       value={actionReason}
                       onChange={(e) => setActionReason(e.target.value)}
-                      className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary/35 resize-none"
+                      className="w-full bg-background border border-border rounded px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
                     />
                   </div>
-                  <div className="flex justify-end gap-2 pt-2 border-t border-primary/10">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-border">
                     <Button 
                       type="button" 
                       onClick={handleCloseModal}
-                      className="border border-primary/15 bg-transparent hover:bg-primary/5 text-muted-foreground text-xs uppercase tracking-wider py-2"
+                      className="border border-border bg-transparent hover:bg-muted text-muted-foreground text-xs uppercase tracking-wider py-2"
                     >
                       Cancel
                     </Button>
@@ -714,10 +714,10 @@ export default function ReservationsDashboard({ initialReservations, tables, met
               {/* TABLE ASSIGNMENT MODE */}
               {actionType === 'assign' && (
                 <div className="space-y-4">
-                  <div className="text-xs text-muted-foreground leading-relaxed">
+                  <div className="text-xs text-muted-foreground leading-relaxed text-left">
                     Assign a table manually for <strong className="text-foreground">{selectedRes.customer_name}</strong> ({selectedRes.guests_count} guests). Only active tables with sufficient capacity are listed below.
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 text-left">
                     <label htmlFor="dining_table_select" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
                       {t('tableLabel')}
                     </label>
@@ -725,7 +725,7 @@ export default function ReservationsDashboard({ initialReservations, tables, met
                       id="dining_table_select"
                       value={selectedTableId}
                       onChange={(e) => setSelectedTableId(e.target.value)}
-                      className="w-full bg-[#070B1E] border border-primary/10 rounded px-2.5 py-2.5 text-xs text-foreground cursor-pointer focus:outline-none focus:border-primary/35"
+                      className="w-full bg-background border border-border rounded px-2.5 py-2.5 text-xs text-foreground cursor-pointer focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                     >
                       <option value="">{t('selectPlaceholder')}</option>
                       {tables
@@ -738,18 +738,18 @@ export default function ReservationsDashboard({ initialReservations, tables, met
                       }
                     </select>
                   </div>
-                  <div className="flex justify-end gap-2 pt-2 border-t border-primary/10">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-border">
                     <Button 
                       type="button" 
                       onClick={handleCloseModal}
-                      className="border border-primary/15 bg-transparent hover:bg-primary/5 text-muted-foreground text-xs uppercase tracking-wider py-2"
+                      className="border border-border bg-transparent hover:bg-muted text-muted-foreground text-xs uppercase tracking-wider py-2"
                     >
                       Cancel
                     </Button>
                     <Button 
                       type="submit" 
                       disabled={isPending}
-                      className="bg-primary/20 hover:bg-primary/30 text-primary font-bold text-xs uppercase tracking-wider py-2"
+                      className="bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs uppercase tracking-wider py-2 border border-primary/20"
                     >
                       {isPending ? <GoldSpinner size="sm" /> : 'Save Table'}
                     </Button>
