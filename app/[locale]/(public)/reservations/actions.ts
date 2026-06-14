@@ -105,7 +105,7 @@ export async function createReservationRequestAction(rawData: z.infer<typeof res
       .from('holiday_closures')
       .select('id, title_pl, title_en')
       .eq('date', data.reservation_date)
-      .eq('is_active', true)
+      .eq('is_closed', true)
       .maybeSingle();
 
     if (holiday) {
@@ -158,6 +158,10 @@ export async function createReservationRequestAction(rawData: z.infer<typeof res
       ? data.occasion.replace(/<[^>]*>/g, '') // strip HTML
       : null;
 
+    const combinedNotes = sanitizedOccasion
+      ? (sanitizedNotes ? `${sanitizedNotes} (Occasion: ${sanitizedOccasion})` : `Occasion: ${sanitizedOccasion}`)
+      : sanitizedNotes;
+
     // 8. Insert Reservation as pending using service role client (bypasses RLS for public submit)
     const startAt = `${data.reservation_date} ${data.reservation_time}:00 Europe/Warsaw`;
     const endAt = `${data.reservation_date} ${addTwoHours(data.reservation_time)} Europe/Warsaw`;
@@ -175,8 +179,7 @@ export async function createReservationRequestAction(rawData: z.infer<typeof res
         guests_count: data.guests_count,
         status: 'pending', // Strictly pending
         source: 'website',
-        customer_notes: sanitizedNotes,
-        occasion: sanitizedOccasion,
+        customer_notes: combinedNotes,
         consent_accepted_at: new Date().toISOString(),
         privacy_policy_version: data.privacy_policy_version,
         // Save metadata like source language & user-agent (no raw IP)

@@ -117,7 +117,7 @@ export async function createOrderRequestAction(rawData: any) {
       .from('holiday_closures')
       .select('id, title_pl, title_en')
       .eq('date', todayLocalDate)
-      .eq('is_active', true)
+      .eq('is_closed', true)
       .maybeSingle();
 
     if (holiday) {
