@@ -9,6 +9,7 @@ import PremiumButton from '@/components/ui/premium-button';
 import GoldFrame from '@/components/ui/gold-frame';
 import { getPublicSystemSettings } from '@/lib/supabase/settings';
 import { getSiteContent } from '@/lib/supabase/content';
+import WhyChooseNamaste from '@/components/public/why-choose-namaste';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -205,76 +206,24 @@ export default async function HomePage({ params }: Props) {
       </section>
 
       {/* 3. WHY NAMASTE */}
-      <SectionContainer className="relative">
-        <MandalaWatermark className="w-[300px] h-[300px] right-5 bottom-5 opacity-[0.02]" />
-
-        <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-          <div className="flex justify-center items-center space-x-2 text-primary">
-            <span className="text-[10px] tracking-[0.25em] font-extrabold uppercase">Namaste Philosophy</span>
-          </div>
-          <h2 className="text-2xl sm:text-4xl font-serif font-bold tracking-wide text-foreground">
-            {t('whyTitle')}
-          </h2>
-          <div className="h-[1px] w-24 bg-primary/40 mx-auto" />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Card 1: Traditional Recipes */}
-          <PremiumCard hoverable className="flex flex-col items-center text-center space-y-4">
-            <div className="w-12 h-12 rounded-full border border-primary/30 flex items-center justify-center text-primary bg-primary/5">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-serif font-bold text-foreground">{t('whyRecipes')}</h3>
-            <p className="text-muted-foreground text-xs leading-relaxed">{t('whyRecipesDesc')}</p>
-          </PremiumCard>
-
-          {/* Card 2: Fresh Ingredients */}
-          <PremiumCard hoverable className="flex flex-col items-center text-center space-y-4">
-            <div className="w-12 h-12 rounded-full border border-primary/30 flex items-center justify-center text-primary bg-primary/5">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707-.707M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-serif font-bold text-foreground">{t('whyIngredients')}</h3>
-            <p className="text-muted-foreground text-xs leading-relaxed">{t('whyIngredientsDesc')}</p>
-          </PremiumCard>
-
-          {/* Card 3: Indian Hospitality */}
-          <PremiumCard hoverable className="flex flex-col items-center text-center space-y-4">
-            <div className="w-12 h-12 rounded-full border border-primary/30 flex items-center justify-center text-primary bg-primary/5">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-serif font-bold text-foreground">{t('whyHospitality')}</h3>
-            <p className="text-muted-foreground text-xs leading-relaxed">{t('whyHospitalityDesc')}</p>
-          </PremiumCard>
-
-          {/* Card 4: Vegetarian Options */}
-          <PremiumCard hoverable className="flex flex-col items-center text-center space-y-4">
-            <div className="w-12 h-12 rounded-full border border-primary/30 flex items-center justify-center text-primary bg-primary/5">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-serif font-bold text-foreground">{t('whyVegetarian')}</h3>
-            <p className="text-muted-foreground text-xs leading-relaxed">{t('whyVegetarianDesc')}</p>
-          </PremiumCard>
-
-          {/* Card 5: Crafted with Spices */}
-          <PremiumCard hoverable className="flex flex-col items-center text-center space-y-4 md:col-span-2 md:max-w-md md:mx-auto">
-            <div className="w-12 h-12 rounded-full border border-primary/30 flex items-center justify-center text-primary bg-primary/5">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-serif font-bold text-foreground">{t('whySpices')}</h3>
-            <p className="text-muted-foreground text-xs leading-relaxed">{t('whySpicesDesc')}</p>
-          </PremiumCard>
-        </div>
-      </SectionContainer>
+      <WhyChooseNamaste
+        whyTitle={t('whyTitle')}
+        whySubtitle={t('whySubtitle')}
+        whyRecipes={t('whyRecipes')}
+        whyRecipesDesc={t('whyRecipesDesc')}
+        whyVegetarian={t('whyVegetarian')}
+        whyVegetarianDesc={t('whyVegetarianDesc')}
+        whyIngredients={t('whyIngredients')}
+        whyIngredientsDesc={t('whyIngredientsDesc')}
+        whyHospitality={t('whyHospitality')}
+        whyHospitalityDesc={t('whyHospitalityDesc')}
+        whySpices={t('whySpices')}
+        whySpicesDesc={t('whySpicesDesc')}
+        madeWith={t('madeWith')}
+        tradition={t('tradition')}
+        madeFor={t('madeFor')}
+        you={t('you')}
+      />
 
       {/* 4. SIGNATURE DISHES */}
       <section className="w-full bg-[#050918] py-16 md:py-24 border-y border-primary/10">
