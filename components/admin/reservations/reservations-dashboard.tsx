@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import StatusPill from '@/components/ui/status-pill';
 import PremiumCard from '@/components/ui/premium-card';
 import GoldSpinner from '@/components/ui/gold-spinner';
+
 import { 
   confirmReservationAction, 
   rejectReservationAction, 
@@ -70,8 +72,28 @@ type Props = {
 
 export default function ReservationsDashboard({ initialReservations, tables, metrics, filters }: Props) {
   const router = useRouter();
+  
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel('realtime-reservations-dashboard')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'reservations' },
+        () => {
+          router.refresh();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [router]);
+
   const t = useTranslations('adminReservations');
   const [isPending, startTransition] = useTransition();
+
 
   // Filter local states
   const [search, setSearch] = useState(filters.query);

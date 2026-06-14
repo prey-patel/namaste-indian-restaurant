@@ -11,8 +11,14 @@ import {
   getOrderNewAdminTemplate
 } from "./templates/orders";
 
-const BASE_URL = process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const BASE_URL =
+  process.env.APP_BASE_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "") ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  "http://localhost:3000";
 const EMAIL_ENABLED = process.env.EMAIL_ENABLED === "true";
+
 
 /**
  * Enforces email sending idempotency.
