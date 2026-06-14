@@ -14,6 +14,7 @@
     "reservations": "Reservations",
     "story": "Our Story",
     "contact": "Contact",
+    "gallery": "Gallery",
     "status": "My Status",
     "admin": "Admin Panel",
     "orderOnline": "Order Online"
@@ -22,7 +23,7 @@
     "heroTitle": "Authentic Indian Flavours",
     "heroTitleAccent": "In the Heart of Ciechanów",
     "heroSubhead": "Discover an exceptional, exquisite experience of traditional Indian cuisine prepared by masters of culinary arts.",
-    "viewMenu": "View Menu",
+    "viewMenu": "Explore Menu",
     "reserveTable": "Reserve a Table",
     "orderOnline": "Order Online",
     "infoOpening": "Opening soon!",

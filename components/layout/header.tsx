@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from '@/i18n/routing';
+import { Link, usePathname } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import LanguageSwitcher from '../public/language-switcher';
 import { ROUTES } from '@/lib/routes/path';
@@ -9,10 +9,18 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 
 export default function Header() {
   const t = useTranslations('nav');
+  const pathname = usePathname();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const shouldReduceMotion = useReducedMotion();
   const drawerRef = useRef<HTMLDivElement>(null);
   const toggleButtonRef = useRef<HTMLButtonElement>(null);
+
+  const isActive = (path: string) => {
+    if (path === '/') {
+      return pathname === '/';
+    }
+    return pathname.startsWith(path);
+  };
 
   // Close drawer on window Escape key press
   useEffect(() => {
@@ -47,7 +55,6 @@ export default function Header() {
     ) as NodeListOf<HTMLElement>;
 
     if (focusableElements && focusableElements.length > 0) {
-      // Focus the close button or first element inside the drawer
       focusableElements[0].focus();
 
       const handleTabKey = (e: KeyboardEvent) => {
@@ -57,13 +64,11 @@ export default function Header() {
         const lastElement = focusableElements[focusableElements.length - 1];
 
         if (e.shiftKey) {
-          // If Shift + Tab and focused on first element, wrap to last
           if (document.activeElement === firstElement) {
             lastElement.focus();
             e.preventDefault();
           }
         } else {
-          // If Tab and focused on last element, wrap to first
           if (document.activeElement === lastElement) {
             firstElement.focus();
             e.preventDefault();
@@ -77,49 +82,118 @@ export default function Header() {
   }, [isDrawerOpen]);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-primary/20 bg-background/85 backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full border-b border-primary/20 bg-[#040815]/90 backdrop-blur-md">
       <div className="container mx-auto px-4 h-20 flex items-center justify-between">
         
-        {/* Brand Logo with Premium Serif Styling */}
-        <Link href={ROUTES.home} className="flex flex-col group focus-visible:ring-2 focus-visible:ring-primary rounded p-1">
-          <span className="text-2xl font-serif font-bold tracking-widest text-primary leading-tight group-hover:brightness-110 transition-all">
+        {/* Brand Logo - Centered alignment inside the block */}
+        <Link href={ROUTES.home} className="flex flex-col items-center group focus-visible:ring-2 focus-visible:ring-primary rounded p-1">
+          <svg className="w-5 h-5 text-primary mb-1 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M12 2l2.4 4.8 5.3.8-3.8 3.7.9 5.3-4.8-2.5-4.8 2.5.9-5.3-3.8-3.7 5.3-.8z" fill="currentColor" fillOpacity="0.2" />
+            <circle cx="12" cy="12" r="2" fill="currentColor" />
+          </svg>
+          <span className="text-xl font-serif font-black tracking-[0.2em] text-primary leading-none group-hover:brightness-110 transition-all">
             NAMASTE
           </span>
-          <span className="text-[9px] tracking-[0.25em] text-muted-foreground font-sans font-medium uppercase group-hover:text-foreground transition-all">
-            Indian Restaurant
+          <span className="text-[7px] tracking-[0.2em] text-muted-foreground/80 font-sans font-bold uppercase mt-1">
+            INDIAN RESTAURANT
           </span>
         </Link>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center space-x-8" aria-label="Główne menu / Main Menu">
-          <Link href={ROUTES.home} className="text-xs uppercase tracking-widest font-sans font-bold hover:text-primary transition-colors duration-300">
+        <nav className="hidden md:flex items-center space-x-8 h-full" aria-label="Główne menu / Main Menu">
+          <Link 
+            href={ROUTES.home} 
+            className={`text-xs uppercase tracking-widest font-sans font-bold transition-all duration-300 relative py-2 ${
+              isActive(ROUTES.home) ? 'text-primary' : 'text-foreground/90 hover:text-primary'
+            }`}
+          >
             {t('home')}
+            {isActive(ROUTES.home) && (
+              <motion.span 
+                layoutId="activeNavLine" 
+                className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-primary rounded-full" 
+              />
+            )}
           </Link>
-          <Link href={ROUTES.menu} className="text-xs uppercase tracking-widest font-sans font-bold hover:text-primary transition-colors duration-300">
+          <Link 
+            href={ROUTES.menu} 
+            className={`text-xs uppercase tracking-widest font-sans font-bold transition-all duration-300 relative py-2 ${
+              isActive(ROUTES.menu) ? 'text-primary' : 'text-foreground/90 hover:text-primary'
+            }`}
+          >
             {t('menu')}
+            {isActive(ROUTES.menu) && (
+              <motion.span 
+                layoutId="activeNavLine" 
+                className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-primary rounded-full" 
+              />
+            )}
           </Link>
-          <Link href={ROUTES.reservations} className="text-xs uppercase tracking-widest font-sans font-bold hover:text-primary transition-colors duration-300">
+          <Link 
+            href={ROUTES.reservations} 
+            className={`text-xs uppercase tracking-widest font-sans font-bold transition-all duration-300 relative py-2 ${
+              isActive(ROUTES.reservations) ? 'text-primary' : 'text-foreground/90 hover:text-primary'
+            }`}
+          >
             {t('reservations')}
+            {isActive(ROUTES.reservations) && (
+              <motion.span 
+                layoutId="activeNavLine" 
+                className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-primary rounded-full" 
+              />
+            )}
           </Link>
-          <Link href={ROUTES.story} className="text-xs uppercase tracking-widest font-sans font-bold hover:text-primary transition-colors duration-300">
+          <Link 
+            href={ROUTES.story} 
+            className={`text-xs uppercase tracking-widest font-sans font-bold transition-all duration-300 relative py-2 ${
+              isActive(ROUTES.story) ? 'text-primary' : 'text-foreground/90 hover:text-primary'
+            }`}
+          >
             {t('story')}
+            {isActive(ROUTES.story) && (
+              <motion.span 
+                layoutId="activeNavLine" 
+                className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-primary rounded-full" 
+              />
+            )}
           </Link>
-          <Link href={ROUTES.contact} className="text-xs uppercase tracking-widest font-sans font-bold hover:text-primary transition-colors duration-300">
+          <Link 
+            href="#" 
+            className="text-xs uppercase tracking-widest font-sans font-bold transition-all duration-300 text-foreground/90 hover:text-primary py-2"
+          >
+            {t('gallery')}
+          </Link>
+          <Link 
+            href={ROUTES.contact} 
+            className={`text-xs uppercase tracking-widest font-sans font-bold transition-all duration-300 relative py-2 ${
+              isActive(ROUTES.contact) ? 'text-primary' : 'text-foreground/90 hover:text-primary'
+            }`}
+          >
             {t('contact')}
-          </Link>
-          <Link href={ROUTES.status} className="text-xs uppercase tracking-widest font-sans font-bold hover:text-primary transition-colors duration-300">
-            {t('status')}
+            {isActive(ROUTES.contact) && (
+              <motion.span 
+                layoutId="activeNavLine" 
+                className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-primary rounded-full" 
+              />
+            )}
           </Link>
         </nav>
 
         {/* Desktop Utility elements */}
-        <div className="hidden md:flex items-center space-x-6">
+        <div className="hidden md:flex items-center space-x-4">
           <LanguageSwitcher />
+          
+          {/* Vertical Separator Line */}
+          <div className="w-[1px] h-6 bg-primary/20" />
+          
           <Link
             href={ROUTES.order}
-            className="text-[10px] font-sans font-bold uppercase tracking-widest bg-primary text-[#070B1E] border border-primary hover:bg-transparent hover:text-primary px-4 py-2.5 rounded shadow-[0_0_12px_rgba(212,175,55,0.25)] transition-all duration-300"
+            className="text-[10px] font-sans font-extrabold uppercase tracking-widest border border-primary/30 hover:border-primary/80 hover:bg-primary/5 text-primary px-5 py-2.5 rounded transition-all duration-300 flex items-center gap-2"
           >
             {t('orderOnline')}
+            <svg className="w-3 h-3 text-primary animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5Z" fill="currentColor" />
+            </svg>
           </Link>
         </div>
 
@@ -215,6 +289,13 @@ export default function Header() {
                   className="text-sm uppercase tracking-widest font-sans font-bold py-2 hover:text-primary transition-colors border-b border-primary/5"
                 >
                   {t('story')}
+                </Link>
+                <Link
+                  href="#"
+                  onClick={() => setIsDrawerOpen(false)}
+                  className="text-sm uppercase tracking-widest font-sans font-bold py-2 hover:text-primary transition-colors border-b border-primary/5"
+                >
+                  {t('gallery')}
                 </Link>
                 <Link
                   href={ROUTES.contact}
