@@ -234,6 +234,12 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
           <p className="text-xs text-muted-foreground mt-1">Manage, confirm, and update customer order workflows</p>
         </div>
         <div className="flex gap-2">
+          <Link href="/admin/orders/new" passHref legacyBehavior>
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold p-2.5 flex items-center gap-1.5">
+              <ShoppingBag className="w-3.5 h-3.5" />
+              New Phone Order
+            </Button>
+          </Link>
           <Button 
             onClick={() => router.refresh()}
             className="border border-border bg-background text-muted-foreground hover:text-foreground text-xs p-2.5 flex items-center gap-1.5"

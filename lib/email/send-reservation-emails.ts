@@ -9,13 +9,28 @@ import {
   getReservationCancelledCustomerTemplate,
   getReservationNewAdminTemplate
 } from "./templates/reservations";
+import { headers } from "next/headers";
 
-const BASE_URL =
-  process.env.APP_BASE_URL ||
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "") ||
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  "http://localhost:3000";
+async function getBaseUrl(): Promise<string> {
+  try {
+    const headersList = await headers();
+    const host = headersList.get("host");
+    const proto = headersList.get("x-forwarded-proto") || "http";
+    if (host) {
+      return `${proto}://${host}`;
+    }
+  } catch (e) {
+    // headers() throws if called outside request context (e.g. static rendering, background tasks)
+  }
+  return (
+    process.env.APP_BASE_URL ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "") ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    "http://localhost:3000"
+  );
+}
+
 const EMAIL_ENABLED = process.env.EMAIL_ENABLED === "true";
 
 
@@ -194,9 +209,10 @@ export async function sendReservationNewAdminEmail(reservationId: string) {
     const approveToken = await createAdminActionToken("reservation", reservationId, "approve", adminEmail);
     const rejectToken = await createAdminActionToken("reservation", reservationId, "reject", adminEmail);
 
-    const approveUrl = `${BASE_URL}/admin/email-actions/reservation/approve?token=${approveToken}`;
-    const rejectUrl = `${BASE_URL}/admin/email-actions/reservation/reject?token=${rejectToken}`;
-    const viewUrl = `${BASE_URL}/admin/reservations`;
+    const baseUrl = await getBaseUrl();
+    const approveUrl = `${baseUrl}/admin/email-actions/reservation/approve?token=${approveToken}`;
+    const rejectUrl = `${baseUrl}/admin/email-actions/reservation/reject?token=${rejectToken}`;
+    const viewUrl = `${baseUrl}/admin/reservations`;
 
     const { subject, html } = getReservationNewAdminTemplate({
       customerName: res.customer_name,

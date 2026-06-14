@@ -10,13 +10,28 @@ import {
   getOrderDeliveredCustomerTemplate,
   getOrderNewAdminTemplate
 } from "./templates/orders";
+import { headers } from "next/headers";
 
-const BASE_URL =
-  process.env.APP_BASE_URL ||
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "") ||
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  "http://localhost:3000";
+async function getBaseUrl(): Promise<string> {
+  try {
+    const headersList = await headers();
+    const host = headersList.get("host");
+    const proto = headersList.get("x-forwarded-proto") || "http";
+    if (host) {
+      return `${proto}://${host}`;
+    }
+  } catch (e) {
+    // headers() throws if called outside request context (e.g. static rendering, background tasks)
+  }
+  return (
+    process.env.APP_BASE_URL ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "") ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    "http://localhost:3000"
+  );
+}
+
 const EMAIL_ENABLED = process.env.EMAIL_ENABLED === "true";
 
 
@@ -115,7 +130,7 @@ export async function sendOrderRequestReceivedCustomerEmail(orderId: string) {
       .eq("id", orderId)
       .single();
 
-    if (error || !order || !order.customer_email) return;
+    if (error || !order || !order.customer_email || order.send_customer_email === false) return;
 
     if (await isEmailAlreadySent(adminClient, orderId, templateKey, order.customer_email)) {
       return;
@@ -194,9 +209,10 @@ export async function sendOrderNewAdminEmail(orderId: string) {
     const approveToken = await createAdminActionToken("order", orderId, "approve", adminEmail);
     const rejectToken = await createAdminActionToken("order", orderId, "reject", adminEmail);
 
-    const approveUrl = `${BASE_URL}/admin/email-actions/order/approve?token=${approveToken}`;
-    const rejectUrl = `${BASE_URL}/admin/email-actions/order/reject?token=${rejectToken}`;
-    const viewUrl = `${BASE_URL}/admin/orders/${orderId}`;
+    const baseUrl = await getBaseUrl();
+    const approveUrl = `${baseUrl}/admin/email-actions/order/approve?token=${approveToken}`;
+    const rejectUrl = `${baseUrl}/admin/email-actions/order/reject?token=${rejectToken}`;
+    const viewUrl = `${baseUrl}/admin/orders/${orderId}`;
 
     const { subject, html } = getOrderNewAdminTemplate({
       orderId: order.id,
@@ -257,7 +273,7 @@ export async function sendOrderApprovedCustomerEmail(orderId: string) {
       .eq("id", orderId)
       .single();
 
-    if (error || !order || !order.customer_email) return;
+    if (error || !order || !order.customer_email || order.send_customer_email === false) return;
 
     if (await isEmailAlreadySent(adminClient, orderId, templateKey, order.customer_email)) {
       return;
@@ -331,7 +347,7 @@ export async function sendOrderRejectedCustomerEmail(orderId: string) {
       .eq("id", orderId)
       .single();
 
-    if (error || !order || !order.customer_email) return;
+    if (error || !order || !order.customer_email || order.send_customer_email === false) return;
 
     if (await isEmailAlreadySent(adminClient, orderId, templateKey, order.customer_email)) {
       return;
@@ -394,7 +410,7 @@ export async function sendOrderReadyForPickupCustomerEmail(orderId: string) {
       .eq("id", orderId)
       .single();
 
-    if (error || !order || !order.customer_email) return;
+    if (error || !order || !order.customer_email || order.send_customer_email === false) return;
 
     // Strict constraint: only takeaway orders should receive ready for pickup
     if (order.order_type !== "takeaway") return;
@@ -458,7 +474,7 @@ export async function sendOrderDeliveredCustomerEmail(orderId: string) {
       .eq("id", orderId)
       .single();
 
-    if (error || !order || !order.customer_email) return;
+    if (error || !order || !order.customer_email || order.send_customer_email === false) return;
 
     // Strict constraint: only delivery orders should receive delivered notification
     if (order.order_type !== "delivery") return;
