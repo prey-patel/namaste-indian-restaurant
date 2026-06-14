@@ -1,8 +1,23 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 export default function AdminTopbar() {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      router.push('/admin/login');
+      router.refresh();
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  };
+
   return (
     <header className="h-20 border-b border-primary/20 bg-[#050B1E] px-8 flex items-center justify-between z-10 shrink-0 font-sans" aria-label="Admin Topbar">
       {/* System Status Indicator */}
@@ -10,9 +25,9 @@ export default function AdminTopbar() {
         <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
           Status:
         </span>
-        <span className="inline-flex items-center px-3 py-1 rounded-full text-[9px] font-bold tracking-widest uppercase border bg-primary/10 text-primary border-primary/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-primary mr-1.5" />
-          Makieta UI / Placeholder Shell
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-[9px] font-bold tracking-widest uppercase border bg-green-500/10 text-green-400 border-green-500/20">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-400 mr-1.5 animate-pulse" />
+          Połączono / Live Connected
         </span>
       </div>
 
@@ -29,9 +44,9 @@ export default function AdminTopbar() {
           </div>
         </div>
 
-        {/* Static Logout Button */}
+        {/* Real Logout Button */}
         <button
-          onClick={() => alert('Wylogowanie (Atrapa) / Logout (Placeholder)')}
+          onClick={handleLogout}
           className="text-[9px] font-bold uppercase tracking-widest border border-red-500/30 text-red-400 hover:bg-red-500/10 px-4 py-2.5 rounded transition-all duration-300 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
           aria-label="Wyloguj się z panelu / Logout"
         >
