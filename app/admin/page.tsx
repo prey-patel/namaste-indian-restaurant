@@ -1,9 +1,52 @@
 import React from 'react';
+import Link from 'next/link';
+import { createAdminClient } from '@/lib/supabase/admin';
 import PremiumCard from '@/components/ui/premium-card';
-import LuxuryAlert from '@/components/ui/luxury-alert';
 import StatusPill from '@/components/ui/status-pill';
+import { ROUTES } from '@/lib/routes/path';
+import { Calendar, ClipboardList, ChefHat, LayoutGrid } from 'lucide-react';
 
-export default function AdminDashboardPage() {
+export const revalidate = 0; // Enforce dynamic rendering for fresh stats
+
+export default async function AdminDashboardPage() {
+  let pendingReservations = 0;
+  let activeOrders = 0;
+  let kitchenOrders = 0;
+  let todayReservations = 0;
+
+  try {
+    const adminClient = createAdminClient();
+
+    // Fetch counts in parallel
+    const [pendingRes, activeOrd, kitchenOrd, todayRes] = await Promise.all([
+      adminClient
+        .from('reservations')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending'),
+      adminClient
+        .from('orders')
+        .select('id', { count: 'exact', head: true })
+        .in('status', ['pending', 'approved', 'preparing', 'ready_for_pickup', 'out_for_delivery']),
+      adminClient
+        .from('orders')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'preparing'),
+      adminClient
+        .from('reservations')
+        .select('id', { count: 'exact', head: true })
+        .gte('reservation_start_at', new Date(new Date().setHours(0,0,0,0)).toISOString())
+        .lt('reservation_start_at', new Date(new Date().setHours(23,59,59,999)).toISOString())
+        .in('status', ['pending', 'confirmed'])
+    ]);
+
+    pendingReservations = pendingRes.count || 0;
+    activeOrders = activeOrd.count || 0;
+    kitchenOrders = kitchenOrd.count || 0;
+    todayReservations = todayRes.count || 0;
+  } catch (err) {
+    console.error('Error fetching admin dashboard metrics:', err);
+  }
+
   return (
     <div className="space-y-8 font-sans">
       
@@ -13,82 +56,107 @@ export default function AdminDashboardPage() {
           <h1 className="text-3xl font-serif font-bold text-primary">Panel Administratora</h1>
           <p className="text-xs text-muted-foreground mt-1">Namaste Restaurant Management Control</p>
         </div>
-        <StatusPill status="neutral" label="Makieta UI" />
+        <StatusPill status="success" label="Live Production" />
       </div>
 
-      {/* Mockup Information Alert */}
-      <LuxuryAlert type="info" title="System w trybie projektowym / Design System Mode">
-        Panel administracyjny znajduje się obecnie w trybie demonstracyjnym (Faza 3). Wszystkie statystyki, 
-        dane i akcje są makietami (placeholders) służącymi do weryfikacji wyglądu oraz spójności layoutu. 
-        Połączenie z bazą danych Supabase oraz mechanizmy autoryzacji zostaną zintegrowane w kolejnych fazach wdrożenia.
-      </LuxuryAlert>
-
-      {/* Dashboard Metrics Placeholders */}
+      {/* Dashboard Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         
-        <PremiumCard hoverable={false} className="relative overflow-hidden">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
-            Rezerwacje oczekujące
-          </p>
-          <div className="flex items-baseline space-x-2">
-            <p className="text-3xl font-bold text-primary font-serif">—</p>
-            <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wider">(Atrapa)</span>
-          </div>
-          <p className="text-[10px] text-muted-foreground/40 mt-3 border-t border-primary/5 pt-2">
-            Pending Reservations
-          </p>
-        </PremiumCard>
+        {/* Pending Reservations */}
+        <Link href={ROUTES.admin.reservations} className="block group">
+          <PremiumCard hoverable className="relative overflow-hidden transition-all duration-300 group-hover:border-primary/40">
+            <div className="flex justify-between items-start mb-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Rezerwacje oczekujące
+              </p>
+              <Calendar className="w-4 h-4 text-primary opacity-60 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <div className="flex items-baseline space-x-2">
+              <p className="text-3xl font-bold text-primary font-serif">{pendingReservations}</p>
+            </div>
+            <p className="text-[10px] text-muted-foreground/40 mt-3 border-t border-primary/5 pt-2">
+              Pending Reservations
+            </p>
+          </PremiumCard>
+        </Link>
 
-        <PremiumCard hoverable={false} className="relative overflow-hidden">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
-            Dzisiejsze Stoliki
-          </p>
-          <div className="flex items-baseline space-x-2">
-            <p className="text-3xl font-bold text-primary font-serif">—</p>
-            <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wider">(Atrapa)</span>
-          </div>
-          <p className="text-[10px] text-muted-foreground/40 mt-3 border-t border-primary/5 pt-2">
-            Today&apos;s Bookings
-          </p>
-        </PremiumCard>
+        {/* Today's Bookings */}
+        <Link href={ROUTES.admin.reservations} className="block group">
+          <PremiumCard hoverable className="relative overflow-hidden transition-all duration-300 group-hover:border-primary/40">
+            <div className="flex justify-between items-start mb-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Dzisiejsze Rezerwacje
+              </p>
+              <Calendar className="w-4 h-4 text-primary opacity-60 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <div className="flex items-baseline space-x-2">
+              <p className="text-3xl font-bold text-primary font-serif">{todayReservations}</p>
+            </div>
+            <p className="text-[10px] text-muted-foreground/40 mt-3 border-t border-primary/5 pt-2">
+              Today&apos;s Bookings (Active)
+            </p>
+          </PremiumCard>
+        </Link>
 
-        <PremiumCard hoverable={false} className="relative overflow-hidden">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
-            Aktywne Zamówienia
-          </p>
-          <div className="flex items-baseline space-x-2">
-            <p className="text-3xl font-bold text-primary font-serif">—</p>
-            <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wider">(Atrapa)</span>
-          </div>
-          <p className="text-[10px] text-muted-foreground/40 mt-3 border-t border-primary/5 pt-2">
-            Active Orders (Del / CO)
-          </p>
-        </PremiumCard>
+        {/* Active Orders */}
+        <Link href={ROUTES.admin.orders} className="block group">
+          <PremiumCard hoverable className="relative overflow-hidden transition-all duration-300 group-hover:border-primary/40">
+            <div className="flex justify-between items-start mb-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Aktywne Zamówienia
+              </p>
+              <ClipboardList className="w-4 h-4 text-primary opacity-60 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <div className="flex items-baseline space-x-2">
+              <p className="text-3xl font-bold text-primary font-serif">{activeOrders}</p>
+            </div>
+            <p className="text-[10px] text-muted-foreground/40 mt-3 border-t border-primary/5 pt-2">
+              Active Orders (In Progress)
+            </p>
+          </PremiumCard>
+        </Link>
 
-        <PremiumCard hoverable={false} className="relative overflow-hidden">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
-            Zlecenia w Kuchni (KDS)
-          </p>
-          <div className="flex items-baseline space-x-2">
-            <p className="text-3xl font-bold text-primary font-serif">—</p>
-            <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wider">(Atrapa)</span>
-          </div>
-          <p className="text-[10px] text-muted-foreground/40 mt-3 border-t border-primary/5 pt-2">
-            Kitchen Queue (KDS)
-          </p>
-        </PremiumCard>
+        {/* KDS Kitchen Queue */}
+        <Link href={ROUTES.admin.kds} className="block group">
+          <PremiumCard hoverable className="relative overflow-hidden transition-all duration-300 group-hover:border-primary/40">
+            <div className="flex justify-between items-start mb-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Zlecenia w Kuchni (KDS)
+              </p>
+              <ChefHat className="w-4 h-4 text-primary opacity-60 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <div className="flex items-baseline space-x-2">
+              <p className="text-3xl font-bold text-primary font-serif">{kitchenOrders}</p>
+            </div>
+            <p className="text-[10px] text-muted-foreground/40 mt-3 border-t border-primary/5 pt-2">
+              Kitchen Queue (Preparing)
+            </p>
+          </PremiumCard>
+        </Link>
 
       </div>
 
-      {/* Operational guidelines shell */}
-      <PremiumCard hoverable={false} className="border-primary/20 bg-primary/5 py-8 text-center max-w-2xl mx-auto space-y-4">
-        <h2 className="text-xl font-serif font-bold text-primary">Struktura Panelu Wdrożona Pomyślnie</h2>
-        <p className="text-xs text-muted-foreground leading-relaxed max-w-lg mx-auto">
-          Zdefiniowaliśmy spójny system typografii serif/sans oraz luksusowe motywy Navy/Gold. 
-          Struktura panelu administratora (sidebar, topbar, responsive drawer) jest w pełni przygotowana 
-          na integracje logiki biznesowej, które nastąpią w kolejnych fazach projektu.
-        </p>
-      </PremiumCard>
+      {/* Quick Navigation Panels */}
+      <div className="border border-primary/10 rounded-2xl bg-card/10 p-6 md:p-8 space-y-6">
+        <div className="flex items-center space-x-2 text-primary">
+          <LayoutGrid className="w-5 h-5" />
+          <h2 className="text-lg font-serif font-bold">Szybkie skróty / Operations Shortcuts</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <Link href={ROUTES.admin.orders} className="px-4 py-3 rounded-lg border border-primary/20 hover:bg-primary/5 text-center text-xs font-bold uppercase tracking-wider text-primary transition-all duration-300">
+            Akceptacja Zamówień / Orders Approval
+          </Link>
+          <Link href={ROUTES.admin.reservations} className="px-4 py-3 rounded-lg border border-primary/20 hover:bg-primary/5 text-center text-xs font-bold uppercase tracking-wider text-primary transition-all duration-300">
+            Terminarz Rezerwacji / Reservations Grid
+          </Link>
+          <Link href={ROUTES.admin.kds} className="px-4 py-3 rounded-lg border border-primary/20 hover:bg-primary/5 text-center text-xs font-bold uppercase tracking-wider text-primary transition-all duration-300">
+            Monitor Kuchenny / Kitchen Display System
+          </Link>
+          <Link href={ROUTES.admin.menu} className="px-4 py-3 rounded-lg border border-primary/20 hover:bg-primary/5 text-center text-xs font-bold uppercase tracking-wider text-primary transition-all duration-300 sm:col-span-2 md:col-span-3">
+            Zarządzanie Menu CMS / Menu & Categories CMS
+          </Link>
+        </div>
+      </div>
 
     </div>
   );

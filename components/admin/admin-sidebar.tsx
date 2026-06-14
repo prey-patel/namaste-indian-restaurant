@@ -51,34 +51,10 @@ export default function AdminSidebar() {
           Configuration
         </span>
         <Link 
-          href={ROUTES.admin.tables} 
-          className="flex items-center px-3 py-2 text-sm font-medium hover:text-primary hover:bg-primary/5 rounded transition-colors"
-        >
-          Tables Map
-        </Link>
-        <Link 
           href={ROUTES.admin.menu} 
           className="flex items-center px-3 py-2 text-sm font-medium hover:text-primary hover:bg-primary/5 rounded transition-colors"
         >
           Menu & Category CMS
-        </Link>
-        <Link 
-          href={ROUTES.admin.settings.root} 
-          className="flex items-center px-3 py-2 text-sm font-medium hover:text-primary hover:bg-primary/5 rounded transition-colors"
-        >
-          System Settings
-        </Link>
-        <Link 
-          href={ROUTES.admin.notifications} 
-          className="flex items-center px-3 py-2 text-sm font-medium hover:text-primary hover:bg-primary/5 rounded transition-colors"
-        >
-          Notification Logs
-        </Link>
-        <Link 
-          href={ROUTES.admin.logs} 
-          className="flex items-center px-3 py-2 text-sm font-medium hover:text-primary hover:bg-primary/5 rounded transition-colors"
-        >
-          Audit Activity Logs
         </Link>
       </nav>
 
