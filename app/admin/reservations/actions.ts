@@ -2,6 +2,12 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import {
+  sendReservationConfirmedCustomerEmail,
+  sendReservationRejectedCustomerEmail,
+  sendReservationCancelledCustomerEmail
+} from '@/lib/email/send-reservation-emails';
+
 
 /**
  * Checks if the current request is authenticated and has owner or manager roles.
@@ -106,10 +112,14 @@ export async function confirmReservationAction(id: string, tableId?: string | nu
       throw new Error('Database update failed');
     }
 
+    // Trigger customer email notification
+    await sendReservationConfirmedCustomerEmail(id);
+
     revalidatePath('/[locale]/reservations', 'layout');
     revalidatePath('/admin/reservations', 'layout');
     return { success: true };
   } catch (err: any) {
+
     console.error('Failed to confirm reservation:', err);
     return { success: false, error: err.message || 'Server error' };
   }
@@ -140,6 +150,9 @@ export async function rejectReservationAction(id: string, reason?: string | null
       throw new Error('Database update failed');
     }
 
+    // Trigger customer email notification
+    await sendReservationRejectedCustomerEmail(id);
+
     revalidatePath('/[locale]/reservations', 'layout');
     revalidatePath('/admin/reservations', 'layout');
     return { success: true };
@@ -148,6 +161,7 @@ export async function rejectReservationAction(id: string, reason?: string | null
     return { success: false, error: err.message || 'Server error' };
   }
 }
+
 
 export async function cancelReservationAction(id: string, reason?: string | null) {
   try {
@@ -174,6 +188,9 @@ export async function cancelReservationAction(id: string, reason?: string | null
       throw new Error('Database update failed');
     }
 
+    // Trigger customer email notification
+    await sendReservationCancelledCustomerEmail(id);
+
     revalidatePath('/[locale]/reservations', 'layout');
     revalidatePath('/admin/reservations', 'layout');
     return { success: true };
@@ -182,6 +199,7 @@ export async function cancelReservationAction(id: string, reason?: string | null
     return { success: false, error: err.message || 'Server error' };
   }
 }
+
 
 export async function completeReservationAction(id: string) {
   try {

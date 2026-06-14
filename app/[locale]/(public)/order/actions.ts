@@ -8,6 +8,11 @@ import { calculateOrderTotalServerSide } from '@/lib/orders/pricing';
 import { z } from 'zod';
 
 import { isRateLimited } from '@/lib/security/rate-limit';
+import {
+  sendOrderRequestReceivedCustomerEmail,
+  sendOrderNewAdminEmail
+} from '@/lib/email/send-order-emails';
+
 
 export async function createOrderRequestAction(rawData: any) {
   try {
@@ -246,6 +251,10 @@ export async function createOrderRequestAction(rawData: any) {
       };
     }
 
+    // Trigger transactional email notifications
+    await sendOrderRequestReceivedCustomerEmail(newOrder.id);
+    await sendOrderNewAdminEmail(newOrder.id);
+
     return {
       success: true,
       id: newOrder.id,
@@ -256,6 +265,7 @@ export async function createOrderRequestAction(rawData: any) {
       totalAmount: pricingResult.totalAmount,
       orderType: data.order_type
     };
+
 
   } catch (err: any) {
     console.error('Server error in createOrderRequestAction:', err);

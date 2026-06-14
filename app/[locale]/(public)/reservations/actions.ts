@@ -7,6 +7,11 @@ import { reservationRequestSchema } from '@/lib/validation/reservations';
 import { z } from 'zod';
 
 import { isRateLimited } from '@/lib/security/rate-limit';
+import {
+  sendReservationRequestReceivedCustomerEmail,
+  sendReservationNewAdminEmail
+} from '@/lib/email/send-reservation-emails';
+
 
 function addTwoHours(timeStr: string): string {
   const [h, m] = timeStr.split(':').map(Number);
@@ -198,11 +203,16 @@ export async function createReservationRequestAction(rawData: z.infer<typeof res
       };
     }
 
+    // Trigger transactional email notifications
+    await sendReservationRequestReceivedCustomerEmail(newReservation.id);
+    await sendReservationNewAdminEmail(newReservation.id);
+
     return {
       success: true,
       id: newReservation.id,
       token: newReservation.token
     };
+
   } catch (err: any) {
     console.error('Server error in createReservationRequestAction:', err);
     return {

@@ -2,6 +2,13 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import {
+  sendOrderApprovedCustomerEmail,
+  sendOrderRejectedCustomerEmail,
+  sendOrderReadyForPickupCustomerEmail,
+  sendOrderDeliveredCustomerEmail
+} from '@/lib/email/send-order-emails';
+
 
 /**
  * Checks if the current request is authenticated and has owner or manager roles.
@@ -93,6 +100,9 @@ export async function confirmOrderAction(id: string, etaMinutes: number) {
       throw new Error('Failed to update order status in database');
     }
 
+    // Trigger customer email notification
+    await sendOrderApprovedCustomerEmail(id);
+
     revalidatePath('/[locale]/order/status', 'layout');
     revalidatePath('/admin/orders', 'layout');
     return { success: true };
@@ -101,6 +111,7 @@ export async function confirmOrderAction(id: string, etaMinutes: number) {
     return { success: false, error: err.message || 'Server error occurred.' };
   }
 }
+
 
 export async function rejectOrderAction(id: string, reason?: string | null) {
   try {
@@ -129,6 +140,9 @@ export async function rejectOrderAction(id: string, reason?: string | null) {
       throw new Error('Failed to reject order');
     }
 
+    // Trigger customer email notification
+    await sendOrderRejectedCustomerEmail(id);
+
     revalidatePath('/[locale]/order/status', 'layout');
     revalidatePath('/admin/orders', 'layout');
     return { success: true };
@@ -137,6 +151,7 @@ export async function rejectOrderAction(id: string, reason?: string | null) {
     return { success: false, error: err.message || 'Server error occurred.' };
   }
 }
+
 
 export async function cancelOrderAction(id: string, reason?: string | null) {
   try {
@@ -211,6 +226,10 @@ export async function markOrderReadyAction(id: string) {
       throw new Error('Failed to update order status');
     }
 
+    if (order.order_type === 'takeaway') {
+      await sendOrderReadyForPickupCustomerEmail(id);
+    }
+
     revalidatePath('/[locale]/order/status', 'layout');
     revalidatePath('/admin/orders', 'layout');
     return { success: true };
@@ -219,6 +238,7 @@ export async function markOrderReadyAction(id: string) {
     return { success: false, error: err.message || 'Server error occurred.' };
   }
 }
+
 
 export async function completeOrderAction(id: string, paymentReceived: boolean) {
   try {
@@ -253,6 +273,10 @@ export async function completeOrderAction(id: string, paymentReceived: boolean) 
       throw new Error('Failed to complete order');
     }
 
+    if (order.order_type === 'delivery') {
+      await sendOrderDeliveredCustomerEmail(id);
+    }
+
     revalidatePath('/[locale]/order/status', 'layout');
     revalidatePath('/admin/orders', 'layout');
     return { success: true };
@@ -261,6 +285,7 @@ export async function completeOrderAction(id: string, paymentReceived: boolean) 
     return { success: false, error: err.message || 'Server error occurred.' };
   }
 }
+
 
 export async function updateOrderEtaAction(id: string, etaMinutes: number) {
   try {
