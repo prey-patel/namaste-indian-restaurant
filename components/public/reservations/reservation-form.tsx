@@ -11,9 +11,10 @@ import PremiumCard from '@/components/ui/premium-card';
 
 type ReservationFormProps = {
   locale: 'pl' | 'en';
+  maxGuests?: number;
 };
 
-export default function ReservationForm({ locale }: ReservationFormProps) {
+export default function ReservationForm({ locale, maxGuests = 8 }: ReservationFormProps) {
   const t = useTranslations('reservations');
 
   // Form Fields State
@@ -237,7 +238,7 @@ export default function ReservationForm({ locale }: ReservationFormProps) {
             required
             className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/40 transition-colors cursor-pointer"
           >
-            {Array.from({ length: 20 }).map((_, idx) => (
+            {Array.from({ length: maxGuests }).map((_, idx) => (
               <option key={idx + 1} value={idx + 1}>
                 {idx + 1} {idx + 1 === 1 ? (locale === 'pl' ? 'osoba' : 'guest') : (locale === 'pl' ? 'osoby' : 'guests')}
               </option>

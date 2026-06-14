@@ -6,6 +6,7 @@ import MandalaWatermark from '@/components/ui/mandala-watermark';
 import LuxuryAlert from '@/components/ui/luxury-alert';
 import GoldFrame from '@/components/ui/gold-frame';
 import ReservationForm from '@/components/public/reservations/reservation-form';
+import { getPublicSystemSettings } from '@/lib/supabase/settings';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -32,6 +33,11 @@ export default async function ReservationsPage({ params }: Props) {
 
   const t = await getTranslations('reservations');
   const tNav = await getTranslations('nav');
+  const settings = await getPublicSystemSettings();
+
+  const maxGuests = settings.reservation_max_guests ?? 8;
+  const phone = settings.restaurant_phone ?? '+48 511 984 331';
+  const address = settings.restaurant_address ?? 'Warszawska 1/3, 06-400 Ciechanów';
 
   return (
     <PageTransition>
@@ -76,8 +82,8 @@ export default async function ReservationsPage({ params }: Props) {
                 <span className="text-primary font-bold mt-0.5">&bull;</span>
                 <p>
                   {locale === 'pl'
-                    ? 'Rezerwacje stolików powyżej 8 osób prosimy ustalać telefonicznie pod numerem: +48 511 984 331.'
-                    : 'For table bookings exceeding 8 guests, please contact us directly by phone: +48 511 984 331.'}
+                    ? `Rezerwacje stolików powyżej ${maxGuests} osób prosimy ustalać telefonicznie pod numerem: ${phone}.`
+                    : `For table bookings exceeding ${maxGuests} guests, please contact us directly by phone: ${phone}.`}
                 </p>
               </div>
               <div className="flex items-start space-x-3">
@@ -92,17 +98,17 @@ export default async function ReservationsPage({ params }: Props) {
 
             <div className="border-t border-primary/10 pt-6 space-y-2 text-xs">
               <p className="text-muted-foreground">
-                <strong className="text-primary">Ciechanów, Warszawska 1/3</strong>
+                <strong className="text-primary">{address}</strong>
               </p>
               <p className="text-muted-foreground">
-                {locale === 'pl' ? 'Telefon:' : 'Phone:'} <strong className="text-foreground">511 984 331</strong>
+                {locale === 'pl' ? 'Telefon:' : 'Phone:'} <strong className="text-foreground">{phone}</strong>
               </p>
             </div>
           </div>
 
           {/* Reservation Request Form (Right 7 cols) */}
           <div className="lg:col-span-7 w-full">
-            <ReservationForm locale={locale as 'pl' | 'en'} />
+            <ReservationForm locale={locale as 'pl' | 'en'} maxGuests={maxGuests} />
           </div>
 
         </div>

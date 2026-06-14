@@ -115,13 +115,13 @@ export async function createOrderRequestAction(rawData: any) {
     // Holiday closures check
     const { data: holiday } = await adminClient
       .from('holiday_closures')
-      .select('id, name_pl, name_en')
-      .eq('closed_date', todayLocalDate)
+      .select('id, title_pl, title_en')
+      .eq('date', todayLocalDate)
       .eq('is_active', true)
       .maybeSingle();
 
     if (holiday) {
-      const holidayName = data.source_language === 'pl' ? holiday.name_pl : holiday.name_en;
+      const holidayName = data.source_language === 'pl' ? holiday.title_pl : holiday.title_en;
       return {
         success: false,
         error: data.source_language === 'pl'

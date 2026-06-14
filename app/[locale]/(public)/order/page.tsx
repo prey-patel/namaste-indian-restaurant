@@ -5,6 +5,7 @@ import SectionContainer from '@/components/ui/section-container';
 import { getPublicMenuData } from '@/lib/supabase/menu';
 import { createAdminClient } from '@/lib/supabase/admin';
 import OrderingWorkflowClient from '@/components/public/order/ordering-workflow-client';
+import { getPublicSystemSettings } from '@/lib/supabase/settings';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -38,14 +39,15 @@ export default async function PublicOrderPage({ params }: Props) {
 
   // Load operational status to see if delivery or takeaway is enabled
   const adminClient = createAdminClient();
-  const { data: opStatus } = await adminClient
-    .from('operational_status')
-    .select('delivery_enabled, takeaway_enabled')
-    .single();
+  const [opStatusRes, settings] = await Promise.all([
+    adminClient.from('operational_status').select('delivery_enabled, takeaway_enabled').single(),
+    getPublicSystemSettings()
+  ]);
+  const opStatus = opStatusRes.data;
 
   const isPl = locale === 'pl';
-  const address = 'Warszawska 1/3, Ciechanów';
-  const phone = '511 984 331';
+  const address = settings.restaurant_address ?? 'Warszawska 1/3, Ciechanów';
+  const phone = settings.restaurant_phone ?? '511 984 331';
 
   return (
     <PageTransition>

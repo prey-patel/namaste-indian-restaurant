@@ -69,6 +69,22 @@ export async function createReservationRequestAction(rawData: z.infer<typeof res
 
     const adminClient = createAdminClient();
 
+    // 3.5. Dynamic Guest Limit Verification
+    const { data: maxGuestsSetting } = await adminClient
+      .from('system_settings')
+      .select('value')
+      .eq('key', 'reservation_max_guests')
+      .maybeSingle();
+    const maxGuests = maxGuestsSetting ? Number(maxGuestsSetting.value) : 8;
+    if (data.guests_count > maxGuests) {
+      return {
+        success: false,
+        error: data.source_language === 'pl'
+          ? `Maksymalna liczba gości dla rezerwacji online to ${maxGuests}.`
+          : `Maximum allowed guests per online booking is ${maxGuests}.`
+      };
+    }
+
     // 4. Operational Settings Verification
     const { data: opStatus } = await adminClient
       .from('operational_status')
@@ -87,13 +103,13 @@ export async function createReservationRequestAction(rawData: z.infer<typeof res
     // 5. Holiday Closures Verification
     const { data: holiday } = await adminClient
       .from('holiday_closures')
-      .select('id, name_pl, name_en')
-      .eq('closed_date', data.reservation_date)
+      .select('id, title_pl, title_en')
+      .eq('date', data.reservation_date)
       .eq('is_active', true)
       .maybeSingle();
 
     if (holiday) {
-      const holidayName = data.source_language === 'pl' ? holiday.name_pl : holiday.name_en;
+      const holidayName = data.source_language === 'pl' ? holiday.title_pl : holiday.title_en;
       return {
         success: false,
         error: data.source_language === 'pl'

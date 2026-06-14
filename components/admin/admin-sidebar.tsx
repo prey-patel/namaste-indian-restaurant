@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ROUTES } from '@/lib/routes/path';
-import { LayoutDashboard, ShoppingCart, CalendarDays, ChefHat, BookOpen } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, CalendarDays, ChefHat, BookOpen, Settings } from 'lucide-react';
 
 export default function AdminSidebar() {
   const pathname = usePathname();
@@ -22,6 +22,7 @@ export default function AdminSidebar() {
     { href: ROUTES.admin.reservations, label: 'Reservations Grid', icon: CalendarDays },
     { href: ROUTES.admin.kds, label: 'Kitchen Display (KDS)', icon: ChefHat },
     { href: ROUTES.admin.menu, label: 'Menu & Category CMS', icon: BookOpen },
+    { href: ROUTES.admin.settings.root, label: 'Settings', icon: Settings },
   ];
 
   return (

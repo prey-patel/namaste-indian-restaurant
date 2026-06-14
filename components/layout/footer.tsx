@@ -1,9 +1,24 @@
 import { Link } from '@/i18n/routing';
-import { useTranslations } from 'next-intl';
+import { getTranslations } from 'next-intl/server';
 import { ROUTES } from '@/lib/routes/path';
+import { getPublicSystemSettings } from '@/lib/supabase/settings';
 
-export default function Footer() {
-  const t = useTranslations('nav');
+export default async function Footer() {
+  const t = await getTranslations('nav');
+  const settings = await getPublicSystemSettings();
+
+  const name = settings.restaurant_name || 'Namaste Indian Restaurant';
+  const address = settings.restaurant_address || 'Warszawska 1/3, 06-400 Ciechanów, Poland';
+  const phone = settings.restaurant_phone || '511984331';
+
+  // Format phone: e.g. 511984331 -> +48 511 984 331
+  const formatPhone = (phoneStr: string) => {
+    const digits = phoneStr.replace(/\D/g, '');
+    if (digits.length === 9) {
+      return `+48 ${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+    }
+    return phoneStr.startsWith('+') ? phoneStr : `+48 ${phoneStr}`;
+  };
 
   return (
     <footer className="w-full border-t border-primary/20 bg-[#050B1E] py-12 text-muted-foreground mt-auto font-sans" aria-label="Footer">
@@ -11,9 +26,9 @@ export default function Footer() {
         
         {/* Restaurant Contact Section */}
         <div className="flex flex-col space-y-3">
-          <h3 className="font-serif text-lg font-bold text-primary tracking-wide">Namaste Indian Restaurant</h3>
-          <p className="text-sm">Warszawska 1/3, 06-400 Ciechanów, Polska</p>
-          <p className="text-sm">Tel: +48 511 984 331</p>
+          <h3 className="font-serif text-lg font-bold text-primary tracking-wide">{name}</h3>
+          <p className="text-sm">{address}</p>
+          <p className="text-sm">Tel: {formatPhone(phone)}</p>
         </div>
 
         {/* Links Navigation */}

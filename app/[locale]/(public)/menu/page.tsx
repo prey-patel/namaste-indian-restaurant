@@ -5,6 +5,7 @@ import SectionContainer from '@/components/ui/section-container';
 import MenuHero from '@/components/public/menu/menu-hero';
 import MenuClientWrapper from '@/components/public/menu/menu-client-wrapper';
 import { getPublicMenuData } from '@/lib/supabase/menu';
+import { getPublicSystemSettings } from '@/lib/supabase/settings';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -37,24 +38,38 @@ export default async function MenuPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
 
-  // Load public menu categories and available items from Supabase (respecting RLS)
-  const { categories, items } = await getPublicMenuData();
+  // Load public settings and menu data
+  const [settings, { categories, items }] = await Promise.all([
+    getPublicSystemSettings(),
+    getPublicMenuData()
+  ]);
   const isPl = locale === 'pl';
+
+  const address = settings.restaurant_address || 'Warszawska 1/3, 06-400 Ciechanów, Poland';
+  const phone = settings.restaurant_phone || '511984331';
+  const name = settings.restaurant_name || 'Namaste Indian Restaurant';
+
+  // Parse address for JSON-LD fields
+  const addressParts = address.split(',').map(p => p.trim());
+  const streetAddress = addressParts[0] || 'Warszawska 1/3';
+  const zipAndCity = addressParts[1] ? addressParts[1].split(' ') : ['06-400', 'Ciechanów'];
+  const postalCode = zipAndCity[0] || '06-400';
+  const addressLocality = zipAndCity[1] || 'Ciechanów';
 
   // Restaurant/FoodMenu JSON-LD schema configuration
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Restaurant",
-    "name": "Namaste Indian Restaurant",
+    "name": name,
     "image": "https://raw.githubusercontent.com/preyanshu/namaste-restaurant/main/public/images/hero-bg.jpg", // fallback placeholder or site logo
     "address": {
       "@type": "PostalAddress",
-      "streetAddress": "Warszawska 1/3",
-      "addressLocality": "Ciechanów",
-      "postalCode": "06-400",
+      "streetAddress": streetAddress,
+      "addressLocality": addressLocality,
+      "postalCode": postalCode,
       "addressCountry": "PL"
     },
-    "telephone": "511984331",
+    "telephone": phone,
     "servesCuisine": "Indian",
     "priceRange": "$$",
     "hasMenu": {
