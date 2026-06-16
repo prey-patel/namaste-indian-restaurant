@@ -63,7 +63,7 @@ export default function MenuItemCard({ item, locale }: MenuItemCardProps) {
   };
 
   return (
-    <GoldFrame className={`h-full flex flex-col transition-all duration-300 hover:border-primary/25 hover:shadow-[0_0_15px_rgba(212,175,55,0.05)] ${!item.is_available ? 'opacity-65 saturate-50' : ''}`}>
+    <GoldFrame className="h-full flex flex-col transition-all duration-300 hover:border-primary/25 hover:shadow-[0_0_15px_rgba(212,175,55,0.05)]">
       <div className="flex flex-col h-full space-y-4">
         
         {/* Image Container / Premium Placeholder */}
@@ -101,11 +101,6 @@ export default function MenuItemCard({ item, locale }: MenuItemCardProps) {
 
           {/* Badges Overlay */}
           <div className="absolute top-2 left-2 flex flex-wrap gap-1.5 z-10">
-            {!item.is_available && (
-              <span className="bg-red-950/90 text-red-400 border border-red-500/30 text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-wider shadow-sm backdrop-blur-sm">
-                {t('unavailable')}
-              </span>
-            )}
             {item.is_chef_special && <DietaryBadge type="chef_special" />}
             {item.is_popular && <DietaryBadge type="popular" />}
             {item.is_new && <DietaryBadge type="new" />}

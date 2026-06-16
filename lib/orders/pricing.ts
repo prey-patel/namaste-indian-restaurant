@@ -47,8 +47,11 @@ export async function calculateOrderTotalServerSide(
 
   // Double check item states
   for (const dbItem of dbItems) {
-    if (!dbItem.is_active || dbItem.is_deleted || !dbItem.is_available) {
-      throw new Error(`Item ${dbItem.name_en || dbItem.id} is currently unavailable`);
+    if (!dbItem.is_active || dbItem.is_deleted) {
+      throw new Error(`Item ${dbItem.name_en || dbItem.id} is not active or has been deleted`);
+    }
+    if (orderType === 'delivery' && !dbItem.is_available) {
+      throw new Error(`Item ${dbItem.name_en || dbItem.id} is not available for delivery`);
     }
   }
 
