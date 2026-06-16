@@ -37,6 +37,7 @@ type MenuItem = {
   is_chef_special: boolean;
   is_popular: boolean;
   is_new: boolean;
+  is_available: boolean;
 };
 
 type BasketItem = {
@@ -326,7 +327,7 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
                       return (
                         <div 
                           key={item.id} 
-                          className="bg-[#050B1E] border border-primary/10 rounded-lg p-4 flex gap-4 hover:border-primary/25 transition-colors relative"
+                          className={`bg-[#050B1E] border border-primary/10 rounded-lg p-4 flex gap-4 hover:border-primary/25 transition-colors relative ${!item.is_available ? 'opacity-55 saturate-50' : ''}`}
                         >
                           {/* Image preview (placeholder if missing) */}
                           <div className="w-20 h-20 bg-[#070B1E] border border-primary/15 rounded overflow-hidden flex-shrink-0 flex items-center justify-center">
@@ -368,7 +369,11 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
                               </div>
 
                               {/* Quantity indicator or Add button */}
-                              {basketQty > 0 ? (
+                              {!item.is_available ? (
+                                <span className="border border-red-500/30 bg-red-950/20 text-red-400 font-bold text-[10px] uppercase tracking-wider py-1 px-3 rounded select-none">
+                                  {locale === 'pl' ? 'Niedostępne' : 'Unavailable'}
+                                </span>
+                              ) : basketQty > 0 ? (
                                 <div className="flex items-center gap-2.5 bg-primary/15 border border-primary/30 px-2 py-0.5 rounded-full text-xs">
                                   <button 
                                     onClick={() => handleDecreaseQuantity(item.id)}

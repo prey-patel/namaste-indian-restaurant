@@ -74,6 +74,7 @@ export default function PreviewCard({ itemData }: PreviewCardProps) {
     is_new: itemData.is_new,
     display_order: 0,
     signed_image_url: signedUrl,
+    is_available: true,
   };
 
   return (

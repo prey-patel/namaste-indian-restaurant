@@ -30,6 +30,7 @@ export type PublicMenuItem = {
   is_new: boolean;
   display_order: number;
   signed_image_url?: string | null;
+  is_available: boolean;
 };
 
 /**
@@ -82,11 +83,11 @@ export async function getPublicMenuItems(): Promise<PublicMenuItem[]> {
         is_chef_special,
         is_popular,
         is_new,
-        display_order
+        display_order,
+        is_available
       `)
       .eq('is_active', true)
       .eq('is_deleted', false)
-      .eq('is_available', true)
       .order('display_order', { ascending: true });
 
     if (error) {

@@ -114,6 +114,7 @@
     "loadingState": "Wczytywanie menu...",
     "errorState": "Nie udało się załadować menu. Spróbuj ponownie później.",
     "priceSuffix": "PLN",
+    "unavailable": "Niedostępne",
     "dietary": {
       "vegetarian": "Wegetariańskie",
       "vegan": "Wegańskie",
