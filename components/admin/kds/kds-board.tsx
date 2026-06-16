@@ -63,7 +63,7 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
 
   const [orders, setOrders] = useState<KdsOrder[]>(initialOrders);
   const [isConnected, setIsConnected] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -77,6 +77,7 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
 
   // Load preferences from localStorage
   useEffect(() => {
+    setLastUpdated(new Date());
     const storedSound = localStorage.getItem('kds_sound_enabled');
     if (storedSound === 'true') {
       setSoundEnabled(true);
@@ -298,7 +299,7 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
 
           {/* Last Updated */}
           <span className="text-[10px] text-muted-foreground/50 font-mono">
-            {t('lastUpdated')}: {formatTime(lastUpdated)}
+            {t('lastUpdated')}: {lastUpdated ? formatTime(lastUpdated) : '--:--:--'}
           </span>          {/* Refresh */}
           <button
             onClick={handleRefresh}
