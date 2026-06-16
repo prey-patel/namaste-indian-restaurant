@@ -268,13 +268,16 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
     });
 
   return (
-    <div className={`${
-      isFullscreen 
-        ? `fixed inset-0 z-50 overflow-auto p-6 transition-colors duration-300 ${
-            theme === 'light' ? 'admin-theme bg-background text-foreground' : 'bg-[#070B1E] text-white'
-          }`
-        : ''
-    }`}>
+    <div 
+      className={`notranslate ${
+        isFullscreen 
+          ? `fixed inset-0 z-50 overflow-auto p-6 transition-colors duration-300 ${
+              theme === 'light' ? 'admin-theme bg-background text-foreground' : 'bg-[#070B1E] text-white'
+            }`
+          : ''
+      }`}
+      translate="no"
+    >
       {/* KDS Header Bar */}
       <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
         isFullscreen ? 'mb-6' : 'mb-6'
