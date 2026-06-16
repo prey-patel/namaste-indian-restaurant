@@ -61,25 +61,6 @@ export default function ManualOrderForm({ menuItems, categories }: Props) {
 
   // 2. Order Settings State
   const [orderType, setOrderType] = useState<"takeaway" | "delivery">("takeaway");
-  const handleSetOrderType = (type: "takeaway" | "delivery") => {
-    setOrderType(type);
-    if (type === "delivery") {
-      const unavailableInBasket = basket.filter(basketItem => {
-        const menuItem = menuItems.find(m => m.id === basketItem.menu_item_id);
-        return menuItem && !menuItem.is_available;
-      });
-
-      if (unavailableInBasket.length > 0) {
-        setBasket(prev => prev.filter(basketItem => {
-          const menuItem = menuItems.find(m => m.id === basketItem.menu_item_id);
-          return menuItem ? menuItem.is_available : true;
-        }));
-        
-        const names = unavailableInBasket.map(b => customerLanguage === "en" ? b.name_en : b.name_pl).join(", ");
-        setErrorMsg(`Removed items not available for delivery: ${names}`);
-      }
-    }
-  };
   const [orderSource, setOrderSource] = useState<"phone" | "walk_in" | "admin">("phone");
   const [customerNotes, setCustomerNotes] = useState("");
   const [adminNotes, setAdminNotes] = useState("");
@@ -419,14 +400,14 @@ export default function ManualOrderForm({ menuItems, categories }: Props) {
                 <div className="flex gap-2">
                   <Button 
                     type="button"
-                    onClick={() => handleSetOrderType("takeaway")}
+                    onClick={() => setOrderType("takeaway")}
                     className={`flex-1 h-10 text-xs border ${orderType === "takeaway" ? "bg-[#9E690A] text-white border-[#9E690A]" : "bg-white text-[#3D2C1E] border-[#EAE3D2] hover:bg-[#FAF9F5]"} font-semibold`}
                   >
                     Takeaway / Wynos
                   </Button>
                   <Button 
                     type="button"
-                    onClick={() => handleSetOrderType("delivery")}
+                    onClick={() => setOrderType("delivery")}
                     className={`flex-1 h-10 text-xs border ${orderType === "delivery" ? "bg-[#9E690A] text-white border-[#9E690A]" : "bg-white text-[#3D2C1E] border-[#EAE3D2] hover:bg-[#FAF9F5]"} font-semibold`}
                   >
                     Delivery / Dostawa
@@ -494,7 +475,7 @@ export default function ManualOrderForm({ menuItems, categories }: Props) {
             {/* Menu Items List */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-1">
               {filteredMenuItems.map(item => {
-                const isAvailable = item.is_active && !item.is_deleted && (orderType === "takeaway" || item.is_available);
+                const isAvailable = item.is_available && item.is_active && !item.is_deleted;
                 return (
                   <div 
                     key={item.id}

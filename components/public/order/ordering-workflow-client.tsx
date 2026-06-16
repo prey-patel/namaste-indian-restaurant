@@ -106,20 +106,7 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
     }
   }, [orderType]);
 
-  const handleSetOrderType = (newType: 'delivery' | 'takeaway') => {
-    setOrderType(newType);
-    if (newType === 'delivery') {
-      const unavailableInBasket = basket.filter(item => !item.menuItem.is_available);
-      if (unavailableInBasket.length > 0) {
-        setBasket(prev => prev.filter(item => item.menuItem.is_available));
-        const names = unavailableInBasket.map(item => locale === 'pl' ? item.menuItem.name_pl : item.menuItem.name_en).join(', ');
-        setError(locale === 'pl' 
-          ? `Usunięto z koszyka pozycje niedostępne w dostawie: ${names}` 
-          : `Removed items not available for delivery: ${names}`
-        );
-      }
-    }
-  };
+
 
   // Group items by category
   const getItemsByCategory = (categoryId: string) => {
@@ -342,7 +329,7 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
                       return (
                         <div 
                           key={item.id} 
-                          className={`bg-[#050B1E] border border-primary/10 rounded-lg p-4 flex gap-4 hover:border-primary/25 transition-colors relative ${orderType === 'delivery' && !item.is_available ? 'opacity-55 saturate-50' : ''}`}
+                          className="bg-[#050B1E] border border-primary/10 rounded-lg p-4 flex gap-4 hover:border-primary/25 transition-colors relative"
                         >
                           {/* Image preview (placeholder if missing) */}
                           <div className="w-20 h-20 bg-[#070B1E] border border-primary/15 rounded overflow-hidden flex-shrink-0 flex items-center justify-center">
@@ -384,11 +371,7 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
                               </div>
 
                               {/* Quantity indicator or Add button */}
-                              {orderType === 'delivery' && !item.is_available ? (
-                                <span className="border border-red-500/30 bg-red-950/20 text-red-400 font-bold text-[10px] uppercase tracking-wider py-1 px-3 rounded select-none">
-                                  {locale === 'pl' ? 'Tylko wynos' : 'Takeaway only'}
-                                </span>
-                              ) : basketQty > 0 ? (
+                              {basketQty > 0 ? (
                                 <div className="flex items-center gap-2.5 bg-primary/15 border border-primary/30 px-2 py-0.5 rounded-full text-xs">
                                   <button 
                                     onClick={() => handleDecreaseQuantity(item.id)}
@@ -448,7 +431,7 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
                 <button
                   type="button"
                   disabled={!operationalStatus.takeaway_enabled}
-                  onClick={() => handleSetOrderType('takeaway')}
+                  onClick={() => setOrderType('takeaway')}
                   className={`py-2 text-xs font-bold uppercase tracking-wider rounded transition-colors ${
                     orderType === 'takeaway' 
                       ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md' 
@@ -460,7 +443,7 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
                 <button
                   type="button"
                   disabled={!operationalStatus.delivery_enabled}
-                  onClick={() => handleSetOrderType('delivery')}
+                  onClick={() => setOrderType('delivery')}
                   className={`py-2 text-xs font-bold uppercase tracking-wider rounded transition-colors ${
                     orderType === 'delivery' 
                       ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md' 

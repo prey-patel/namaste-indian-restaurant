@@ -36,6 +36,7 @@ export default async function PublicOrderPage({ params }: Props) {
 
   // Load public menu categories and available items
   const { categories, items } = await getPublicMenuData();
+  const availableItems = items.filter(item => item.is_available);
 
   // Load operational status to see if delivery or takeaway is enabled
   const adminClient = createAdminClient();
@@ -67,7 +68,7 @@ export default async function PublicOrderPage({ params }: Props) {
       <SectionContainer>
         <OrderingWorkflowClient
           categories={categories}
-          items={items}
+          items={availableItems}
           operationalStatus={{
             delivery_enabled: opStatus?.delivery_enabled ?? true,
             takeaway_enabled: opStatus?.takeaway_enabled ?? true,
