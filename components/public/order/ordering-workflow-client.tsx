@@ -113,6 +113,7 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
     geocodedAddress: string;
     loading: boolean;
     error: string | null;
+    errorCode: string | null;
   } | null>(null);
 
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -168,19 +169,22 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
           geocodedAddress: data.geocodedAddress,
           loading: false,
           error: null,
+          errorCode: null,
         });
       } else {
         setDeliveryFeeInfo(prev => ({
-          ...(prev ?? { fee: 0, distanceKm: 0, durationMinutes: 0, zoneName: '', action: 'allow' as const, messagePl: null, messageEn: null, geocodedAddress: '' }),
+          ...(prev ?? { fee: 0, distanceKm: 0, durationMinutes: 0, zoneName: '', action: 'allow' as const, messagePl: null, messageEn: null, geocodedAddress: '', errorCode: null }),
           loading: false,
           error: data.error ?? (locale === 'pl' ? 'Nie można obliczyć kosztu dostawy.' : 'Could not calculate delivery fee.'),
+          errorCode: data.code ?? null,
         }));
       }
     } catch {
       setDeliveryFeeInfo(prev => ({
-        ...(prev ?? { fee: 0, distanceKm: 0, durationMinutes: 0, zoneName: '', action: 'allow' as const, messagePl: null, messageEn: null, geocodedAddress: '' }),
+        ...(prev ?? { fee: 0, distanceKm: 0, durationMinutes: 0, zoneName: '', action: 'allow' as const, messagePl: null, messageEn: null, geocodedAddress: '', errorCode: null }),
         loading: false,
         error: locale === 'pl' ? 'Błąd połączenia. Spróbuj ponownie.' : 'Connection error. Please try again.',
+        errorCode: 'CONNECTION_ERROR',
       }));
     }
   }, [locale]);
@@ -927,23 +931,51 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
                 {/* Delivery zone info messages */}
                 {orderType === 'delivery' && deliveryFeeInfo && !deliveryFeeInfo.loading && (
                   <>
-                    {deliveryFeeInfo.error && (
+                    {/* Generic geocoding / routing errors */}
+                    {deliveryFeeInfo.error && deliveryFeeInfo.errorCode !== 'NO_ZONE' && (
                       <div className="p-2 bg-amber-500/10 border border-amber-500/25 text-amber-300 rounded text-[10px] leading-normal">
                         {deliveryFeeInfo.error}
                       </div>
                     )}
-                    {!deliveryFeeInfo.error && deliveryFeeInfo.action === 'block' && (
-                      <div className="p-2 bg-red-500/10 border border-red-500/25 text-red-300 rounded text-[10px] leading-normal">
-                        {locale === 'pl'
-                          ? (deliveryFeeInfo.messagePl || 'Twój adres jest poza zasięgiem dostawy.')
-                          : (deliveryFeeInfo.messageEn || 'Your address is outside our delivery area.')}
+
+                    {/* Address outside all delivery zones */}
+                    {(deliveryFeeInfo.errorCode === 'NO_ZONE' || (!deliveryFeeInfo.error && deliveryFeeInfo.action === 'block')) && (
+                      <div className="p-3 bg-red-500/10 border border-red-500/25 text-red-200 rounded text-[10px] leading-relaxed space-y-1.5">
+                        <p className="font-bold text-red-300">
+                          {locale === 'pl'
+                            ? 'Nie dostarczamy pod ten adres.'
+                            : 'We cannot deliver to this address.'}
+                        </p>
+                        <p>
+                          {locale === 'pl' ? 'Zadzwoń do nas: ' : 'Call us: '}
+                          <a href={`tel:${restaurantInfo.phone}`} className="font-bold text-primary underline">
+                            {restaurantInfo.phone}
+                          </a>
+                        </p>
+                        <p>
+                          <Link href={`/${locale}/contact`} className="text-primary/80 underline">
+                            {locale === 'pl' ? 'Odwiedź stronę kontaktową →' : 'Visit our contact page →'}
+                          </Link>
+                        </p>
                       </div>
                     )}
+
+                    {/* Contact restaurant zone */}
                     {!deliveryFeeInfo.error && deliveryFeeInfo.action === 'contact' && (
-                      <div className="p-2 bg-amber-500/10 border border-amber-500/25 text-amber-300 rounded text-[10px] leading-normal">
-                        {locale === 'pl'
-                          ? (deliveryFeeInfo.messagePl || 'Skontaktuj się z restauracją w sprawie dostawy.')
-                          : (deliveryFeeInfo.messageEn || 'Please contact the restaurant regarding delivery.')}
+                      <div className="p-2.5 bg-amber-500/10 border border-amber-500/25 text-amber-200 rounded text-[10px] leading-relaxed space-y-1">
+                        <p className="font-bold text-amber-300">
+                          {locale === 'pl' ? 'Dostawa do potwierdzenia' : 'Delivery needs confirmation'}
+                        </p>
+                        <p>
+                          {locale === 'pl'
+                            ? (deliveryFeeInfo.messagePl || 'Skontaktuj się z restauracją w sprawie dostawy.')
+                            : (deliveryFeeInfo.messageEn || 'Please contact the restaurant regarding delivery.')}
+                        </p>
+                        <p>
+                          <a href={`tel:${restaurantInfo.phone}`} className="font-bold text-primary underline">
+                            {restaurantInfo.phone}
+                          </a>
+                        </p>
                       </div>
                     )}
                   </>
@@ -1109,23 +1141,51 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
                 {/* Delivery zone info messages */}
                 {orderType === 'delivery' && deliveryFeeInfo && !deliveryFeeInfo.loading && (
                   <>
-                    {deliveryFeeInfo.error && (
+                    {/* Generic errors */}
+                    {deliveryFeeInfo.error && deliveryFeeInfo.errorCode !== 'NO_ZONE' && (
                       <div className="p-2 bg-amber-500/10 border border-amber-500/25 text-amber-300 rounded text-[10px]">
                         {deliveryFeeInfo.error}
                       </div>
                     )}
-                    {!deliveryFeeInfo.error && deliveryFeeInfo.action === 'block' && (
-                      <div className="p-2 bg-red-500/10 border border-red-500/25 text-red-300 rounded text-[10px]">
-                        {locale === 'pl'
-                          ? (deliveryFeeInfo.messagePl || 'Twój adres jest poza zasięgiem dostawy.')
-                          : (deliveryFeeInfo.messageEn || 'Your address is outside our delivery area.')}
+
+                    {/* Address outside all zones */}
+                    {(deliveryFeeInfo.errorCode === 'NO_ZONE' || (!deliveryFeeInfo.error && deliveryFeeInfo.action === 'block')) && (
+                      <div className="p-3 bg-red-500/10 border border-red-500/25 text-red-200 rounded text-[10px] leading-relaxed space-y-1.5">
+                        <p className="font-bold text-red-300">
+                          {locale === 'pl'
+                            ? 'Nie dostarczamy pod ten adres.'
+                            : 'We cannot deliver to this address.'}
+                        </p>
+                        <p>
+                          {locale === 'pl' ? 'Zadzwoń: ' : 'Call us: '}
+                          <a href={`tel:${restaurantInfo.phone}`} className="font-bold text-primary underline">
+                            {restaurantInfo.phone}
+                          </a>
+                        </p>
+                        <p>
+                          <Link href={`/${locale}/contact`} className="text-primary/80 underline">
+                            {locale === 'pl' ? 'Strona kontaktowa →' : 'Contact page →'}
+                          </Link>
+                        </p>
                       </div>
                     )}
+
+                    {/* Contact zone */}
                     {!deliveryFeeInfo.error && deliveryFeeInfo.action === 'contact' && (
-                      <div className="p-2 bg-amber-500/10 border border-amber-500/25 text-amber-300 rounded text-[10px]">
-                        {locale === 'pl'
-                          ? (deliveryFeeInfo.messagePl || 'Skontaktuj się z restauracją.')
-                          : (deliveryFeeInfo.messageEn || 'Please contact the restaurant.')}
+                      <div className="p-2.5 bg-amber-500/10 border border-amber-500/25 text-amber-200 rounded text-[10px] leading-relaxed space-y-1">
+                        <p className="font-bold text-amber-300">
+                          {locale === 'pl' ? 'Dostawa do potwierdzenia' : 'Delivery needs confirmation'}
+                        </p>
+                        <p>
+                          {locale === 'pl'
+                            ? (deliveryFeeInfo.messagePl || 'Zadzwoń, żebyśmy mogli potwierdzić dostawę.')
+                            : (deliveryFeeInfo.messageEn || 'Call us to confirm delivery to your area.')}
+                        </p>
+                        <p>
+                          <a href={`tel:${restaurantInfo.phone}`} className="font-bold text-primary underline">
+                            {restaurantInfo.phone}
+                          </a>
+                        </p>
                       </div>
                     )}
                   </>

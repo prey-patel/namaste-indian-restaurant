@@ -197,8 +197,10 @@ export default function SettingsClient({
         estimated_delivery_minutes: Number(z.estimated_delivery_minutes),
         is_active: z.is_active
       })),
-      rules: rulesState.map(r => ({
+      rules: rulesState.map((r, i) => ({
         id: r.id,
+        isNew: r.isNew ?? false,
+        name: r.name || `Zone ${i + 1}`,
         min_distance_km: Number(r.min_distance_km),
         max_distance_km: r.max_distance_km ? Number(r.max_distance_km) : null,
         fee_amount: Number(r.fee_amount),
@@ -211,6 +213,8 @@ export default function SettingsClient({
     });
     setIsSaving(false);
     if (res.success) {
+      // Mark all zones as no longer new after successful save
+      setRulesState(prev => prev.map(r => ({ ...r, isNew: false })));
       showFeedback('success', 'Delivery settings updated successfully.');
     } else {
       showFeedback('error', res.error || 'Failed to update delivery rules.');
@@ -858,28 +862,64 @@ export default function SettingsClient({
 
               {/* Distance Fee Rules */}
               <div className="space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-widest text-[#0A192F]">Distance Pricing & Block Rules</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-[#0A192F]">Distance Pricing &amp; Block Rules</h3>
+                  <button
+                    type="button"
+                    onClick={() => setRulesState(prev => [...prev, {
+                      id: `new-${Date.now()}`,
+                      isNew: true,
+                      name: `Zone ${prev.length + 1}`,
+                      min_distance_km: prev.length > 0 ? (Number(prev[prev.length - 1].max_distance_km) || 0) : 0,
+                      max_distance_km: null,
+                      fee_amount: 0,
+                      rule_action: 'allow',
+                      message_pl: '',
+                      message_en: '',
+                      is_active: true,
+                      display_order: prev.length
+                    }])}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-primary border border-primary/40 hover:bg-primary/10 px-3 py-1.5 rounded-lg transition-all"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Add Zone
+                  </button>
+                </div>
                 <div className="border border-border rounded-lg overflow-x-auto bg-white">
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
                       <tr className="bg-muted/10 border-b border-border">
-                        <th className="p-3 font-bold">Rule Name</th>
+                        <th className="p-3 font-bold">Zone Name</th>
                         <th className="p-3 font-bold">Min (km)</th>
                         <th className="p-3 font-bold">Max (km)</th>
                         <th className="p-3 font-bold">Fee (PLN)</th>
                         <th className="p-3 font-bold">Action</th>
                         <th className="p-3 font-bold">Message (PL)</th>
-                        <th className="p-3 font-bold">Status</th>
+                        <th className="p-3 font-bold">Active</th>
+                        <th className="p-3 font-bold"></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/60">
                       {rulesState.map((rule, idx) => (
-                        <tr key={rule.id} className="hover:bg-muted/5">
-                          <td className="p-3 font-medium text-foreground">{rule.name}</td>
+                        <tr key={rule.id} className={`hover:bg-muted/5 ${rule.isNew ? 'bg-green-50/60' : ''}`}>
+                          <td className="p-3">
+                            <input
+                              type="text"
+                              value={rule.name || ''}
+                              onChange={e => {
+                                const updated = [...rulesState];
+                                updated[idx].name = e.target.value;
+                                setRulesState(updated);
+                              }}
+                              className="w-28 bg-[#FAF9F5] border border-border rounded px-1.5 py-0.5 text-xs outline-none focus:border-primary"
+                              placeholder="Zone name"
+                            />
+                          </td>
                           <td className="p-3">
                             <input 
                               type="number" 
                               value={rule.min_distance_km}
+                              min="0"
+                              step="0.5"
                               onChange={e => {
                                 const updated = [...rulesState];
                                 updated[idx].min_distance_km = Number(e.target.value);
@@ -892,7 +932,9 @@ export default function SettingsClient({
                             <input 
                               type="number" 
                               value={rule.max_distance_km || ''}
-                              placeholder="Infinity"
+                              placeholder="∞"
+                              min="0"
+                              step="0.5"
                               onChange={e => {
                                 const updated = [...rulesState];
                                 updated[idx].max_distance_km = e.target.value === '' ? null : Number(e.target.value);
@@ -905,6 +947,8 @@ export default function SettingsClient({
                             <input 
                               type="number" 
                               value={rule.fee_amount}
+                              min="0"
+                              step="0.5"
                               onChange={e => {
                                 const updated = [...rulesState];
                                 updated[idx].fee_amount = Number(e.target.value);
@@ -940,7 +984,7 @@ export default function SettingsClient({
                               className="w-full min-w-[120px] bg-[#FAF9F5] border border-border rounded px-1.5 py-0.5 text-xs outline-none"
                             />
                           </td>
-                          <td className="p-3">
+                          <td className="p-3 text-center">
                             <input 
                               type="checkbox"
                               checked={rule.is_active}
@@ -952,11 +996,32 @@ export default function SettingsClient({
                               className="rounded text-primary focus:ring-primary"
                             />
                           </td>
+                          <td className="p-3 text-center">
+                            <button
+                              type="button"
+                              onClick={() => setRulesState(prev => prev.filter((_, i) => i !== idx))}
+                              className="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-colors"
+                              title="Delete zone"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
                         </tr>
                       ))}
+                      {rulesState.length === 0 && (
+                        <tr>
+                          <td colSpan={8} className="p-6 text-center text-muted-foreground text-xs italic">
+                            No delivery zones configured. Click "Add Zone" to create one.
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
+                <p className="text-[10px] text-muted-foreground/70 leading-relaxed">
+                  Zones use half-open intervals [Min, Max). Addresses <strong>outside all zones</strong> are automatically blocked. 
+                  Use <strong>Contact</strong> action for zones where you need to confirm delivery manually.
+                </p>
               </div>
 
               <div className="border-t border-primary/10 pt-4 flex justify-end">

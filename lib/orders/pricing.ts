@@ -1,7 +1,15 @@
 import "server-only";
 import { createAdminClient } from '@/lib/supabase/admin';
-import { geocodeRestaurantAddress, calculateSuggestedDeliveryFee } from '@/lib/delivery/distance';
+import { geocodeRestaurantAddress } from '@/lib/delivery/distance';
 import { geocodeAddressGoogle, calculateRouteGoogle } from '@/lib/delivery/google-maps';
+
+/** Normalise DB rule_action enum to client-facing action string */
+function normaliseAction(raw: string): 'allow' | 'contact' | 'block' {
+  const v = raw.toLowerCase();
+  if (v === 'allow') return 'allow';
+  if (v === 'block') return 'block';
+  return 'contact'; // 'contact_restaurant' and any other contact variant
+}
 
 export interface PriceCalculationItem {
   menu_item_id: string;
@@ -170,7 +178,7 @@ export async function calculateOrderTotalServerSide(
           });
 
           if (matchingRule) {
-            deliveryZoneAction = (((matchingRule.rule_action as string) || 'allow').toLowerCase()) as 'allow' | 'contact' | 'block';
+            deliveryZoneAction = normaliseAction((matchingRule.rule_action as string) || 'allow');
             // Only charge a fee for 'allow' action (not 'contact' or 'block')
             if (deliveryZoneAction === 'allow') {
               deliveryFeeGrosz = Math.round(Number(matchingRule.fee_amount) * 100);

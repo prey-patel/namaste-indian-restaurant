@@ -40,6 +40,14 @@ export interface DeliveryFeeError {
 
 export type DeliveryFeeResponse = DeliveryFeeResult | DeliveryFeeError;
 
+/** Normalise rule_action from DB enum to client-facing string */
+function normaliseAction(raw: string): 'allow' | 'contact' | 'block' {
+  const v = raw.toLowerCase();
+  if (v === 'allow') return 'allow';
+  if (v === 'block') return 'block';
+  return 'contact'; // 'contact_restaurant' and any other contact variant
+}
+
 export async function POST(req: NextRequest): Promise<NextResponse<DeliveryFeeResponse>> {
   // 1. Rate limiting by IP
   const ip =
@@ -175,7 +183,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<DeliveryFeeRe
       );
     }
 
-    const action = (((matchingRule.rule_action as string) || 'allow').toLowerCase()) as 'allow' | 'contact' | 'block';
+    const action = normaliseAction((matchingRule.rule_action as string) || 'allow');
     // Only charge a fee for 'allow' action
     const fee = action === 'block' ? 0 : Number(matchingRule.fee_amount);
 

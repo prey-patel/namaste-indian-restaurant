@@ -264,13 +264,15 @@ const DeliveryZoneSchema = z.object({
 });
 
 const DeliveryFeeRuleSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(), // UUID for existing, temp string (e.g. 'new-1234') for new zones
+  isNew: z.boolean().optional().default(false),
+  name: z.string().min(1).max(100),
   min_distance_km: z.number().min(0),
   max_distance_km: z.number().min(0).nullable().optional(),
   fee_amount: z.number().min(0),
   rule_action: z.enum(['allow', 'contact_restaurant', 'block']),
-  message_pl: z.string().max(200).nullable().optional(),
-  message_en: z.string().max(200).nullable().optional(),
+  message_pl: z.string().max(300).nullable().optional(),
+  message_en: z.string().max(300).nullable().optional(),
   is_active: z.boolean()
 });
 
@@ -285,7 +287,7 @@ export async function updateDeliveryTakeawaySettingsAction(rawData: unknown) {
     const { supabase, userId } = await verifyAuth();
     const data = DeliveryTakeawaySettingsSchema.parse(rawData);
 
-    // Update zones
+    // Update delivery zones (unchanged logic)
     for (const zone of data.zones) {
       const { error } = await supabase
         .from('delivery_zones')
@@ -302,24 +304,77 @@ export async function updateDeliveryTakeawaySettingsAction(rawData: unknown) {
       if (error) throw error;
     }
 
-    // Update fee rules
-    for (const rule of data.rules) {
-      const { error } = await supabase
-        .from('delivery_fee_rules')
-        .update({
-          min_distance_km: rule.min_distance_km,
-          max_distance_km: rule.max_distance_km || null,
-          fee_amount: rule.fee_amount,
-          rule_action: rule.rule_action,
-          message_pl: rule.message_pl || null,
-          message_en: rule.message_en || null,
-          is_active: rule.is_active,
-          updated_by: userId,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', rule.id);
+    // === DELIVERY FEE RULES: Atomic replace to avoid overlap constraint ===
+    //
+    // Strategy: deactivate ALL existing rules first (so the DB overlap trigger
+    // sees no active rows when we update/insert each rule), then update/insert
+    // each rule individually. Finally delete any rules removed by the admin.
+    //
+    // This avoids the "Overlapping active delivery fee rules are not allowed"
+    // error that occurs when updating zone boundaries one at a time while
+    // other zones with old boundaries are still active.
 
-      if (error) throw error;
+    // Step 1: Get all existing rule IDs in DB
+    const { data: existingRules, error: fetchErr } = await supabase
+      .from('delivery_fee_rules')
+      .select('id');
+    if (fetchErr) throw fetchErr;
+
+    const existingIds = new Set((existingRules || []).map((r: any) => r.id as string));
+    const incomingExistingIds = new Set<string>();
+
+    // Step 2: Deactivate all existing rules to prevent overlap trigger
+    if (existingIds.size > 0) {
+      const { error: deactivateErr } = await supabase
+        .from('delivery_fee_rules')
+        .update({ is_active: false })
+        .in('id', [...existingIds]);
+      if (deactivateErr) throw deactivateErr;
+    }
+
+    // Step 3: Update existing rules, insert new ones
+    for (let i = 0; i < data.rules.length; i++) {
+      const rule = data.rules[i];
+      const rulePayload: Record<string, any> = {
+        name: rule.name,
+        min_distance_km: rule.min_distance_km,
+        max_distance_km: rule.max_distance_km ?? null,
+        fee_amount: rule.fee_amount,
+        rule_action: rule.rule_action,
+        message_pl: rule.message_pl ?? null,
+        message_en: rule.message_en ?? null,
+        is_active: rule.is_active,
+        display_order: i,
+        updated_by: userId,
+        updated_at: new Date().toISOString()
+      };
+
+      if (rule.isNew) {
+        // INSERT new zone
+        const { error: insertErr } = await supabase
+          .from('delivery_fee_rules')
+          .insert(rulePayload);
+        if (insertErr) throw new Error(`Failed to create zone "${rule.name}": ${insertErr.message}`);
+      } else {
+        // UPDATE existing zone
+        const { error: updateErr } = await supabase
+          .from('delivery_fee_rules')
+          .update(rulePayload)
+          .eq('id', rule.id);
+        if (updateErr) throw new Error(`Failed to update zone "${rule.name}": ${updateErr.message}`);
+        incomingExistingIds.add(rule.id);
+      }
+    }
+
+    // Step 4: Delete zones removed by the admin
+    for (const existingId of existingIds) {
+      if (!incomingExistingIds.has(existingId)) {
+        const { error: deleteErr } = await supabase
+          .from('delivery_fee_rules')
+          .delete()
+          .eq('id', existingId);
+        if (deleteErr) throw new Error(`Failed to delete zone: ${deleteErr.message}`);
+      }
     }
 
     // Update delivery minimum order value
