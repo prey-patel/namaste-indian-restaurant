@@ -39,12 +39,14 @@ export default async function PublicOrderPage({ params }: Props) {
   const { categories, items } = await getPublicMenuData();
   const availableItems = items.filter(item => item.is_available);
 
-  // Load operational status, settings, and opening hours concurrently
+  // Load operational status, settings, opening hours, and packaging rules concurrently
   const adminClient = createAdminClient();
-  const [opStatusRes, settings, openingHoursData] = await Promise.all([
+  const [opStatusRes, settings, openingHoursData, packagingRulesRes, menuItemPackagingRulesRes] = await Promise.all([
     adminClient.from('operational_status').select('delivery_enabled, takeaway_enabled').single(),
     getPublicSystemSettings(),
-    getPublicOpeningHours(locale)
+    getPublicOpeningHours(locale),
+    adminClient.from('packaging_fee_rules').select('*').eq('is_active', true),
+    adminClient.from('menu_item_packaging_rules').select('*').eq('is_required', true)
   ]);
   const opStatus = opStatusRes.data;
 
@@ -79,6 +81,8 @@ export default async function PublicOrderPage({ params }: Props) {
           restaurantInfo={{ address, phone }}
           deliveryHours={openingHoursData.delivery}
           deliveryMinimumOrderValue={settings.delivery_minimum_order_value}
+          packagingRules={packagingRulesRes.data || []}
+          menuItemPackagingRules={menuItemPackagingRulesRes.data || []}
         />
       </SectionContainer>
     </PageTransition>

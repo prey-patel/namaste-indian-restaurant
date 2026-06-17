@@ -117,6 +117,7 @@ export async function calculateOrderTotalServerSide(
 
   // 4. Compute packaging total in grosz
   let packagingGrosz = 0;
+  const appliedBagRules = new Set<string>();
   if (packagingRules && itemPackagingMaps && itemPackagingMaps.length > 0) {
     for (const item of items) {
       const maps = itemPackagingMaps.filter(m => m.menu_item_id === item.menu_item_id);
@@ -127,7 +128,14 @@ export async function calculateOrderTotalServerSide(
           const applies = orderType === 'delivery' ? rule.applies_to_delivery : rule.applies_to_takeaway;
           if (applies) {
             const ruleAmountGrosz = Math.round(Number(rule.amount) * 100);
-            packagingGrosz += ruleAmountGrosz * (map.default_quantity || 1) * item.quantity;
+            if (rule.fee_type === 'bag') {
+              if (!appliedBagRules.has(rule.id)) {
+                packagingGrosz += ruleAmountGrosz * (map.default_quantity || 1);
+                appliedBagRules.add(rule.id);
+              }
+            } else {
+              packagingGrosz += ruleAmountGrosz * (map.default_quantity || 1) * item.quantity;
+            }
           }
         }
       }

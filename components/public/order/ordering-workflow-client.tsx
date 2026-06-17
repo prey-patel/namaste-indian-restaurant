@@ -48,6 +48,24 @@ type BasketItem = {
   customerNotes: string;
 };
 
+type PackagingRule = {
+  id: string;
+  name_pl: string;
+  name_en: string;
+  fee_type: 'food_container' | 'beverage_cup' | 'bag' | 'custom';
+  amount: number | string;
+  applies_to_delivery: boolean;
+  applies_to_takeaway: boolean;
+  is_active: boolean;
+};
+
+type MenuItemPackagingRule = {
+  menu_item_id: string;
+  packaging_fee_rule_id: string;
+  default_quantity: number;
+  is_required: boolean;
+};
+
 type Props = {
   categories: Category[];
   items: MenuItem[];
@@ -62,9 +80,21 @@ type Props = {
   };
   deliveryHours: ServiceStatusInfo;
   deliveryMinimumOrderValue?: number;
+  packagingRules: PackagingRule[];
+  menuItemPackagingRules: MenuItemPackagingRule[];
 };
 
-export default function OrderingWorkflowClient({ categories, items, operationalStatus, locale, restaurantInfo, deliveryHours, deliveryMinimumOrderValue = 0 }: Props) {
+export default function OrderingWorkflowClient({
+  categories,
+  items,
+  operationalStatus,
+  locale,
+  restaurantInfo,
+  deliveryHours,
+  deliveryMinimumOrderValue = 0,
+  packagingRules,
+  menuItemPackagingRules,
+}: Props) {
   const t = useTranslations('order');
 
   // Order Type State (defaults to takeaway or whichever is enabled)
@@ -245,7 +275,37 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
   const liveDeliveryFee = orderType === 'delivery' && deliveryFeeInfo && !deliveryFeeInfo.loading && !deliveryFeeInfo.error && deliveryFeeInfo.action !== 'block'
     ? deliveryFeeInfo.fee
     : 0;
-  const estimatedTotal = itemsSubtotal + liveDeliveryFee;
+
+  // Calculate Packaging Total client-side
+  const packagingTotal = (() => {
+    let total = 0;
+    const appliedBagRules = new Set<string>();
+
+    basket.forEach((item) => {
+      const maps = menuItemPackagingRules.filter(m => m.menu_item_id === item.menuItem.id && m.is_required);
+      maps.forEach((map) => {
+        const rule = packagingRules.find(r => r.id === map.packaging_fee_rule_id && r.is_active);
+        if (rule) {
+          const applies = orderType === 'delivery' ? rule.applies_to_delivery : rule.applies_to_takeaway;
+          if (applies) {
+            const ruleAmount = Number(rule.amount);
+            if (rule.fee_type === 'bag') {
+              if (!appliedBagRules.has(rule.id)) {
+                total += ruleAmount * (map.default_quantity || 1);
+                appliedBagRules.add(rule.id);
+              }
+            } else {
+              total += ruleAmount * (map.default_quantity || 1) * item.quantity;
+            }
+          }
+        }
+      });
+    });
+
+    return total;
+  })();
+
+  const estimatedTotal = itemsSubtotal + packagingTotal + liveDeliveryFee;
   const isDeliveryBlocked = orderType === 'delivery' && deliveryFeeInfo && !deliveryFeeInfo.loading && (deliveryFeeInfo.action === 'block' || deliveryFeeInfo.errorCode === 'NO_ZONE');
 
   // Submit Handler
@@ -984,6 +1044,13 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
                   <span>{itemsSubtotal.toFixed(2)} PLN</span>
                 </div>
 
+                {packagingTotal > 0 && (
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>{t('packagingFee')}</span>
+                    <span>{packagingTotal.toFixed(2)} PLN</span>
+                  </div>
+                )}
+
                 {orderType === 'delivery' && (
                   <div className="flex justify-between items-start gap-1">
                     <span className="flex flex-col text-muted-foreground">
@@ -1108,7 +1175,7 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
               {t('basketHeader')} ({basket.reduce((sum, i) => sum + i.quantity, 0)})
             </span>
             <span className="text-sm font-bold text-primary font-mono">
-              {itemsSubtotal.toFixed(2)} PLN
+              {(itemsSubtotal + packagingTotal).toFixed(2)} PLN
             </span>
           </div>
 
@@ -1193,6 +1260,13 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
                   <span>{t('subtotal')}</span>
                   <span>{itemsSubtotal.toFixed(2)} PLN</span>
                 </div>
+
+                {packagingTotal > 0 && (
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>{t('packagingFee')}</span>
+                    <span>{packagingTotal.toFixed(2)} PLN</span>
+                  </div>
+                )}
 
                 {orderType === 'delivery' && (
                   <div className="flex justify-between items-start gap-1">
