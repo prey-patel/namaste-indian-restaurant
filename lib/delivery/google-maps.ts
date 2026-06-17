@@ -54,7 +54,53 @@ export async function geocodeAddressGoogle(address: string): Promise<GeocodingRe
 }
 
 /**
- * Calculates routing distance and duration using the new Google Routes API.
+ * Calculates routing distance and duration using the legacy Distance Matrix API (fallback for restricted keys).
+ */
+export async function calculateRouteDistanceMatrix(
+  origin: { latitude: number; longitude: number },
+  destination: { latitude: number; longitude: number },
+  mode: "driving" | "walking"
+): Promise<RouteResult> {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    throw new Error("Google Maps API Key is not configured.");
+  }
+
+  const travelMode = mode === "walking" ? "walking" : "driving";
+  const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin.latitude},${origin.longitude}&destinations=${destination.latitude},${destination.longitude}&mode=${travelMode}&key=${apiKey}`;
+
+  console.log(`[Distance Matrix Fallback] Fetching route (${mode}) between points...`);
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Distance Matrix API HTTP error! Status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  if (data.status !== "OK") {
+    throw new Error(`Distance Matrix API error! Status: ${data.status}`);
+  }
+
+  const element = data.rows?.[0]?.elements?.[0];
+  if (!element || element.status !== "OK") {
+    throw new Error(`Distance Matrix API element error! Status: ${element?.status || "NO_ELEMENT"}`);
+  }
+
+  const distanceMeters = element.distance?.value;
+  const durationSeconds = element.duration?.value;
+
+  if (distanceMeters === undefined || durationSeconds === undefined) {
+    throw new Error("Distance Matrix API response is missing distance or duration.");
+  }
+
+  return {
+    distanceMeters,
+    durationSeconds,
+  };
+}
+
+/**
+ * Calculates routing distance and duration using the new Google Routes API,
+ * with an automatic fallback to the legacy Distance Matrix API on failure.
  */
 export async function calculateRouteGoogle(
   origin: { latitude: number; longitude: number },
@@ -66,72 +112,76 @@ export async function calculateRouteGoogle(
     throw new Error("Google Maps API Key is not configured.");
   }
 
-  const url = "https://routes.googleapis.com/directions/v2:computeRoutes";
-
-  const travelMode = mode === "walking" ? "WALK" : "DRIVE";
-  const body: Record<string, any> = {
-    origin: {
-      location: {
-        latLng: {
-          latitude: origin.latitude,
-          longitude: origin.longitude,
+  try {
+    const url = "https://routes.googleapis.com/directions/v2:computeRoutes";
+    const travelMode = mode === "walking" ? "WALK" : "DRIVE";
+    const body: Record<string, any> = {
+      origin: {
+        location: {
+          latLng: {
+            latitude: origin.latitude,
+            longitude: origin.longitude,
+          },
         },
       },
-    },
-    destination: {
-      location: {
-        latLng: {
-          latitude: destination.latitude,
-          longitude: destination.longitude,
+      destination: {
+        location: {
+          latLng: {
+            latitude: destination.latitude,
+            longitude: destination.longitude,
+          },
         },
       },
-    },
-    travelMode,
-    computeAlternativeRoutes: false,
-    languageCode: "en-US",
-    units: "METRIC",
-  };
+      travelMode,
+      computeAlternativeRoutes: false,
+      languageCode: "en-US",
+      units: "METRIC",
+    };
 
-  // Only driving supports traffic-aware routing preferences
-  if (mode === "driving") {
-    body.routingPreference = "TRAFFIC_AWARE";
+    // Only driving supports traffic-aware routing preferences
+    if (mode === "driving") {
+      body.routingPreference = "TRAFFIC_AWARE";
+    }
+
+    console.log(`[Google Routes API] Fetching route (${mode}) between points...`);
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask": "routes.duration,routes.distanceMeters",
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[Google Routes API] Error response: ${errorText}`);
+      throw new Error(`Routes API HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (!data.routes || data.routes.length === 0) {
+      throw new Error("No routes found between origin and destination.");
+    }
+
+    const route = data.routes[0];
+    const distanceMeters = route.distanceMeters;
+    const durationStr = route.duration; // e.g. "165s"
+
+    if (distanceMeters === undefined || !durationStr) {
+      throw new Error("Routes API response is missing distance or duration.");
+    }
+
+    // Parse duration string like "165s" to integer seconds
+    const durationSeconds = parseInt(durationStr.replace("s", ""), 10);
+
+    return {
+      distanceMeters,
+      durationSeconds,
+    };
+  } catch (err: any) {
+    console.warn(`[Google Routes API] Failed to compute route using Routes API. Attempting Distance Matrix fallback. Error: ${err.message}`);
+    return calculateRouteDistanceMatrix(origin, destination, mode);
   }
-
-  console.log(`[Google Routes API] Fetching route (${mode}) between points...`);
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Goog-Api-Key": apiKey,
-      "X-Goog-FieldMask": "routes.duration,routes.distanceMeters",
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error(`[Google Routes API] Error response: ${errorText}`);
-    throw new Error(`Routes API HTTP error! Status: ${response.status}`);
-  }
-
-  const data = await response.json();
-  if (!data.routes || data.routes.length === 0) {
-    throw new Error("No routes found between origin and destination.");
-  }
-
-  const route = data.routes[0];
-  const distanceMeters = route.distanceMeters;
-  const durationStr = route.duration; // e.g. "165s"
-
-  if (distanceMeters === undefined || !durationStr) {
-    throw new Error("Routes API response is missing distance or duration.");
-  }
-
-  // Parse duration string like "165s" to integer seconds
-  const durationSeconds = parseInt(durationStr.replace("s", ""), 10);
-
-  return {
-    distanceMeters,
-    durationSeconds,
-  };
 }
