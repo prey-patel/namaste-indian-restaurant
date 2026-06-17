@@ -278,7 +278,15 @@
     "confirmAction": "Potwierdź",
     "successUpdate": "Rezerwacja została pomyślnie zaktualizowana.",
     "errorUpdate": "Wystąpił błąd podczas aktualizacji rezerwacji.",
-    "selectPlaceholder": "Brak stolika"
+    "selectPlaceholder": "Brak stolika",
+    "status": {
+      "pending": "Oczekująca",
+      "confirmed": "Potwierdzona",
+      "rejected": "Odrzucona",
+      "cancelled": "Anulowana",
+      "completed": "Zakończona",
+      "no_show": "Nieobecność (No-show)"
+    }
   },
   "adminOrders": {
     "title": "Zarządzanie Zamówieniami",

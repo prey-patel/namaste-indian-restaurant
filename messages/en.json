@@ -278,7 +278,15 @@
     "confirmAction": "Confirm",
     "successUpdate": "Reservation updated successfully.",
     "errorUpdate": "An error occurred while updating the reservation.",
-    "selectPlaceholder": "No Table"
+    "selectPlaceholder": "No Table",
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled",
+      "completed": "Completed",
+      "no_show": "No-show"
+    }
   },
   "adminOrders": {
     "title": "Order Management",
