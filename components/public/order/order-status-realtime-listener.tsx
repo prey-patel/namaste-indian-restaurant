@@ -14,18 +14,18 @@ export default function OrderStatusRealtimeListener({ orderId }: Props) {
   useEffect(() => {
     const supabase = createClient();
     
-    // Subscribe to Postgres changes on the orders table for this specific row
+    // Subscribe to Postgres changes on the public_order_status table for this specific row
     const channel = supabase
       .channel(`public-order-status-${orderId}`)
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
-          table: 'orders',
+          table: 'public_order_status',
           filter: `id=eq.${orderId}`
         },
-        (payload) => {
+        (payload: any) => {
           console.log('Realtime order update received:', payload.new?.status);
           // router.refresh forces Next.js to fetch the server page data again and re-render
           router.refresh();
