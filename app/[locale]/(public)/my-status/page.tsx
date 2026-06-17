@@ -1,8 +1,21 @@
+import React from 'react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import PageTransition from '@/components/ui/page-transition';
+import MandalaWatermark from '@/components/ui/mandala-watermark';
+import StatusLookupClient from './status-lookup-client';
 
 type Props = {
   params: Promise<{ locale: string }>;
 };
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'nav' });
+  return {
+    title: `${t('status')} | Namaste Indian Restaurant`,
+    description: 'Track the real-time status of your takeaway, delivery orders or table reservations.',
+  };
+}
 
 export default async function MyStatusPage({ params }: Props) {
   const { locale } = await params;
@@ -11,16 +24,38 @@ export default async function MyStatusPage({ params }: Props) {
   const t = await getTranslations('nav');
 
   return (
-    <div className="container mx-auto px-4 py-16 flex-1 flex flex-col justify-center items-center">
-      <div className="max-w-2xl text-center space-y-6">
-        <h1 className="text-3xl sm:text-5xl font-serif font-bold text-primary">{t('status')}</h1>
-        <p className="text-muted-foreground leading-relaxed">
-          Monitorowanie statusu rezerwacji oraz zamówień dostawy/odbioru. Bezpieczne wyszukiwanie za pomocą unikalnego tokena bez konieczności logowania klienta zostanie wdrożone w Fazie 6 i Fazie 8.
-        </p>
-        <p className="text-sm text-primary/60 italic">
-          Reservation and order status tracking interface. Secure token-based lookups without guest logins will be integrated in Phase 6 and Phase 8.
-        </p>
-      </div>
-    </div>
+    <PageTransition>
+      <section className="relative overflow-hidden bg-[#070B1E] py-20 text-center border-b border-primary/15 min-h-[85vh] flex flex-col justify-center animate-fade-in">
+        {/* Decorative Watermarks */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-primary/5 rounded-full blur-[90px] pointer-events-none" />
+        <MandalaWatermark className="w-[300px] h-[300px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.02]" />
+
+        <div className="container mx-auto px-4 relative z-10 space-y-8 max-w-2xl">
+          {/* Header */}
+          <div className="space-y-3">
+            <div className="flex justify-center items-center space-x-2 text-primary">
+              <div className="h-[1px] w-6 bg-primary/30" />
+              <span className="text-[10px] tracking-[0.25em] font-extrabold uppercase">
+                {locale === 'pl' ? 'Śledzenie Zamówienia' : 'Track Order'}
+              </span>
+              <div className="h-[1px] w-6 bg-primary/30" />
+            </div>
+            
+            <h1 className="text-3xl sm:text-5xl font-serif font-black tracking-wide text-foreground uppercase">
+              {t('status')}
+            </h1>
+            
+            <p className="text-xs sm:text-sm text-muted-foreground/80 font-light leading-relaxed max-w-md mx-auto">
+              {locale === 'pl'
+                ? 'Wprowadź swój kod referencyjny, aby natychmiast sprawdzić i śledzić w czasie rzeczywistym status swojego zamówienia lub rezerwacji stolika.'
+                : 'Enter your reference code below to check and track the real-time status of your order or table reservation.'}
+            </p>
+          </div>
+
+          {/* Interactive Search Lookup Component */}
+          <StatusLookupClient locale={locale as 'pl' | 'en'} />
+        </div>
+      </section>
+    </PageTransition>
   );
 }
