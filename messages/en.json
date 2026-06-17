@@ -532,5 +532,32 @@
       "6": "Saturday",
       "0": "Sunday"
     }
+  },
+  "adminSidebar": {
+    "sections": {
+      "operations": "Operations",
+      "administration": "Administration"
+    },
+    "links": {
+      "dashboard": "Dashboard Overview",
+      "orders": "Orders Approval",
+      "reservations": "Reservations Grid",
+      "kds": "Kitchen Display (KDS)",
+      "menu": "Menu & Category CMS",
+      "settings": "Settings",
+      "users": "Users & Roles",
+      "analytics": "Reports & Analytics",
+      "performance": "Performance / Speed"
+    },
+    "footer": {
+      "loggedInAs": "Logged in as: {role}",
+      "restaurantLocation": "Namaste Restaurant Ciechanów"
+    }
+  },
+  "adminTopbar": {
+    "statusLabel": "Status:",
+    "statusConnected": "Live Connected",
+    "roleOwner": "Owner",
+    "logoutButton": "Logout"
   }
 }

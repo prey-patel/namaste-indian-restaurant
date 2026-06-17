@@ -532,5 +532,32 @@
       "6": "Sobota",
       "0": "Niedziela"
     }
+  },
+  "adminSidebar": {
+    "sections": {
+      "operations": "Operacje",
+      "administration": "Administracja"
+    },
+    "links": {
+      "dashboard": "Dashboard Overview",
+      "orders": "Zatwierdzanie Zamówień",
+      "reservations": "Siatka Rezerwacji",
+      "kds": "Ekran Kuchenny (KDS)",
+      "menu": "CMS Menu i Kategorii",
+      "settings": "Ustawienia",
+      "users": "Użytkownicy i Role",
+      "analytics": "Raporty i Analizy",
+      "performance": "Wydajność"
+    },
+    "footer": {
+      "loggedInAs": "Zalogowano jako: {role}",
+      "restaurantLocation": "Namaste Restauracja Ciechanów"
+    }
+  },
+  "adminTopbar": {
+    "statusLabel": "Status:",
+    "statusConnected": "Połączono / Live Connected",
+    "roleOwner": "Właściciel",
+    "logoutButton": "Wyloguj"
   }
 }

@@ -5,9 +5,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ROUTES } from '@/lib/routes/path';
 import { LayoutDashboard, ShoppingCart, CalendarDays, ChefHat, BookOpen, Settings, Users, BarChart3, Activity } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const t = useTranslations('adminSidebar');
+  const tTopbar = useTranslations('adminTopbar');
 
   const isActive = (href: string) => {
     if (href === ROUTES.admin.dashboard) {
@@ -17,18 +20,18 @@ export default function AdminSidebar() {
   };
 
   const operationsItems = [
-    { href: ROUTES.admin.dashboard, label: 'Dashboard Overview', icon: LayoutDashboard },
-    { href: ROUTES.admin.orders, label: 'Orders Approval', icon: ShoppingCart },
-    { href: ROUTES.admin.reservations, label: 'Reservations Grid', icon: CalendarDays },
-    { href: ROUTES.admin.kds, label: 'Kitchen Display (KDS)', icon: ChefHat },
-    { href: ROUTES.admin.menu, label: 'Menu & Category CMS', icon: BookOpen },
+    { href: ROUTES.admin.dashboard, key: 'dashboard', icon: LayoutDashboard },
+    { href: ROUTES.admin.orders, key: 'orders', icon: ShoppingCart },
+    { href: ROUTES.admin.reservations, key: 'reservations', icon: CalendarDays },
+    { href: ROUTES.admin.kds, key: 'kds', icon: ChefHat },
+    { href: ROUTES.admin.menu, key: 'menu', icon: BookOpen },
   ];
 
   const administrationItems = [
-    { href: ROUTES.admin.settings.root, label: 'Settings', icon: Settings },
-    { href: ROUTES.admin.users, label: 'Users & Roles', icon: Users },
-    { href: ROUTES.admin.analytics, label: 'Raporty i Analizy / Analytics', icon: BarChart3 },
-    { href: ROUTES.admin.performance, label: 'Wydajność / Performance', icon: Activity },
+    { href: ROUTES.admin.settings.root, key: 'settings', icon: Settings },
+    { href: ROUTES.admin.users, key: 'users', icon: Users },
+    { href: ROUTES.admin.analytics, key: 'analytics', icon: BarChart3 },
+    { href: ROUTES.admin.performance, key: 'performance', icon: Activity },
   ];
 
   return (
@@ -49,7 +52,7 @@ export default function AdminSidebar() {
       <nav className="flex-1 p-4 space-y-5 overflow-y-auto">
         <div>
           <span className="px-3 py-1.5 text-[10px] uppercase font-bold tracking-wider text-muted-foreground block">
-            Operations
+            {t('sections.operations')}
           </span>
           <div className="space-y-1 mt-1.5">
             {operationsItems.map((item) => {
@@ -67,7 +70,7 @@ export default function AdminSidebar() {
                   }`}
                 >
                   <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-primary' : 'text-muted-foreground/75'}`} />
-                  {item.label}
+                  {t(`links.${item.key}`)}
                 </Link>
               );
             })}
@@ -76,7 +79,7 @@ export default function AdminSidebar() {
 
         <div>
           <span className="px-3 py-1.5 text-[10px] uppercase font-bold tracking-wider text-muted-foreground block">
-            Administration
+            {t('sections.administration')}
           </span>
           <div className="space-y-1 mt-1.5">
             {administrationItems.map((item) => {
@@ -94,7 +97,7 @@ export default function AdminSidebar() {
                   }`}
                 >
                   <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-primary' : 'text-muted-foreground/75'}`} />
-                  {item.label}
+                  {t(`links.${item.key}`)}
                 </Link>
               );
             })}
@@ -104,8 +107,12 @@ export default function AdminSidebar() {
 
       {/* Admin Profile Footer */}
       <div className="p-5 border-t border-border bg-muted/30 text-xs">
-        <p className="font-bold text-foreground">Logged in as: Owner</p>
-        <p className="text-[10px] text-muted-foreground font-medium mt-0.5">Namaste Restaurant Ciechanów</p>
+        <p className="font-bold text-foreground">
+          {t('footer.loggedInAs', { role: tTopbar('roleOwner') })}
+        </p>
+        <p className="text-[10px] text-muted-foreground font-medium mt-0.5">
+          {t('footer.restaurantLocation')}
+        </p>
       </div>
     </aside>
   );
