@@ -146,7 +146,9 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
       geocodedAddress: prev?.geocodedAddress ?? '',
       loading: true,
       error: null,
+      errorCode: null,
     }));
+
 
     try {
       const res = await fetch('/api/delivery-fee', {
