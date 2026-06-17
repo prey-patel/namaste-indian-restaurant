@@ -324,7 +324,8 @@ export async function createOrderRequestAction(rawData: any) {
       packagingTotal: pricingResult.packagingTotal,
       deliveryFee: pricingResult.deliveryFee,
       totalAmount: pricingResult.totalAmount,
-      orderType: data.order_type
+      orderType: data.order_type,
+      deliveryZoneAction: pricingResult.deliveryZoneAction
     };
 
 

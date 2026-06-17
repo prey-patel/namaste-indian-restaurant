@@ -99,6 +99,13 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
     deliveryFee?: number;
     totalAmount?: number;
     orderType?: 'delivery' | 'takeaway';
+    deliveryZoneAction?: 'allow' | 'contact' | 'block' | null;
+    customerName?: string;
+    customerPhone?: string;
+    deliveryAddress?: string | null;
+    deliveryPostalCode?: string | null;
+    deliveryCity?: string | null;
+    items?: { name_pl: string; name_en: string; quantity: number; price: number }[];
   } | null>(null);
 
   // Real-time delivery fee state
@@ -290,7 +297,19 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
           packagingTotal: res.packagingTotal,
           deliveryFee: res.deliveryFee,
           totalAmount: res.totalAmount,
-          orderType: res.orderType
+          orderType: res.orderType,
+          deliveryZoneAction: res.deliveryZoneAction as any,
+          customerName: payload.customer_name,
+          customerPhone: payload.customer_phone,
+          deliveryAddress: payload.delivery_address,
+          deliveryPostalCode: payload.delivery_postal_code,
+          deliveryCity: payload.delivery_city,
+          items: basket.map(b => ({
+            name_pl: b.menuItem.name_pl,
+            name_en: b.menuItem.name_en,
+            quantity: b.quantity,
+            price: b.menuItem.price
+          }))
         });
         setBasket([]);
       } else {
@@ -324,23 +343,88 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
   if (successData) {
     const trackingUrl = `/${locale}/order/status?id=${successData.id}&token=${successData.token}`;
     return (
-      <PremiumCard hoverable={false} className="border-green-500/20 bg-green-500/5 p-8 text-center space-y-6 max-w-xl mx-auto font-sans">
-        <div className="w-12 h-12 bg-green-500/10 border border-green-500/30 text-green-400 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
-          ✓
+      <div className="relative overflow-hidden bg-gradient-to-b from-[#0e1329] via-[#070b1e] to-[#040614] border border-amber-500/25 rounded-2xl shadow-2xl p-8 max-w-xl mx-auto text-center space-y-6 font-sans gold-border-glow">
+        
+        {/* Decorative elements representing traditional Indian patterns */}
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500" />
+        <div className="absolute -top-12 -right-12 w-28 h-28 bg-primary/5 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute -bottom-12 -left-12 w-28 h-28 bg-primary/5 rounded-full blur-2xl pointer-events-none" />
+
+        {/* Success Icon */}
+        <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-green-500/10 to-emerald-500/15 border border-green-500/30 text-green-400 mx-auto animate-pulse shadow-[0_0_15px_rgba(34,197,94,0.1)]">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-8 h-8">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
         </div>
+
+        {/* Title & Description */}
         <div className="space-y-2">
-          <h3 className="text-xl font-serif font-bold text-green-400">{t('successTitle')}</h3>
-          <p className="text-xs text-muted-foreground leading-relaxed">
+          <h3 className="text-2xl font-serif font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-yellow-100 uppercase">
+            {t('successTitle')}
+          </h3>
+          <p className="text-xs text-muted-foreground/80 leading-relaxed max-w-md mx-auto">
             {t('successDesc')}
           </p>
         </div>
 
-        {/* Order Summary on Success Page */}
+        {/* Customer & Address Details */}
+        <div className="p-4 bg-[#0a0f26] border border-primary/10 rounded-xl space-y-3 text-xs text-left max-w-md mx-auto">
+          <span className="text-[10px] font-bold text-amber-500/70 tracking-widest uppercase block border-b border-primary/5 pb-1.5 mb-1.5">
+            {locale === 'pl' ? 'Szczegóły Odbiorcy' : 'Customer Details'}
+          </span>
+          <div className="grid grid-cols-2 gap-2 text-muted-foreground">
+            <div>
+              <span className="text-[9px] uppercase tracking-wider text-muted-foreground/50 block">{t('nameLabel')}</span>
+              <span className="text-foreground font-medium text-[11px]">{successData.customerName}</span>
+            </div>
+            <div>
+              <span className="text-[9px] uppercase tracking-wider text-muted-foreground/50 block">{t('phoneLabel')}</span>
+              <span className="text-foreground font-medium text-[11px]">{successData.customerPhone}</span>
+            </div>
+          </div>
+          {successData.orderType === 'delivery' && successData.deliveryAddress && (
+            <div className="pt-2 border-t border-primary/5">
+              <span className="text-[9px] uppercase tracking-wider text-muted-foreground/50 block">{t('addressHeader')}</span>
+              <span className="text-foreground font-medium text-[11px] flex items-center gap-1.5">
+                <span className="text-amber-500">📍</span>
+                {successData.deliveryAddress}, {successData.deliveryPostalCode} {successData.deliveryCity}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Dishes Ordered Section */}
+        {successData.items && successData.items.length > 0 && (
+          <div className="p-4 bg-[#0a0f26] border border-primary/10 rounded-xl space-y-2.5 text-xs text-left max-w-md mx-auto">
+            <span className="text-[10px] font-bold text-amber-500/70 tracking-widest uppercase block border-b border-primary/5 pb-1.5 mb-1.5">
+              {locale === 'pl' ? 'Zamówione Pozycje' : 'Dishes Ordered'}
+            </span>
+            <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
+              {successData.items.map((item, idx) => (
+                <div key={idx} className="flex justify-between items-center text-[11px] text-muted-foreground">
+                  <div className="flex flex-col text-left">
+                    <span className="text-foreground font-medium">
+                      {locale === 'pl' ? item.name_pl : item.name_en}
+                    </span>
+                    <span className="text-[9px] text-muted-foreground/60">
+                      {item.quantity} × {item.price.toFixed(2)} PLN
+                    </span>
+                  </div>
+                  <span className="font-mono text-foreground font-semibold">
+                    {(item.quantity * item.price).toFixed(2)} PLN
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Order Totals Summary */}
         {successData.itemsSubtotal !== undefined && (
-          <div className="p-4 bg-[#070B1E] border border-primary/15 rounded-lg space-y-2 text-xs text-left max-w-md mx-auto">
-            <h4 className="font-semibold text-primary uppercase tracking-wider text-[10px] border-b border-primary/10 pb-1.5 mb-2">
-              {locale === 'pl' ? 'Podsumowanie Zamówienia' : 'Order Summary'}
-            </h4>
+          <div className="p-4 bg-[#070b1e] border border-amber-500/15 rounded-xl space-y-2.5 text-xs text-left max-w-md mx-auto shadow-inner">
+            <span className="text-[10px] font-bold text-amber-500/70 tracking-widest uppercase block border-b border-primary/10 pb-1.5 mb-1.5">
+              {locale === 'pl' ? 'Podsumowanie Kosztów' : 'Payment Summary'}
+            </span>
             <div className="flex justify-between text-muted-foreground">
               <span>{t('subtotal')}</span>
               <span className="font-mono">{successData.itemsSubtotal.toFixed(2)} PLN</span>
@@ -352,50 +436,61 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
               </div>
             )}
             {successData.orderType === 'delivery' && (
-              <div className="flex flex-col space-y-1 pt-1 border-t border-primary/5">
-                <div className="flex justify-between text-muted-foreground font-semibold">
+              <div className="flex flex-col space-y-1 pt-1.5 border-t border-primary/5">
+                <div className="flex justify-between text-muted-foreground">
                   <span>{t('deliveryFee')}</span>
-                  <span className="text-primary italic">{t('deliveryFeeTbd')}</span>
+                  {successData.deliveryZoneAction === 'contact' ? (
+                    <span className="text-amber-400 font-medium italic">{t('deliveryFeeTbd')}</span>
+                  ) : (
+                    <span className="font-mono text-foreground font-medium">
+                      {successData.deliveryFee === 0 
+                        ? (locale === 'pl' ? 'Bezpłatna' : 'Free') 
+                        : `${successData.deliveryFee?.toFixed(2)} PLN`}
+                    </span>
+                  )}
                 </div>
-                <p className="text-[10px] text-primary/75 italic leading-tight">
-                  {t('deliveryFeeNotice')}
-                </p>
+                {successData.deliveryZoneAction === 'contact' && (
+                  <p className="text-[10px] text-amber-400/80 italic leading-tight font-light">
+                    {t('deliveryFeeNotice')}
+                  </p>
+                )}
               </div>
             )}
-            <div className="flex justify-between text-foreground font-bold text-sm pt-2 border-t border-primary/15">
+            <div className="flex justify-between text-foreground font-bold text-sm pt-2.5 border-t border-primary/15 bg-gradient-to-r from-amber-500/5 via-transparent to-transparent -mx-4 px-4 py-1.5 rounded-b-lg">
               <span>
                 {successData.orderType === 'delivery' ? t('estimatedTotal') : t('finalTotal')}
               </span>
-              <span className="text-primary font-mono font-bold">
-                {(successData.itemsSubtotal + (successData.packagingTotal || 0)).toFixed(2)} PLN
+              <span className="text-amber-400 font-mono text-base font-black">
+                {Number(successData.totalAmount || 0).toFixed(2)} PLN
               </span>
             </div>
           </div>
         )}
 
-        <div className="p-4 bg-[#070B1E] border border-primary/20 rounded-lg space-y-3">
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 block">
+        {/* Tracking Information Box */}
+        <div className="p-4 bg-[#0a0f26] border border-primary/20 rounded-xl space-y-3 max-w-md mx-auto">
+          <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 block font-semibold">
             {t('trackingRef')}
           </span>
-          <code className="text-sm text-primary font-mono select-all block break-all p-1 bg-primary/5 rounded">
+          <code className="text-xs text-amber-400 font-mono select-all block break-all py-1.5 px-3 bg-amber-500/5 border border-amber-500/10 rounded-lg">
             {successData.token}
           </code>
-          <p className="text-[10px] text-muted-foreground/50 leading-relaxed font-light">
+          <p className="text-[10px] text-muted-foreground/60 leading-relaxed font-light">
             {t('trackingText')}
           </p>
           <div className="pt-2">
-            <Link href={trackingUrl}>
-              <Button className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs uppercase tracking-wider py-2">
+            <Link href={trackingUrl} className="block">
+              <Button className="w-full bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-[#070B1E] font-bold text-xs uppercase tracking-wider py-3 shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:shadow-[0_0_25px_rgba(245,158,11,0.3)] transition-all duration-300 rounded-lg">
                 {t('trackLinkText')}
               </Button>
             </Link>
           </div>
         </div>
 
-        <p className="text-[10px] text-muted-foreground/50 pt-2 border-t border-primary/5">
+        <p className="text-[10px] text-muted-foreground/50 pt-2 border-t border-primary/5 max-w-md mx-auto">
           {t('contactNote')}
         </p>
-      </PremiumCard>
+      </div>
     );
   }
 
