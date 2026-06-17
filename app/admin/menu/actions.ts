@@ -136,13 +136,13 @@ export async function deleteCategoryAction(id: string) {
 // MENU ITEM ACTIONS
 // ==========================================
 
-export async function createMenuItemAction(rawData: z.infer<typeof menuItemFormSchema>) {
+export async function createMenuItemAction(rawData: z.infer<typeof menuItemFormSchema>, packagingRules?: { ruleId: string; quantity: number }[]) {
   try {
     await validateAdminAccess();
     const data = menuItemFormSchema.parse(rawData);
 
     const supabase = await createClient();
-    const { error } = await supabase
+    const { data: newItem, error } = await supabase
       .from('menu_items')
       .insert({
         category_id: data.category_id,
@@ -164,11 +164,32 @@ export async function createMenuItemAction(rawData: z.infer<typeof menuItemFormS
         is_available: true,
         is_active: true,
         is_deleted: false,
-      });
+      })
+      .select('id')
+      .single();
 
-    if (error) {
+    if (error || !newItem) {
       console.error('Database error in createMenuItemAction:', error);
       return { success: false, error: 'Database write failed' };
+    }
+
+    if (packagingRules && packagingRules.length > 0) {
+      const mappings = packagingRules.map(rule => ({
+        menu_item_id: newItem.id,
+        packaging_fee_rule_id: rule.ruleId,
+        default_quantity: rule.quantity,
+        is_required: true
+      }));
+
+      const { error: mappingErr } = await supabase
+        .from('menu_item_packaging_rules')
+        .insert(mappings);
+
+      if (mappingErr) {
+        console.error('Database error saving packaging rules:', mappingErr);
+        await supabase.from('menu_items').delete().eq('id', newItem.id);
+        return { success: false, error: 'Failed to assign packaging rules: ' + mappingErr.message };
+      }
     }
 
     revalidatePath('/[locale]/menu', 'layout');
@@ -180,7 +201,11 @@ export async function createMenuItemAction(rawData: z.infer<typeof menuItemFormS
   }
 }
 
-export async function updateMenuItemAction(id: string, rawData: Partial<z.infer<typeof menuItemFormSchema>> & { is_available?: boolean; is_active?: boolean }) {
+export async function updateMenuItemAction(
+  id: string,
+  rawData: Partial<z.infer<typeof menuItemFormSchema>> & { is_available?: boolean; is_active?: boolean },
+  packagingRules?: { ruleId: string; quantity: number }[]
+) {
   try {
     await validateAdminAccess();
 
@@ -201,6 +226,36 @@ export async function updateMenuItemAction(id: string, rawData: Partial<z.infer<
     if (error) {
       console.error('Database error in updateMenuItemAction:', error);
       return { success: false, error: 'Database update failed' };
+    }
+
+    if (packagingRules) {
+      const { error: deleteErr } = await supabase
+        .from('menu_item_packaging_rules')
+        .delete()
+        .eq('menu_item_id', id);
+
+      if (deleteErr) {
+        console.error('Database error deleting packaging rules:', deleteErr);
+        return { success: false, error: 'Failed to update packaging rules mappings' };
+      }
+
+      if (packagingRules.length > 0) {
+        const mappings = packagingRules.map(rule => ({
+          menu_item_id: id,
+          packaging_fee_rule_id: rule.ruleId,
+          default_quantity: rule.quantity,
+          is_required: true
+        }));
+
+        const { error: mappingErr } = await supabase
+          .from('menu_item_packaging_rules')
+          .insert(mappings);
+
+        if (mappingErr) {
+          console.error('Database error inserting packaging rules:', mappingErr);
+          return { success: false, error: 'Failed to assign packaging rules' };
+        }
+      }
     }
 
     revalidatePath('/[locale]/menu', 'layout');

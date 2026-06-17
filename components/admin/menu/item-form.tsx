@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { menuItemFormSchema } from '@/lib/validation/admin-menu';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import GoldSpinner from '@/components/ui/gold-spinner';
 import ImageUploader from './image-uploader';
 import PreviewCard from './preview-card';
+import { createClient } from '@/lib/supabase/client';
 
 type CategoryOption = {
   id: string;
@@ -69,6 +70,42 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [allPackagingRules, setAllPackagingRules] = useState<any[]>([]);
+  const [selectedPackagingRules, setSelectedPackagingRules] = useState<{ ruleId: string; quantity: number }[]>([]);
+
+  useEffect(() => {
+    async function loadPackagingData() {
+      const supabase = createClient();
+      
+      const { data: rules } = await supabase
+        .from('packaging_fee_rules')
+        .select('id, name_pl, name_en, amount')
+        .eq('is_active', true)
+        .order('name_en', { ascending: true });
+        
+      if (rules) {
+        setAllPackagingRules(rules);
+      }
+      
+      if (initialData?.id) {
+        const { data: mappings } = await supabase
+          .from('menu_item_packaging_rules')
+          .select('packaging_fee_rule_id, default_quantity')
+          .eq('menu_item_id', initialData.id);
+          
+        if (mappings) {
+          setSelectedPackagingRules(
+            mappings.map((m: any) => ({
+              ruleId: m.packaging_fee_rule_id,
+              quantity: m.default_quantity
+            }))
+          );
+        }
+      }
+    }
+    loadPackagingData();
+  }, [initialData?.id]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -116,9 +153,9 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
           ...payload,
           is_available: isAvailable,
           is_active: isActive,
-        });
+        }, selectedPackagingRules);
       } else {
-        res = await createMenuItemAction(payload);
+        res = await createMenuItemAction(payload, selectedPackagingRules);
       }
 
       if (res.success) {
@@ -413,6 +450,67 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
             </label>
           </div>
         </div>
+
+        {/* Section: Packaging Charges */}
+        {allPackagingRules.length > 0 && (
+          <div className="space-y-3 border-t border-border pt-4">
+            <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium block">
+              Opłaty za opakowanie / Packaging Charges
+            </span>
+            <p className="text-[11px] text-muted-foreground leading-normal">
+              Wybierz opłaty doliczane do tego dania przy zamówieniach na wynos lub z dostawą.
+            </p>
+            
+            <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+              {allPackagingRules.map((rule) => {
+                const match = selectedPackagingRules.find(r => r.ruleId === rule.id);
+                const isChecked = !!match;
+                const quantity = match?.quantity ?? 1;
+
+                return (
+                  <div key={rule.id} className="flex items-center justify-between p-2.5 bg-muted/10 border border-border/50 rounded text-xs">
+                    <label className="flex items-center space-x-2.5 text-foreground cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedPackagingRules([...selectedPackagingRules, { ruleId: rule.id, quantity: 1 }]);
+                          } else {
+                            setSelectedPackagingRules(selectedPackagingRules.filter(r => r.ruleId !== rule.id));
+                          }
+                        }}
+                        className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary"
+                      />
+                      <span className="font-medium">
+                        {rule.name_pl} / {rule.name_en} ({Number(rule.amount).toFixed(2)} PLN)
+                      </span>
+                    </label>
+                    
+                    {isChecked && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-muted-foreground">Qty:</span>
+                        <input
+                          type="number"
+                          min="1"
+                          max="10"
+                          value={quantity}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            setSelectedPackagingRules(selectedPackagingRules.map(r => 
+                              r.ruleId === rule.id ? { ...r, quantity: isNaN(val) || val < 1 ? 1 : val } : r
+                            ));
+                          }}
+                          className="w-12 bg-background border border-border rounded px-1 py-0.5 text-center text-xs focus:outline-none focus:border-primary"
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Form Actions */}
         <div className="flex space-x-3 pt-6 border-t border-border">
