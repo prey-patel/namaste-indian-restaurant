@@ -13,6 +13,7 @@ import MandalaWatermark from '@/components/ui/mandala-watermark';
 import StatusPill from '@/components/ui/status-pill';
 import { Button } from '@/components/ui/button';
 import { Calendar, Users, Clock, AlertTriangle } from 'lucide-react';
+import ReservationStatusRealtimeListener from '@/components/public/reservations/reservation-status-realtime-listener';
 
 export const dynamic = 'force-dynamic';
 
@@ -168,6 +169,7 @@ export default async function ReservationStatusPage({ params, searchParams }: Pr
 
   return (
     <PageTransition>
+      <ReservationStatusRealtimeListener reservationId={id!} />
       {/* Hero Header */}
       <section className="relative overflow-hidden bg-[#070B1E] py-16 md:py-24 text-center border-b border-primary/15">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-primary/5 rounded-full blur-[80px] pointer-events-none" />
