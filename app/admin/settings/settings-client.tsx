@@ -1011,7 +1011,7 @@ export default function SettingsClient({
                       {rulesState.length === 0 && (
                         <tr>
                           <td colSpan={8} className="p-6 text-center text-muted-foreground text-xs italic">
-                            No delivery zones configured. Click "Add Zone" to create one.
+                            No delivery zones configured. Click &quot;Add Zone&quot; to create one.
                           </td>
                         </tr>
                       )}
