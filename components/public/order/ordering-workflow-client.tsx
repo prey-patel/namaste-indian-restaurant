@@ -245,7 +245,7 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
     ? deliveryFeeInfo.fee
     : 0;
   const estimatedTotal = itemsSubtotal + liveDeliveryFee;
-  const isDeliveryBlocked = orderType === 'delivery' && deliveryFeeInfo && !deliveryFeeInfo.loading && deliveryFeeInfo.action === 'block';
+  const isDeliveryBlocked = orderType === 'delivery' && deliveryFeeInfo && !deliveryFeeInfo.loading && (deliveryFeeInfo.action === 'block' || deliveryFeeInfo.errorCode === 'NO_ZONE');
 
   // Submit Handler
   const handleSubmitOrder = async (e: React.FormEvent) => {

@@ -184,6 +184,9 @@ export async function calculateOrderTotalServerSide(
               deliveryFeeGrosz = Math.round(Number(matchingRule.fee_amount) * 100);
             }
             isDeliveryFeeCalculated = true;
+          } else {
+            deliveryZoneAction = 'block';
+            isDeliveryFeeCalculated = true;
           }
         }
       }
