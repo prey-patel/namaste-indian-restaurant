@@ -88,7 +88,23 @@ export default function ManualOrderForm({ menuItems, categories }: Props) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [feeStatus, setFeeStatus] = useState<{ calculated: boolean; error: string | null }>({ calculated: false, error: null });
+  const [feeStatus, setFeeStatus] = useState<{
+    calculated: boolean;
+    loading: boolean;
+    error: string | null;
+    distanceKm: number | null;
+    durationMinutes: number | null;
+    zoneName: string | null;
+    action: 'allow' | 'contact' | 'block' | null;
+  }>({
+    calculated: false,
+    loading: false,
+    error: null,
+    distanceKm: null,
+    durationMinutes: null,
+    zoneName: null,
+    action: null
+  });
 
   // Update default payment method when order type changes
   useEffect(() => {
@@ -109,24 +125,119 @@ export default function ManualOrderForm({ menuItems, categories }: Props) {
     setDeliveryPostalCode(val);
   };
 
-  // Real-time Postal Code DB lookup
+  // Real-time Delivery Distance & Fee Lookup (Matches Customer Website)
   useEffect(() => {
-    if (orderType === "delivery" && deliveryPostalCode.length === 6) {
-      setErrorMsg(null);
-      startTransition(async () => {
-        const res = await lookupPostalCodeAction(deliveryPostalCode);
-        if (res.success && res.fee !== undefined) {
-          setDeliveryFee(res.fee);
-          setIsFeeManuallySet(false);
-          setFeeStatus({ calculated: true, error: null });
-        } else {
-          setFeeStatus({ calculated: false, error: res.error || "No postal code zone matched." });
-        }
+    if (orderType !== "delivery") {
+      setFeeStatus({
+        calculated: false,
+        loading: false,
+        error: null,
+        distanceKm: null,
+        durationMinutes: null,
+        zoneName: null,
+        action: null
       });
-    } else {
-      setFeeStatus({ calculated: false, error: null });
+      return;
     }
-  }, [deliveryPostalCode, orderType]);
+
+    // Check if minimum fields required for Google Maps API driving route are present
+    const hasAddress = deliveryAddress.trim().length >= 4;
+    const hasPostalCode = /^\d{2}-\d{3}$/.test(deliveryPostalCode);
+    const hasCity = deliveryCity.trim().length >= 2;
+
+    if (!hasAddress || !hasPostalCode || !hasCity) {
+      setFeeStatus(prev => ({ ...prev, calculated: false, error: null }));
+      return;
+    }
+
+    if (isFeeManuallySet) {
+      return;
+    }
+
+    setFeeStatus(prev => ({ ...prev, loading: true, error: null }));
+
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/delivery-fee", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            street: deliveryAddress,
+            postalCode: deliveryPostalCode,
+            city: deliveryCity
+          })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          setDeliveryFee(data.fee);
+          setFeeStatus({
+            calculated: true,
+            loading: false,
+            error: null,
+            distanceKm: data.distanceKm,
+            durationMinutes: data.durationMinutes,
+            zoneName: data.zoneName,
+            action: data.action
+          });
+        } else {
+          // Fallback to local DB postal code lookup if API fails/excludes address
+          const fallback = await lookupPostalCodeAction(deliveryPostalCode);
+          if (fallback.success && fallback.fee !== undefined) {
+            setDeliveryFee(fallback.fee);
+            setFeeStatus({
+              calculated: true,
+              loading: false,
+              error: null,
+              distanceKm: null,
+              durationMinutes: null,
+              zoneName: fallback.fee === 0 ? "Free Postal Zone" : "Postal Zone",
+              action: "allow"
+            });
+          } else {
+            setDeliveryFee(0);
+            setFeeStatus({
+              calculated: false,
+              loading: false,
+              error: data.error || "Address is outside active delivery zones.",
+              distanceKm: null,
+              durationMinutes: null,
+              zoneName: null,
+              action: "block"
+            });
+          }
+        }
+      } catch (err) {
+        // Fallback to local DB postal code lookup on connection issues
+        const fallback = await lookupPostalCodeAction(deliveryPostalCode);
+        if (fallback.success && fallback.fee !== undefined) {
+          setDeliveryFee(fallback.fee);
+          setFeeStatus({
+            calculated: true,
+            loading: false,
+            error: null,
+            distanceKm: null,
+            durationMinutes: null,
+            zoneName: "Postal Zone (Offline)",
+            action: "allow"
+          });
+        } else {
+          setFeeStatus({
+            calculated: false,
+            loading: false,
+            error: "Could not auto-calculate route fee. Enter manually.",
+            distanceKm: null,
+            durationMinutes: null,
+            zoneName: null,
+            action: null
+          });
+        }
+      }
+    }, 800);
+
+    return () => clearTimeout(delayDebounce);
+  }, [deliveryAddress, deliveryPostalCode, deliveryCity, orderType, isFeeManuallySet]);
 
   // Recalculate totals server-side when basket changes or delivery fee changes
   useEffect(() => {
@@ -658,16 +769,30 @@ export default function ManualOrderForm({ menuItems, categories }: Props) {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-semibold text-muted-foreground block">Delivery Fee (PLN)</label>
-                  {feeStatus.calculated && (
-                    <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full">
-                      Zone Match
-                    </span>
-                  )}
-                  {isFeeManuallySet && (
-                    <span className="text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full">
-                      Manually Set
-                    </span>
-                  )}
+                  <div className="flex gap-1.5 items-center">
+                    {feeStatus.loading && (
+                      <span className="text-[9px] font-bold text-muted-foreground animate-pulse">
+                        Calculating...
+                      </span>
+                    )}
+                    {feeStatus.calculated && !isFeeManuallySet && (
+                      <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full">
+                        {feeStatus.zoneName || "Zone Match"}
+                      </span>
+                    )}
+                    {isFeeManuallySet && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsFeeManuallySet(false);
+                          setDeliveryFee(0);
+                        }}
+                        className="text-[9px] font-bold text-[#9E690A] hover:underline bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-full"
+                      >
+                        Reset to Auto
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="relative">
                   <input 
@@ -685,10 +810,27 @@ export default function ManualOrderForm({ menuItems, categories }: Props) {
                   />
                   <span className="absolute right-3 top-3 text-xs text-muted-foreground">PLN</span>
                 </div>
-                {feeStatus.error && (
-                  <p className="text-[10px] text-amber-700 flex items-center gap-1">
+                {feeStatus.calculated && !feeStatus.loading && (
+                  <div className="text-[10px] text-emerald-700 font-medium space-y-0.5 mt-1 bg-emerald-50/50 p-2 rounded border border-emerald-100">
+                    <p className="flex justify-between">
+                      <span>Driving Distance:</span>
+                      <span className="font-mono">{feeStatus.distanceKm ? `${feeStatus.distanceKm.toFixed(2)} km` : "N/A"}</span>
+                    </p>
+                    <p className="flex justify-between">
+                      <span>Estimated Duration:</span>
+                      <span className="font-mono">{feeStatus.durationMinutes ? `${feeStatus.durationMinutes} mins` : "N/A"}</span>
+                    </p>
+                    {feeStatus.action === "block" && (
+                      <p className="text-rose-700 font-bold mt-1">
+                        ⚠️ Address is outside our delivery area!
+                      </p>
+                    )}
+                  </div>
+                )}
+                {feeStatus.error && !feeStatus.loading && (
+                  <p className="text-[10px] text-amber-700 flex items-center gap-1 mt-1">
                     <Info className="w-3 h-3" />
-                    {feeStatus.error} Entering manually.
+                    {feeStatus.error} Enter manually if needed.
                   </p>
                 )}
               </div>
