@@ -90,12 +90,11 @@ type Order = {
 type OrderItem = {
   id: string;
   menu_item_id: string;
-  name_en: string;
-  name_pl: string;
+  item_name_en: string;
+  item_name_pl: string;
   quantity: number;
   unit_price: number;
   line_total: number;
-  packaging_fee: number;
   customer_notes: string | null;
 };
 
@@ -674,23 +673,18 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
                   key={item.id}
                   className="flex justify-between items-start gap-4 p-3.5 bg-background border border-border rounded text-xs"
                 >
-                  <div className="space-y-1">
+                <div className="space-y-1">
                     <span className="font-semibold text-foreground text-sm">
-                      {item.name_en}
+                      {item.item_name_en}
                     </span>
-                    {item.name_pl && item.name_pl !== item.name_en && (
+                    {item.item_name_pl && item.item_name_pl !== item.item_name_en && (
                       <span className="text-[10px] text-muted-foreground/50 block">
-                        {item.name_pl}
+                        {item.item_name_pl}
                       </span>
                     )}
                     <span className="text-muted-foreground/60 block text-[10px] font-mono">
                       {item.quantity} × {Number(item.unit_price).toFixed(2)} PLN
                     </span>
-                    {Number(item.packaging_fee) > 0 && (
-                      <span className="text-[10px] text-muted-foreground/50">
-                        +{Number(item.packaging_fee).toFixed(2)} PLN packaging
-                      </span>
-                    )}
                     {item.customer_notes && (
                       <span className="text-[10px] text-primary/75 italic leading-tight block pt-0.5">
                         * {item.customer_notes}
