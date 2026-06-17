@@ -102,7 +102,7 @@ type OrderItem = {
 
 type TimelineEvent = {
   id: string;
-  status: string;
+  new_status: string;
   created_at: string;
   metadata?: any;
   profiles?: {
@@ -268,21 +268,283 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
     });
   };
 
-  // ETA calculation
-  const etaInfo = (() => {
-    if (!order.estimated_time) return null;
-    const etaDate = new Date(order.estimated_time);
+  // SLA Calculations and Card Renderer
+  const renderSlaTrackerCard = () => {
+    const isDelivery = order.order_type === 'delivery';
+    const trackerTitle = isDelivery ? t('slaTrackerTitleDelivery' as any) : t('slaTrackerTitleTakeaway' as any);
+    
+    const isPending = order.status === 'pending';
+    const isCancelled = order.status === 'cancelled';
+    const isRejected = order.status === 'rejected';
+    const isCompleted = order.status === 'completed';
+
+    const createdTimeStr = formatDateTime(order.created_at);
+
+    const formatTimeWarsaw = (dateStr: string | null) => {
+      if (!dateStr) return '--:--';
+      return new Date(dateStr).toLocaleTimeString('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'Europe/Warsaw',
+      });
+    };
+
+    if (isPending) {
+      return (
+        <PremiumCard hoverable={false} className="border-border bg-card p-6 space-y-4">
+          <div className="flex justify-between items-center border-b border-border pb-3">
+            <h3 className="text-lg font-serif font-bold text-primary tracking-wide">
+              {trackerTitle}
+            </h3>
+            <span className="bg-muted border border-border text-muted-foreground font-bold px-2.5 py-1 rounded text-[10px] uppercase tracking-wider">
+              {t('slaStatusAwaiting' as any)}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div className="p-3.5 bg-background border border-border rounded-lg space-y-1">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60 block font-semibold">
+                {t('slaOrderPlaced' as any)}
+              </span>
+              <span className="font-semibold text-foreground">{createdTimeStr}</span>
+            </div>
+            <div className="p-3.5 bg-background border border-border rounded-lg space-y-1 flex items-center justify-center text-muted-foreground/50 italic">
+              {t('slaNotAvailable' as any)}
+            </div>
+          </div>
+        </PremiumCard>
+      );
+    }
+
+    if (isRejected || (isCancelled && !order.approved_at)) {
+      return (
+        <PremiumCard hoverable={false} className="border-border bg-card p-6 space-y-4">
+          <div className="flex justify-between items-center border-b border-border pb-3">
+            <h3 className="text-lg font-serif font-bold text-primary tracking-wide">
+              {trackerTitle}
+            </h3>
+            <span className="bg-red-500/10 border border-red-500/30 text-red-500 font-bold px-2.5 py-1 rounded text-[10px] uppercase tracking-wider">
+              {isRejected ? t('slaStatusRejected' as any) : t('slaStatusCancelled' as any)}
+            </span>
+          </div>
+          <div className="p-3.5 bg-background border border-border rounded-lg text-xs space-y-1">
+            <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60 block font-semibold">
+              {t('slaOrderPlaced' as any)}
+            </span>
+            <span className="font-semibold text-foreground">{createdTimeStr}</span>
+          </div>
+        </PremiumCard>
+      );
+    }
+
+    const approvedTime = order.approved_at ? new Date(order.approved_at) : new Date(order.created_at);
+    const targetTime = order.estimated_time ? new Date(order.estimated_time) : null;
+
+    if (!targetTime) {
+      return null;
+    }
+
+    const approvedTimeStr = formatDateTime(approvedTime.toISOString());
+    const targetTimeStr = formatDateTime(targetTime.toISOString());
+    const targetTimeOnlyStr = formatTime(targetTime.toISOString());
+
+    const allocatedMins = Math.round((targetTime.getTime() - approvedTime.getTime()) / 60000);
+
+    let badgeClass = '';
+    let badgeText = '';
+    let progressPercent = 0;
+    let progressBarColor = 'bg-primary';
+    let slaPerformanceText = '';
+    let slaPerformanceColor = '';
+    let elapsedMinsLabel = '';
+
     const now = new Date();
-    const diffMs = etaDate.getTime() - now.getTime();
-    const minsLeft = Math.max(0, Math.round(diffMs / 60000));
-    const timeStr = etaDate.toLocaleTimeString('en-GB', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-      timeZone: 'Europe/Warsaw',
-    });
-    return { timeStr, minsLeft, isPast: diffMs <= 0 };
-  })();
+
+    if (isCompleted && order.completed_at) {
+      const completedTime = new Date(order.completed_at);
+      const completedTimeStr = formatDateTime(completedTime.toISOString());
+
+      const actualDurationMins = Math.round((completedTime.getTime() - approvedTime.getTime()) / 60000);
+      const diffMins = Math.round((completedTime.getTime() - targetTime.getTime()) / 60000);
+
+      elapsedMinsLabel = `${actualDurationMins} min`;
+
+      if (diffMins > 0) {
+        badgeClass = 'bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400';
+        badgeText = t('slaStatusLate' as any, { mins: diffMins });
+        slaPerformanceText = t('slaRatingBreached' as any);
+        slaPerformanceColor = 'text-red-500 font-bold';
+        progressBarColor = 'bg-red-500';
+        progressPercent = 100;
+      } else if (diffMins < 0) {
+        badgeClass = 'bg-green-500/10 border border-green-500/30 text-green-600 dark:text-green-400';
+        badgeText = t('slaStatusEarly' as any, { mins: Math.abs(diffMins) });
+        slaPerformanceText = t('slaRatingExcellent' as any);
+        slaPerformanceColor = 'text-green-600 dark:text-green-400 font-bold';
+        progressBarColor = 'bg-green-600';
+        progressPercent = Math.min(100, Math.max(0, (actualDurationMins / allocatedMins) * 100));
+      } else {
+        badgeClass = 'bg-green-500/10 border border-green-500/30 text-green-600 dark:text-green-400';
+        badgeText = t('slaStatusOnTime' as any);
+        slaPerformanceText = t('slaRatingOnTime' as any);
+        slaPerformanceColor = 'text-green-600 dark:text-green-400 font-bold';
+        progressBarColor = 'bg-green-600';
+        progressPercent = 100;
+      }
+
+      return (
+        <PremiumCard hoverable={false} className="border-border bg-card p-6 space-y-5">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center border-b border-border pb-3 gap-2">
+            <div className="flex items-center gap-2">
+              <Timer className="w-5 h-5 text-primary flex-shrink-0" />
+              <h3 className="text-lg font-serif font-bold text-primary tracking-wide">
+                {trackerTitle}
+              </h3>
+            </div>
+            <span className={`font-bold px-2.5 py-1 rounded text-[10px] uppercase tracking-wider ${badgeClass}`}>
+              {badgeText}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+            <div className="p-3.5 bg-background border border-border rounded-lg space-y-1">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60 block font-semibold">
+                {t('slaOrderPlaced' as any)}
+              </span>
+              <span className="font-semibold text-foreground">{createdTimeStr}</span>
+            </div>
+            <div className="p-3.5 bg-background border border-border rounded-lg space-y-1">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60 block font-semibold">
+                {t('slaOrderConfirmed' as any)}
+              </span>
+              <span className="font-semibold text-foreground">{approvedTimeStr}</span>
+            </div>
+            <div className="p-3.5 bg-background border border-border rounded-lg space-y-1">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60 block font-semibold">
+                {t('slaTargetTime' as any)}
+              </span>
+              <span className="font-semibold text-foreground">{targetTimeStr}</span>
+            </div>
+            <div className="p-3.5 bg-background border border-border rounded-lg space-y-1">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60 block font-semibold">
+                {t('slaActualTime' as any)}
+              </span>
+              <span className="font-semibold text-foreground">{completedTimeStr}</span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-[10px]">
+              <span className="text-muted-foreground/60">{t('slaAllocatedTime' as any)}: <strong className="text-foreground">{allocatedMins} min</strong></span>
+              <span className="text-muted-foreground/60">{t('slaElapsedTime' as any)}: <strong className="text-foreground">{elapsedMinsLabel}</strong></span>
+            </div>
+            <div className="w-full bg-border rounded-full h-2.5 overflow-hidden">
+              <div 
+                className={`h-full ${progressBarColor} transition-all duration-500`} 
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <div className="flex justify-between items-center text-[10px]">
+              <span className="text-muted-foreground/40 font-mono">{formatTimeWarsaw(order.approved_at)}</span>
+              <span className="text-muted-foreground/40 font-mono">{targetTimeOnlyStr}</span>
+            </div>
+          </div>
+
+          <div className="p-3.5 bg-background border border-border rounded-lg flex justify-between items-center text-xs">
+            <span className="text-muted-foreground/60 font-semibold uppercase text-[9px] tracking-wider">{t('slaRating' as any)}</span>
+            <span className={slaPerformanceColor}>{slaPerformanceText}</span>
+          </div>
+        </PremiumCard>
+      );
+    } else {
+      const elapsedDurationMins = Math.round((now.getTime() - approvedTime.getTime()) / 60000);
+      const diffMins = Math.round((now.getTime() - targetTime.getTime()) / 60000);
+
+      elapsedMinsLabel = `${elapsedDurationMins} min`;
+
+      if (diffMins > 0) {
+        badgeClass = 'bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 animate-pulse';
+        badgeText = t('slaActiveOverdue' as any, { mins: diffMins });
+        slaPerformanceText = t('slaRatingBreached' as any);
+        slaPerformanceColor = 'text-red-500 font-bold';
+        progressBarColor = 'bg-red-500';
+        progressPercent = 100;
+      } else {
+        const remainingMins = Math.abs(diffMins);
+        badgeClass = 'bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:text-blue-400';
+        badgeText = t('slaActiveRemaining' as any, { mins: remainingMins });
+        slaPerformanceText = t('slaPendingCompletion' as any);
+        slaPerformanceColor = 'text-blue-500 font-bold';
+        progressBarColor = 'bg-blue-500';
+        progressPercent = Math.min(100, Math.max(0, (elapsedDurationMins / allocatedMins) * 100));
+      }
+
+      return (
+        <PremiumCard hoverable={false} className="border-border bg-card p-6 space-y-5">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center border-b border-border pb-3 gap-2">
+            <div className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-primary flex-shrink-0" />
+              <h3 className="text-lg font-serif font-bold text-primary tracking-wide">
+                {trackerTitle}
+              </h3>
+            </div>
+            <span className={`font-bold px-2.5 py-1 rounded text-[10px] uppercase tracking-wider ${badgeClass}`}>
+              {badgeText}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+            <div className="p-3.5 bg-background border border-border rounded-lg space-y-1">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60 block font-semibold">
+                {t('slaOrderPlaced' as any)}
+              </span>
+              <span className="font-semibold text-foreground">{createdTimeStr}</span>
+            </div>
+            <div className="p-3.5 bg-background border border-border rounded-lg space-y-1">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60 block font-semibold">
+                {t('slaOrderConfirmed' as any)}
+              </span>
+              <span className="font-semibold text-foreground">{approvedTimeStr}</span>
+            </div>
+            <div className="p-3.5 bg-background border border-border rounded-lg space-y-1">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60 block font-semibold">
+                {t('slaTargetTime' as any)}
+              </span>
+              <span className="font-semibold text-foreground">{targetTimeStr}</span>
+            </div>
+            <div className="p-3.5 bg-background border border-border rounded-lg space-y-1">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60 block font-semibold">
+                {t('slaActualTime' as any)}
+              </span>
+              <span className="font-medium text-muted-foreground/50 italic">{t('slaPendingCompletion' as any)}</span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-[10px]">
+              <span className="text-muted-foreground/60">{t('slaAllocatedTime' as any)}: <strong className="text-foreground">{allocatedMins} min</strong></span>
+              <span className="text-muted-foreground/60">{t('slaElapsedTime' as any)}: <strong className="text-foreground">{elapsedMinsLabel}</strong></span>
+            </div>
+            <div className="w-full bg-border rounded-full h-2.5 overflow-hidden">
+              <div 
+                className={`h-full ${progressBarColor} transition-all duration-500`} 
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <div className="flex justify-between items-center text-[10px]">
+              <span className="text-muted-foreground/40 font-mono">{formatTimeWarsaw(order.approved_at)}</span>
+              <span className="text-muted-foreground/40 font-mono">{targetTimeOnlyStr}</span>
+            </div>
+          </div>
+
+          <div className="p-3.5 bg-background border border-border rounded-lg flex justify-between items-center text-xs">
+            <span className="text-muted-foreground/60 font-semibold uppercase text-[9px] tracking-wider">{t('slaRating' as any)}</span>
+            <span className={slaPerformanceColor}>{slaPerformanceText}</span>
+          </div>
+        </PremiumCard>
+      );
+    }
+  };
 
   return (
     <div className="space-y-6 font-sans relative">
@@ -332,6 +594,9 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column — Customer + Items (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
+          {/* SLA Tracker Card */}
+          {renderSlaTrackerCard()}
+
           {/* Customer Details */}
           <PremiumCard hoverable={false} className="border-border bg-card p-6 space-y-5">
             <h3 className="text-lg font-serif font-bold text-primary tracking-wide border-b border-border pb-2">
@@ -619,8 +884,8 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
               </div>
             )}
 
-            {/* Order Created / ETA */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-primary/10">
+            {/* Order Created */}
+            <div className="pt-2 border-t border-primary/10">
               <div className="p-3.5 bg-background border border-border rounded-lg flex gap-3 items-center">
                 <div className="w-9 h-9 rounded-full bg-primary/5 border border-border flex items-center justify-center text-primary flex-shrink-0">
                   <Calendar className="w-4 h-4" />
@@ -634,33 +899,6 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
                   </span>
                 </div>
               </div>
-
-              {etaInfo && (
-                <div className="p-3.5 bg-background border border-border rounded-lg flex gap-3 items-center">
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    etaInfo.isPast
-                      ? 'bg-red-500/10 border border-red-500/20 text-red-400'
-                      : 'bg-amber-500/10 border border-amber-500/20 text-amber-400'
-                  }`}>
-                    <Timer className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block">
-                      {t('estimatedTime')}
-                    </span>
-                    <span className="text-xs font-bold text-foreground font-mono">
-                      {etaInfo.timeStr}
-                    </span>
-                    <span className={`text-[9px] block mt-0.5 ${
-                      etaInfo.isPast ? 'text-red-400' : 'text-muted-foreground/60'
-                    }`}>
-                      {etaInfo.isPast
-                        ? 'Overdue'
-                        : `${etaInfo.minsLeft} min remaining`}
-                    </span>
-                  </div>
-                </div>
-              )}
             </div>
           </PremiumCard>
 
@@ -847,17 +1085,17 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
             <div className="relative pl-6 space-y-6 border-l border-border py-1">
               {timeline.map((event, idx) => {
                 const eventMappedStatus =
-                  event.status === 'approved' ? 'confirmed' : event.status;
+                  event.new_status === 'approved' ? 'confirmed' : event.new_status;
                 const isLast = idx === timeline.length - 1;
                 const dotColor = isLast
-                  ? event.status === 'approved' ||
-                    event.status === 'confirmed' ||
-                    event.status === 'completed' ||
-                    event.status === 'ready_for_pickup'
+                  ? event.new_status === 'approved' ||
+                    event.new_status === 'confirmed' ||
+                    event.new_status === 'completed' ||
+                    event.new_status === 'ready_for_pickup'
                     ? 'bg-green-500 ring-4 ring-green-500/20 border-green-400'
-                    : event.status === 'rejected'
+                    : event.new_status === 'rejected'
                     ? 'bg-red-500 ring-4 ring-red-500/20 border-red-400'
-                    : event.status === 'cancelled'
+                    : event.new_status === 'cancelled'
                     ? 'bg-orange-500 ring-4 ring-orange-500/20 border-orange-400'
                     : 'bg-amber-500 ring-4 ring-amber-500/20 border-amber-400'
                   : 'bg-primary/45 border-primary/30';
