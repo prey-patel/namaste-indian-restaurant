@@ -94,6 +94,8 @@ export default function ManualOrderForm({ menuItems, categories }: Props) {
     error: string | null;
     distanceKm: number | null;
     durationMinutes: number | null;
+    walkDistanceKm: number | null;
+    walkDurationMinutes: number | null;
     zoneName: string | null;
     action: 'allow' | 'contact' | 'block' | null;
   }>({
@@ -102,6 +104,8 @@ export default function ManualOrderForm({ menuItems, categories }: Props) {
     error: null,
     distanceKm: null,
     durationMinutes: null,
+    walkDistanceKm: null,
+    walkDurationMinutes: null,
     zoneName: null,
     action: null
   });
@@ -134,6 +138,8 @@ export default function ManualOrderForm({ menuItems, categories }: Props) {
         error: null,
         distanceKm: null,
         durationMinutes: null,
+        walkDistanceKm: null,
+        walkDurationMinutes: null,
         zoneName: null,
         action: null
       });
@@ -178,6 +184,8 @@ export default function ManualOrderForm({ menuItems, categories }: Props) {
             error: null,
             distanceKm: data.distanceKm,
             durationMinutes: data.durationMinutes,
+            walkDistanceKm: data.walkDistanceKm,
+            walkDurationMinutes: data.walkDurationMinutes,
             zoneName: data.zoneName,
             action: data.action
           });
@@ -192,6 +200,8 @@ export default function ManualOrderForm({ menuItems, categories }: Props) {
               error: null,
               distanceKm: null,
               durationMinutes: null,
+              walkDistanceKm: null,
+              walkDurationMinutes: null,
               zoneName: fallback.fee === 0 ? "Free Postal Zone" : "Postal Zone",
               action: "allow"
             });
@@ -203,6 +213,8 @@ export default function ManualOrderForm({ menuItems, categories }: Props) {
               error: data.error || "Address is outside active delivery zones.",
               distanceKm: null,
               durationMinutes: null,
+              walkDistanceKm: null,
+              walkDurationMinutes: null,
               zoneName: null,
               action: "block"
             });
@@ -219,6 +231,8 @@ export default function ManualOrderForm({ menuItems, categories }: Props) {
             error: null,
             distanceKm: null,
             durationMinutes: null,
+            walkDistanceKm: null,
+            walkDurationMinutes: null,
             zoneName: "Postal Zone (Offline)",
             action: "allow"
           });
@@ -229,6 +243,8 @@ export default function ManualOrderForm({ menuItems, categories }: Props) {
             error: "Could not auto-calculate route fee. Enter manually.",
             distanceKm: null,
             durationMinutes: null,
+            walkDistanceKm: null,
+            walkDurationMinutes: null,
             zoneName: null,
             action: null
           });
@@ -813,13 +829,15 @@ export default function ManualOrderForm({ menuItems, categories }: Props) {
                 {feeStatus.calculated && !feeStatus.loading && (
                   <div className="text-[10px] text-emerald-700 font-medium space-y-0.5 mt-1 bg-emerald-50/50 p-2 rounded border border-emerald-100">
                     <p className="flex justify-between">
-                      <span>Driving Distance:</span>
-                      <span className="font-mono">{feeStatus.distanceKm ? `${feeStatus.distanceKm.toFixed(2)} km` : "N/A"}</span>
+                      <span>🚗 Driving Distance:</span>
+                      <span className="font-mono">{feeStatus.distanceKm ? `${feeStatus.distanceKm.toFixed(2)} km (${feeStatus.durationMinutes} mins)` : "N/A"}</span>
                     </p>
-                    <p className="flex justify-between">
-                      <span>Estimated Duration:</span>
-                      <span className="font-mono">{feeStatus.durationMinutes ? `${feeStatus.durationMinutes} mins` : "N/A"}</span>
-                    </p>
+                    {feeStatus.walkDistanceKm !== null && (
+                      <p className="flex justify-between">
+                        <span>🚶 Walking Distance:</span>
+                        <span className="font-mono">{`${feeStatus.walkDistanceKm.toFixed(2)} km (${feeStatus.walkDurationMinutes} mins)`}</span>
+                      </p>
+                    )}
                     {feeStatus.action === "block" && (
                       <p className="text-rose-700 font-bold mt-1">
                         ⚠️ Address is outside our delivery area!

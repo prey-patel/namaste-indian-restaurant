@@ -25,6 +25,8 @@ export interface DeliveryFeeResult {
   fee: number;           // PLN
   distanceKm: number;
   durationMinutes: number;
+  walkDistanceKm: number | null;
+  walkDurationMinutes: number | null;
   zoneName: string;
   action: 'allow' | 'contact' | 'block';
   geocodedAddress: string;
@@ -121,7 +123,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<DeliveryFeeRe
       );
     }
 
-    // 6. Calculate driving route
+    // 6. Calculate driving and walking routes
     let route;
     try {
       route = await calculateRouteGoogle(origin, customerGeo, 'driving');
@@ -139,6 +141,13 @@ export async function POST(req: NextRequest): Promise<NextResponse<DeliveryFeeRe
     const distanceKm = route.distanceMeters / 1000;
     const durationMinutes = Math.ceil(route.durationSeconds / 60);
 
+    let walkRoute = null;
+    try {
+      walkRoute = await calculateRouteGoogle(origin, customerGeo, 'walking');
+    } catch (err: any) {
+      console.warn('[/api/delivery-fee] Walking route calculation failed:', err.message);
+    }
+
     // 7. Look up matching delivery zone from admin-configured rules
     const adminClient = createAdminClient();
     const { data: rules, error: rulesError } = await adminClient
@@ -154,6 +163,8 @@ export async function POST(req: NextRequest): Promise<NextResponse<DeliveryFeeRe
         fee: 0,
         distanceKm: parseFloat(distanceKm.toFixed(2)),
         durationMinutes,
+        walkDistanceKm: walkRoute ? parseFloat((walkRoute.distanceMeters / 1000).toFixed(2)) : null,
+        walkDurationMinutes: walkRoute ? Math.ceil(walkRoute.durationSeconds / 60) : null,
         zoneName: 'Default',
         action: 'contact',
         geocodedAddress: customerGeo.formattedAddress,
@@ -188,6 +199,8 @@ export async function POST(req: NextRequest): Promise<NextResponse<DeliveryFeeRe
       fee,
       distanceKm: parseFloat(distanceKm.toFixed(2)),
       durationMinutes,
+      walkDistanceKm: walkRoute ? parseFloat((walkRoute.distanceMeters / 1000).toFixed(2)) : null,
+      walkDurationMinutes: walkRoute ? Math.ceil(walkRoute.durationSeconds / 60) : null,
       zoneName: matchingRule.name,
       action,
       geocodedAddress: customerGeo.formattedAddress,
