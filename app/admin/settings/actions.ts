@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { geocodeRestaurantAddress } from '@/lib/delivery/distance';
 
 // Helper to check owner/manager authorization
 async function verifyAuth() {
@@ -70,6 +71,23 @@ export async function updateRestaurantProfileAction(rawData: unknown) {
     const { supabase, userId } = await verifyAuth();
     const data = ProfileSchema.parse(rawData);
 
+    // Fetch existing settings to check if address changed
+    const { data: existingSettings } = await supabase
+      .from('system_settings')
+      .select('key, value')
+      .in('key', ['restaurant_address', 'restaurant_city', 'restaurant_postal_code', 'restaurant_country']);
+
+    const oldSettings: Record<string, any> = {};
+    existingSettings?.forEach((s: any) => {
+      oldSettings[s.key] = s.value;
+    });
+
+    const isAddressChanged =
+      oldSettings.restaurant_address !== data.restaurant_address ||
+      oldSettings.restaurant_city !== data.restaurant_city ||
+      oldSettings.restaurant_postal_code !== data.restaurant_postal_code ||
+      oldSettings.restaurant_country !== data.restaurant_country;
+
     // Save key-value settings in system_settings
     const keys = Object.keys(data) as Array<keyof typeof data>;
     
@@ -84,6 +102,26 @@ export async function updateRestaurantProfileAction(rawData: unknown) {
         });
 
       if (error) throw error;
+    }
+
+    if (isAddressChanged) {
+      console.log('[Settings Profile] Restaurant address changed. Invalidating and re-geocoding coordinates...');
+      // 1. Invalidate current coordinates
+      await supabase
+        .from('system_settings')
+        .upsert({
+          key: 'coordinates',
+          value: { status: 'unverified', latitude: null, longitude: null },
+          updated_by: userId,
+          updated_at: new Date().toISOString()
+        });
+        
+      // 2. Trigger re-geocoding
+      try {
+        await geocodeRestaurantAddress();
+      } catch (err) {
+        console.error('Restaurant address re-geocoding failed:', err);
+      }
     }
 
     revalidateAllPaths();

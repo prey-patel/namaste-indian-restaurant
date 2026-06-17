@@ -58,6 +58,10 @@ export async function kdsStartPreparingAction(orderId: string) {
       return { success: false, error: 'Order not found.' };
     }
 
+    if (order.status === 'preparing') {
+      return { success: true };
+    }
+
     if (order.status !== 'approved') {
       return {
         success: false,
@@ -115,6 +119,11 @@ export async function kdsMarkReadyAction(orderId: string) {
 
     if (fetchError || !order) {
       return { success: false, error: 'Order not found.' };
+    }
+
+    const targetStatus = order.order_type === 'takeaway' ? 'ready_for_pickup' : 'out_for_delivery';
+    if (order.status === targetStatus) {
+      return { success: true };
     }
 
     const allowedStatuses = ['approved', 'preparing'];

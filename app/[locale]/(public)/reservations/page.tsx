@@ -37,7 +37,7 @@ export default async function ReservationsPage({ params }: Props) {
 
   const maxGuests = settings.reservation_max_guests ?? 8;
   const phone = settings.restaurant_phone ?? '+48 511 984 331';
-  const address = settings.restaurant_address ?? 'Warszawska 1/3, 06-400 Ciechanów';
+  const address = settings.restaurant_full_address || settings.restaurant_address || 'Warszawska 1/3, 06-400 Ciechanów, Poland';
 
   return (
     <PageTransition>

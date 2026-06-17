@@ -74,6 +74,10 @@ export async function confirmOrderAction(id: string, etaMinutes: number) {
 
     const order = await getOrder(supabase, id);
 
+    if (order.status === 'approved') {
+      return { success: true };
+    }
+
     if (order.status !== 'pending') {
       throw new Error(`Cannot confirm order from status: ${order.status}`);
     }
@@ -120,6 +124,10 @@ export async function rejectOrderAction(id: string, reason?: string | null) {
 
     const order = await getOrder(supabase, id);
 
+    if (order.status === 'rejected') {
+      return { success: true };
+    }
+
     if (order.status !== 'pending') {
       throw new Error(`Cannot reject order from status: ${order.status}`);
     }
@@ -160,6 +168,10 @@ export async function cancelOrderAction(id: string, reason?: string | null) {
 
     const order = await getOrder(supabase, id);
 
+    if (order.status === 'cancelled') {
+      return { success: true };
+    }
+
     const allowedStatuses = ['pending', 'approved', 'preparing'];
     if (!allowedStatuses.includes(order.status)) {
       throw new Error(`Cannot cancel order from status: ${order.status}`);
@@ -196,6 +208,11 @@ export async function markOrderReadyAction(id: string) {
     const supabase = await createClient();
 
     const order = await getOrder(supabase, id);
+
+    const targetStatus = order.order_type === 'takeaway' ? 'ready_for_pickup' : 'out_for_delivery';
+    if (order.status === targetStatus) {
+      return { success: true };
+    }
 
     const allowedStatuses = ['approved', 'preparing'];
     if (!allowedStatuses.includes(order.status)) {
@@ -246,6 +263,10 @@ export async function completeOrderAction(id: string, paymentReceived: boolean) 
     const supabase = await createClient();
 
     const order = await getOrder(supabase, id);
+
+    if (order.status === 'completed') {
+      return { success: true };
+    }
 
     const allowedStatuses = ['ready_for_pickup', 'out_for_delivery'];
     if (!allowedStatuses.includes(order.status)) {
@@ -335,6 +356,10 @@ export async function startPreparingOrderAction(id: string) {
 
     const order = await getOrder(supabase, id);
 
+    if (order.status === 'preparing') {
+      return { success: true };
+    }
+
     if (order.status !== 'approved') {
       throw new Error(`Cannot start preparing order from status: ${order.status}`);
     }
@@ -359,6 +384,23 @@ export async function startPreparingOrderAction(id: string) {
     return { success: true };
   } catch (err: any) {
     console.error('Failed to start preparing order:', err);
+    return { success: false, error: err.message || 'Server error occurred.' };
+  }
+}
+
+export async function recalculateOrderDistanceAction(id: string) {
+  try {
+    await validateAdminAccess();
+    const { refreshOrderDeliveryDistance } = await import('@/lib/delivery/distance');
+    const success = await refreshOrderDeliveryDistance(id);
+    if (!success) {
+      throw new Error('Distance calculation failed. Please verify address details manually.');
+    }
+    revalidatePath(`/admin/orders/${id}`, 'page');
+    revalidatePath('/admin/orders', 'layout');
+    return { success: true };
+  } catch (err: any) {
+    console.error('Failed to recalculate distance:', err);
     return { success: false, error: err.message || 'Server error occurred.' };
   }
 }

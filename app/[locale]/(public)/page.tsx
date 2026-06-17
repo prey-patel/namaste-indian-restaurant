@@ -53,7 +53,7 @@ export default async function HomePage({ params }: Props) {
   const welcomeMessage = settings.public_messages?.welcome_message || t('infoOpening');
   const alertBanner = settings.public_messages?.alert_banner;
   
-  const address = settings.restaurant_address || 'Warszawska 1/3, 06-400 Ciechanów, Poland';
+  const address = settings.restaurant_full_address || settings.restaurant_address || 'Warszawska 1/3, 06-400 Ciechanów, Poland';
   const phone = settings.restaurant_phone || '511984331';
   const email = settings.restaurant_email || 'contact@namaste-ciechanow.pl';
   const dineInHours = settings.public_service_hours?.dine_in || '12:00 - 22:00';

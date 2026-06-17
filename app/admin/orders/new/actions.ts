@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { calculateOrderTotalServerSide } from "@/lib/orders/pricing";
 import { sendOrderApprovedCustomerEmail } from "@/lib/email/send-order-emails";
 import { revalidatePath } from "next/cache";
+import { calculateDeliveryDistance } from "@/lib/delivery/distance";
 
 // 1. Zod validation schemas
 const manualOrderItemSchema = z.object({
@@ -301,6 +302,15 @@ export async function createManualOrderAction(rawData: any) {
         ? "Manually created and approved by admin."
         : "Manually created as pending by admin."
     });
+
+    // 7.5 Calculate delivery distance and route metrics (non-blocking)
+    if (data.order_type === "delivery") {
+      try {
+        await calculateDeliveryDistance(newOrder.id);
+      } catch (distErr) {
+        console.error("Failed to calculate delivery distance for manual order:", distErr);
+      }
+    }
 
     // 8. Trigger customer email if applicable
     if (data.status === "approved" && data.send_customer_email && data.customer_email) {

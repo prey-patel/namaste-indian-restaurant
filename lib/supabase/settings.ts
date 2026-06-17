@@ -4,6 +4,7 @@ import { createClient } from './server';
 
 export type PublicSettings = {
   restaurant_address?: string;
+  restaurant_full_address?: string;
   restaurant_phone?: string;
   opening_status?: { is_open: boolean; message: string | null };
   public_messages?: { alert_banner: string | null; welcome_message: string };
@@ -31,7 +32,8 @@ export type PublicSettings = {
  */
 export async function getPublicSystemSettings(): Promise<PublicSettings> {
   const defaults: PublicSettings = {
-    restaurant_address: 'Warszawska 1/3, 06-400 Ciechanów, Poland',
+    restaurant_address: 'Warszawska 1/3',
+    restaurant_full_address: 'Warszawska 1/3, 06-400 Ciechanów, Poland',
     restaurant_phone: '511984331',
     opening_status: { is_open: true, message: null },
     public_messages: { alert_banner: null, welcome_message: 'Welcome to Namaste Indian Restaurant!' },
@@ -64,8 +66,27 @@ export async function getPublicSystemSettings(): Promise<PublicSettings> {
       settings[item.key] = item.value;
     });
 
+    const rawAddress = settings.restaurant_address || defaults.restaurant_address || '';
+    const city = settings.restaurant_city || defaults.restaurant_city || '';
+    const zip = settings.restaurant_postal_code || defaults.restaurant_postal_code || '';
+    const country = settings.restaurant_country || defaults.restaurant_country || '';
+
+    let fullAddress = rawAddress;
+    if (zip && !rawAddress.includes(zip)) {
+      const cityZip = [zip, city].filter(Boolean).join(' ');
+      if (cityZip) {
+        fullAddress = `${rawAddress}, ${cityZip}`;
+      }
+    } else if (city && !rawAddress.includes(city)) {
+      fullAddress = `${rawAddress}, ${city}`;
+    }
+    if (country && !fullAddress.includes(country)) {
+      fullAddress = `${fullAddress}, ${country}`;
+    }
+
     return {
       restaurant_address: settings.restaurant_address || defaults.restaurant_address,
+      restaurant_full_address: fullAddress,
       restaurant_phone: settings.restaurant_phone || defaults.restaurant_phone,
       opening_status: settings.opening_status || defaults.opening_status,
       public_messages: settings.public_messages || defaults.public_messages,

@@ -40,7 +40,7 @@ export default async function ContactPage({ params }: Props) {
   const settings = await getPublicSystemSettings();
   const openingHoursData = await getPublicOpeningHours(locale);
 
-  const address = settings.restaurant_address || 'Warszawska 1/3, 06-400 Ciechanów, Poland';
+  const address = settings.restaurant_full_address || settings.restaurant_address || 'Warszawska 1/3, 06-400 Ciechanów, Poland';
   const phone = settings.restaurant_phone || '511984331';
   const email = settings.restaurant_email || 'contact@namaste-ciechanow.pl';
   const dineInHours = settings.public_service_hours?.dine_in || '12:00 - 22:00';

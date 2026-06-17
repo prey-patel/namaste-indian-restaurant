@@ -45,7 +45,7 @@ export default async function MenuPage({ params }: Props) {
   ]);
   const isPl = locale === 'pl';
 
-  const address = settings.restaurant_address || 'Warszawska 1/3, 06-400 Ciechanów, Poland';
+  const address = settings.restaurant_full_address || settings.restaurant_address || 'Warszawska 1/3, 06-400 Ciechanów, Poland';
   const phone = settings.restaurant_phone || '511984331';
   const name = settings.restaurant_name || 'Namaste Indian Restaurant';
 

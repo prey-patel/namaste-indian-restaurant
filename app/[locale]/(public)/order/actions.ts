@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { orderRequestSchema } from '@/lib/validation/orders';
 import { calculateOrderTotalServerSide } from '@/lib/orders/pricing';
 import { z } from 'zod';
+import { calculateDeliveryDistance } from '@/lib/delivery/distance';
 
 import { isRateLimited } from '@/lib/security/rate-limit';
 import {
@@ -182,28 +183,37 @@ export async function createOrderRequestAction(rawData: any) {
     const userAgent = headersList.get('user-agent') || 'unknown';
 
     // 6. Insert order as pending (using service role to bypass insert block)
+    const orderInsertPayload: Record<string, any> = {
+      customer_name: data.customer_name,
+      customer_email: data.customer_email,
+      customer_phone: data.customer_phone,
+      order_type: data.order_type,
+      status: 'pending', // Strictly pending
+      payment_status: 'pending', // Strictly pending
+      payment_method: data.payment_method,
+      customer_notes: sanitizedCustomerNotes,
+      // Save database-calculated totals
+      items_subtotal: pricingResult.itemsSubtotal,
+      packaging_total: pricingResult.packagingTotal,
+      delivery_fee: pricingResult.deliveryFee, // defaults to 0.00
+      total_amount: pricingResult.totalAmount,
+      route_distance_km: null, // Indicates uncalculated delivery fee
+      route_provider: 'unresolved',
+      geocoding_status: 'pending',
+      customer_language: data.source_language,
+      admin_notes: `Browser: ${userAgent.substring(0, 100)}`
+    };
+
+    if (data.order_type === 'delivery') {
+      orderInsertPayload.delivery_address = data.delivery_address;
+      orderInsertPayload.delivery_postal_code = data.delivery_postal_code;
+      orderInsertPayload.delivery_city = data.delivery_city;
+      orderInsertPayload.delivery_geocoding_status = 'not_attempted';
+    }
+
     const { data: newOrder, error: orderError } = await adminClient
       .from('orders')
-      .insert({
-        customer_name: data.customer_name,
-        customer_email: data.customer_email,
-        customer_phone: data.customer_phone,
-        order_type: data.order_type,
-        status: 'pending', // Strictly pending
-        payment_status: 'pending', // Strictly pending
-        payment_method: data.payment_method,
-        customer_notes: sanitizedCustomerNotes,
-        // Save database-calculated totals
-        items_subtotal: pricingResult.itemsSubtotal,
-        packaging_total: pricingResult.packagingTotal,
-        delivery_fee: pricingResult.deliveryFee, // defaults to 0.00
-        total_amount: pricingResult.totalAmount,
-        route_distance_km: null, // Indicates uncalculated delivery fee
-        route_provider: 'unresolved',
-        geocoding_status: 'pending',
-        customer_language: data.source_language,
-        admin_notes: `Browser: ${userAgent.substring(0, 100)}`
-      })
+      .insert(orderInsertPayload)
       .select('id, token')
       .single();
 
@@ -249,6 +259,15 @@ export async function createOrderRequestAction(rawData: any) {
           ? 'Błąd podczas zapisywania pozycji zamówienia.'
           : 'Failed to save order items.'
       };
+    }
+
+    // 7.5 Calculate delivery distance and route metrics (non-blocking)
+    if (data.order_type === 'delivery') {
+      try {
+        await calculateDeliveryDistance(newOrder.id);
+      } catch (distErr) {
+        console.error('Failed to calculate delivery distance:', distErr);
+      }
     }
 
     // Trigger transactional email notifications

@@ -16,6 +16,7 @@ import {
   completeOrderAction,
   updateOrderEtaAction,
   startPreparingOrderAction,
+  recalculateOrderDistanceAction,
 } from '@/app/admin/orders/actions';
 import {
   ConfirmOrderModal,
@@ -39,6 +40,7 @@ import {
   XCircle,
   AlertTriangle,
   Timer,
+  ShieldCheck,
 } from 'lucide-react';
 
 type Order = {
@@ -72,6 +74,17 @@ type Order = {
   ready_at: string | null;
   dispatched_at: string | null;
   completed_at: string | null;
+  delivery_geocoded_address?: string | null;
+  delivery_geocoding_status?: string | null;
+  delivery_distance_car_meters?: number | null;
+  delivery_duration_car_seconds?: number | null;
+  delivery_distance_walk_meters?: number | null;
+  delivery_duration_walk_seconds?: number | null;
+  delivery_distance_calculated_at?: string | null;
+  delivery_distance_error?: string | null;
+  suggested_delivery_fee_amount?: number | null;
+  delivery_latitude?: number | null;
+  delivery_longitude?: number | null;
 };
 
 type OrderItem = {
@@ -114,6 +127,26 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
   >(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isRecalculating, setIsRecalculating] = useState(false);
+
+  const handleRecalculateDistance = async () => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsRecalculating(true);
+    try {
+      const res = await recalculateOrderDistanceAction(order.id);
+      if (res.success) {
+        setSuccessMessage('Delivery distance calculated successfully!');
+        router.refresh();
+      } else {
+        setErrorMessage(res.error || 'Failed to calculate distance.');
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || 'An unexpected error occurred.');
+    } finally {
+      setIsRecalculating(false);
+    }
+  };
 
   // Map database status to translation-ready keys
   const mapDbStatusToKey = (status: string): string => {
@@ -381,6 +414,127 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
                     {order.delivery_postal_code && `, ${order.delivery_postal_code}`}
                     {order.delivery_city && ` ${order.delivery_city}`}
                   </span>
+                </div>
+              </div>
+            )}
+
+            {/* Delivery Intelligence Card */}
+            {order.order_type === 'delivery' && (
+              <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-4">
+                <div className="flex justify-between items-center border-b border-primary/10 pb-2">
+                  <span className="text-xs font-serif font-bold text-primary flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-primary" />
+                    Delivery Address Intelligence
+                  </span>
+                  {order.delivery_geocoding_status ? (
+                    <span className={`text-[9px] uppercase font-semibold tracking-widest px-2 py-0.5 rounded border ${
+                      order.delivery_geocoding_status === 'success'
+                        ? 'bg-green-500/10 border-green-500/30 text-green-400'
+                        : order.delivery_geocoding_status === 'partial'
+                        ? 'bg-blue-500/10 border-blue-500/30 text-blue-400'
+                        : 'bg-red-500/10 border-red-500/30 text-red-400'
+                    }`}>
+                      {order.delivery_geocoding_status.replace(/_/g, ' ')}
+                    </span>
+                  ) : (
+                    <span className="text-[9px] uppercase font-semibold tracking-widest px-2 py-0.5 rounded border bg-yellow-500/10 border-yellow-500/30 text-yellow-400">
+                      Not Attempted
+                    </span>
+                  )}
+                </div>
+
+                {/* Formatted address & coordinates */}
+                <div className="space-y-1.5 text-xs bg-background/40 p-3 rounded-md border border-border/40">
+                  {order.delivery_geocoded_address ? (
+                    <div>
+                      <strong className="text-muted-foreground/60 text-[9px] uppercase block tracking-wider mb-0.5">Geocoded Address</strong>
+                      <span className="text-foreground/90 font-medium leading-relaxed">{order.delivery_geocoded_address}</span>
+                    </div>
+                  ) : (
+                    <div className="text-yellow-600 [.admin-theme_&]:text-yellow-800 dark:text-yellow-400 font-medium italic">
+                      Geocoded address is not verified yet.
+                    </div>
+                  )}
+                  {order.delivery_latitude && order.delivery_longitude && (
+                    <div className="text-[9px] text-muted-foreground/50 font-mono mt-1 pt-1 border-t border-border/20">
+                      Coordinates: {Number(order.delivery_latitude).toFixed(7)}, {Number(order.delivery_longitude).toFixed(7)}
+                    </div>
+                  )}
+                </div>
+
+                {/* Route Metrics */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Car metrics */}
+                  <div className="p-3 bg-background border border-border rounded-lg space-y-1">
+                    <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold block">Driving (Car)</span>
+                    {order.delivery_distance_car_meters !== null && order.delivery_distance_car_meters !== undefined ? (
+                      <div className="text-sm font-bold text-foreground font-mono">
+                        {(order.delivery_distance_car_meters / 1000).toFixed(2)} km
+                        <span className="text-muted-foreground/60 font-normal text-xs ml-1.5 font-sans">
+                          · {Math.ceil(order.delivery_duration_car_seconds! / 60)} min
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-red-500 italic block font-medium">Distance unavailable</span>
+                    )}
+                  </div>
+
+                  {/* Walking metrics */}
+                  <div className="p-3 bg-background border border-border rounded-lg space-y-1">
+                    <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-semibold block">Walking (Pedestrian)</span>
+                    {order.delivery_distance_walk_meters !== null && order.delivery_distance_walk_meters !== undefined ? (
+                      <div className="text-sm font-bold text-foreground font-mono">
+                        {(order.delivery_distance_walk_meters / 1000).toFixed(2)} km
+                        <span className="text-muted-foreground/60 font-normal text-xs ml-1.5 font-sans">
+                          · {Math.ceil(order.delivery_duration_walk_seconds! / 60)} min
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-red-500 italic block font-medium">Distance unavailable</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Suggested Delivery Fee */}
+                <div className="p-3.5 bg-background border border-border rounded-lg flex justify-between items-center text-xs">
+                  <div>
+                    <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-bold block">Suggested Fee</span>
+                    <span className="text-[9px] text-muted-foreground/40 leading-none">Guidance only, does not alter final billing</span>
+                  </div>
+                  <span className="text-sm font-mono font-bold text-primary">
+                    {order.suggested_delivery_fee_amount !== null && order.suggested_delivery_fee_amount !== undefined
+                      ? `${(order.suggested_delivery_fee_amount / 100).toFixed(2)} PLN`
+                      : 'TBD / No Rule Match'}
+                  </span>
+                </div>
+
+                {/* Warning / Error */}
+                {order.delivery_distance_error && (
+                  <div className="p-3 bg-red-500/5 border border-red-500/20 rounded-md text-[10px] text-red-400 leading-relaxed flex items-start gap-2 select-text">
+                    <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 text-red-500 mt-0.5" />
+                    <div>
+                      <strong className="block font-bold mb-0.5">Distance Calculation Warning</strong>
+                      {order.delivery_distance_error}
+                      <p className="mt-1 font-light text-muted-foreground/80">Please check the address manually. Do not display 0 km or 0 min.</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Recalculate Trigger */}
+                <div className="flex justify-between items-center pt-2 border-t border-primary/10 text-[10px]">
+                  <span className="text-muted-foreground/40 font-mono">
+                    {order.delivery_distance_calculated_at 
+                      ? `Updated: ${new Date(order.delivery_distance_calculated_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Europe/Warsaw' })}` 
+                      : 'Never calculated'}
+                  </span>
+                  <Button
+                    type="button"
+                    onClick={handleRecalculateDistance}
+                    disabled={isRecalculating}
+                    className="border border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider px-3.5 py-2 h-auto"
+                  >
+                    {isRecalculating ? 'Calculating...' : 'Recalculate distance'}
+                  </Button>
                 </div>
               </div>
             )}
@@ -769,6 +923,7 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
           onClose={() => setModalType(null)}
           orderType={order.order_type}
           onSubmit={handleModalSubmit}
+          order={order}
         />
       )}
 

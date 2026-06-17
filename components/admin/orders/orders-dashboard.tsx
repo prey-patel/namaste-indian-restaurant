@@ -26,7 +26,7 @@ import {
   CompleteOrderModal,
   UpdateEtaModal
 } from './order-modals';
-import { Search, RefreshCw, Eye, Calendar, Clock, ShoppingBag, ArrowRight, X } from 'lucide-react';
+import { Search, RefreshCw, Eye, Calendar, Clock, ShoppingBag, ArrowRight, X, MapPin } from 'lucide-react';
 
 type Order = {
   id: string;
@@ -50,6 +50,12 @@ type Order = {
   cancellation_reason: string | null;
   customer_notes: string | null;
   created_at: string;
+  delivery_geocoding_status?: string | null;
+  delivery_distance_car_meters?: number | null;
+  delivery_duration_car_seconds?: number | null;
+  delivery_distance_walk_meters?: number | null;
+  delivery_duration_walk_seconds?: number | null;
+  delivery_distance_error?: string | null;
 };
 
 type Metrics = {
@@ -426,6 +432,18 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                           Ref: {order.token.substring(0, 8)}...
                         </div>
                         <div className="text-muted-foreground/60">{order.customer_phone}</div>
+                        {order.order_type === 'delivery' && (
+                          <div className="text-[10px] flex items-center gap-1 mt-1 text-primary">
+                            <MapPin className="w-3 h-3 flex-shrink-0 text-primary" />
+                            {order.delivery_geocoding_status === 'success' && order.delivery_distance_car_meters ? (
+                              <span>{(order.delivery_distance_car_meters / 1000).toFixed(1)} km ({Math.ceil(order.delivery_duration_car_seconds! / 60)}m)</span>
+                            ) : order.delivery_geocoding_status === 'failed' || order.delivery_distance_error ? (
+                              <span className="text-red-400 font-semibold" title={order.delivery_distance_error || ''}>Distance unavailable</span>
+                            ) : (
+                              <span className="text-yellow-500 font-light">Pending distance...</span>
+                            )}
+                          </div>
+                        )}
                       </td>
 
                       {/* Order Type */}
@@ -478,12 +496,14 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                             <>
                               <Button
                                 onClick={() => handleOpenModal(order, 'confirm')}
+                                disabled={isPending}
                                 className="bg-green-600 hover:bg-green-700 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
                               >
                                 {t('confirmButton')}
                               </Button>
                               <Button
                                 onClick={() => handleOpenModal(order, 'reject')}
+                                disabled={isPending}
                                 className="border border-red-500/25 bg-transparent hover:bg-red-500/10 text-red-400 font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
                               >
                                 {t('rejectButton')}
@@ -495,6 +515,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                           {order.status === 'approved' && (
                             <Button
                               onClick={() => handleStartPreparing(order.id)}
+                              disabled={isPending}
                               className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
                             >
                               Start preparing
@@ -505,6 +526,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                           {(order.status === 'approved' || order.status === 'preparing') && (
                             <Button
                               onClick={() => handleMarkReady(order.id)}
+                              disabled={isPending}
                               className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
                             >
                               {isTakeaway ? t('readyButton') : t('dispatchButton')}
@@ -516,6 +538,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                             (!isTakeaway && order.status === 'out_for_delivery')) && (
                             <Button
                               onClick={() => handleOpenModal(order, 'complete')}
+                              disabled={isPending}
                               className="bg-green-600 hover:bg-green-700 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
                             >
                               {t('completeButton')}
@@ -526,6 +549,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                           {(order.status === 'approved' || order.status === 'preparing') && (
                             <Button
                               onClick={() => handleOpenModal(order, 'updateEta')}
+                              disabled={isPending}
                               className="border border-primary/30 hover:bg-primary/10 text-primary font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
                             >
                               Update ETA
@@ -536,6 +560,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                           {['approved', 'preparing', 'pending'].includes(order.status) && (
                             <Button
                               onClick={() => handleOpenModal(order, 'cancel')}
+                              disabled={isPending}
                               className="text-muted-foreground/60 hover:text-red-400 p-1"
                               title={t('cancelButton')}
                             >
@@ -592,6 +617,18 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                       <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block">Total</span>
                       <span className="font-bold text-primary font-mono">{order.total_amount.toFixed(2)} PLN</span>
                     </div>
+                    {order.order_type === 'delivery' && (
+                      <div className="col-span-2 pt-1.5 border-t border-border/20 text-[10px] text-primary flex items-center gap-1">
+                        <MapPin className="w-3 h-3 flex-shrink-0 text-primary" />
+                        {order.delivery_geocoding_status === 'success' && order.delivery_distance_car_meters ? (
+                          <span>Distance: {(order.delivery_distance_car_meters / 1000).toFixed(1)} km ({Math.ceil(order.delivery_duration_car_seconds! / 60)} mins)</span>
+                        ) : order.delivery_geocoding_status === 'failed' || order.delivery_distance_error ? (
+                          <span className="text-red-400 font-semibold">Distance unavailable</span>
+                        ) : (
+                          <span className="text-yellow-500">Pending distance...</span>
+                        )}
+                      </div>
+                    )}
                     <div className="col-span-2 pt-1.5 border-t border-border flex justify-between items-center">
                       <div>
                         <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block">Payment</span>
@@ -613,12 +650,14 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                       <>
                         <Button
                           onClick={() => handleOpenModal(order, 'confirm')}
+                          disabled={isPending}
                           className="bg-green-600 hover:bg-green-700 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
                         >
                           {t('confirmButton')}
                         </Button>
                         <Button
                           onClick={() => handleOpenModal(order, 'reject')}
+                          disabled={isPending}
                           className="border border-red-500/30 text-red-600 [.admin-theme_&]:text-red-700 hover:bg-red-500/10 dark:text-red-400 font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
                         >
                           {t('rejectButton')}
@@ -630,6 +669,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                     {order.status === 'approved' && (
                       <Button
                         onClick={() => handleStartPreparing(order.id)}
+                        disabled={isPending}
                         className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
                       >
                         Start preparing
@@ -640,6 +680,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                     {(order.status === 'approved' || order.status === 'preparing') && (
                       <Button
                         onClick={() => handleMarkReady(order.id)}
+                        disabled={isPending}
                         className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
                       >
                         {isTakeaway ? t('readyButton') : t('dispatchButton')}
@@ -651,6 +692,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                       (!isTakeaway && order.status === 'out_for_delivery')) && (
                       <Button
                         onClick={() => handleOpenModal(order, 'complete')}
+                        disabled={isPending}
                         className="bg-green-600 hover:bg-green-700 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
                       >
                         {t('completeButton')}
@@ -661,6 +703,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                     {(order.status === 'approved' || order.status === 'preparing') && (
                       <Button
                         onClick={() => handleOpenModal(order, 'updateEta')}
+                        disabled={isPending}
                         className="border border-primary/30 hover:bg-primary/10 text-primary font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
                       >
                         Update ETA
@@ -671,6 +714,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                     {['approved', 'preparing', 'pending'].includes(order.status) && (
                       <Button
                         onClick={() => handleOpenModal(order, 'cancel')}
+                        disabled={isPending}
                         className="border border-red-500/30 text-red-600 [.admin-theme_&]:text-red-700 hover:bg-red-500/10 dark:text-red-400 font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
                       >
                         Cancel
@@ -692,6 +736,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
           onClose={handleCloseModal}
           orderType={selectedOrder.order_type}
           onSubmit={handleModalSubmit}
+          order={selectedOrder}
         />
       )}
 

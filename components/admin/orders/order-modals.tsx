@@ -14,9 +14,10 @@ interface ConfirmOrderModalProps extends BaseModalProps {
   orderType: 'delivery' | 'takeaway';
   onSubmit: (etaMinutes: number) => void;
   title?: string;
+  order?: any;
 }
 
-export function ConfirmOrderModal({ isOpen, onClose, orderType, onSubmit, title }: ConfirmOrderModalProps) {
+export function ConfirmOrderModal({ isOpen, onClose, orderType, onSubmit, title, order }: ConfirmOrderModalProps) {
   const isDelivery = orderType === 'delivery';
   const defaultOptions = React.useMemo(
     () => (isDelivery ? [30, 40, 50, 60, 75, 90] : [15, 20, 30, 40, 50, 60]),
@@ -84,6 +85,81 @@ export function ConfirmOrderModal({ isOpen, onClose, orderType, onSubmit, title 
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {isDelivery && order && (
+            <div className="p-3.5 bg-muted/40 border border-border rounded-lg text-xs space-y-2.5">
+              <div className="flex justify-between items-center text-[9px] text-muted-foreground/60 font-bold uppercase tracking-widest pb-1.5 border-b border-border">
+                <span>Delivery Intelligence</span>
+                <span className={`px-1.5 py-0.5 rounded border text-[8px] font-semibold ${
+                  order.delivery_geocoding_status === 'success' 
+                    ? 'bg-green-500/10 border-green-500/30 text-green-400' 
+                    : order.delivery_geocoding_status === 'partial'
+                    ? 'bg-blue-500/10 border-blue-500/30 text-blue-400'
+                    : 'bg-red-500/10 border-red-500/30 text-red-400'
+                }`}>
+                  {order.delivery_geocoding_status || 'not_attempted'}
+                </span>
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-foreground leading-relaxed font-semibold">
+                  {order.delivery_address}
+                  {order.delivery_postal_code ? `, ${order.delivery_postal_code}` : ''}
+                  {order.delivery_city ? ` ${order.delivery_city}` : ''}
+                </p>
+                <p className="text-[10px] text-muted-foreground flex gap-1 items-center">
+                  Phone: {order.customer_phone}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-[10px] pt-1">
+                <div className="p-2 bg-background/50 border border-border/40 rounded">
+                  <span className="text-muted-foreground/60 block uppercase text-[8px] tracking-wider font-semibold">Car Route</span>
+                  {order.delivery_distance_car_meters !== null && order.delivery_distance_car_meters !== undefined ? (
+                    <span className="font-bold text-foreground">
+                      {(order.delivery_distance_car_meters / 1000).toFixed(2)} km ({Math.ceil(order.delivery_duration_car_seconds / 60)} min)
+                    </span>
+                  ) : (
+                    <span className="text-red-400 italic font-medium">Distance unavailable</span>
+                  )}
+                </div>
+                <div className="p-2 bg-background/50 border border-border/40 rounded">
+                  <span className="text-muted-foreground/60 block uppercase text-[8px] tracking-wider font-semibold">Walking Route</span>
+                  {order.delivery_distance_walk_meters !== null && order.delivery_distance_walk_meters !== undefined ? (
+                    <span className="font-bold text-foreground">
+                      {(order.delivery_distance_walk_meters / 1000).toFixed(2)} km ({Math.ceil(order.delivery_duration_walk_seconds / 60)} min)
+                    </span>
+                  ) : (
+                    <span className="text-red-400 italic font-medium">Distance unavailable</span>
+                  )}
+                </div>
+              </div>
+
+              {order.delivery_distance_error && (
+                <div className="text-[9px] text-red-400 bg-red-500/5 p-2 rounded border border-red-500/15 leading-normal flex items-start gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 text-red-500" />
+                  <div>
+                    <strong className="block font-bold">Warning:</strong>
+                    Distance could not be calculated. Verify address manually.
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center text-xs pt-2 border-t border-border">
+                <span className="text-muted-foreground">Current Delivery Fee:</span>
+                <span className="font-mono font-bold text-foreground">
+                  {Number(order.delivery_fee).toFixed(2)} PLN
+                </span>
+              </div>
+              {order.suggested_delivery_fee_amount !== null && order.suggested_delivery_fee_amount !== undefined && (
+                <div className="flex justify-between items-center text-xs text-primary pt-0.5">
+                  <span>Suggested Fee (Guidance):</span>
+                  <span className="font-mono font-bold">
+                    {(order.suggested_delivery_fee_amount / 100).toFixed(2)} PLN
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
           <div className="space-y-2.5">
             <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
               Select Estimated Time (Minutes)

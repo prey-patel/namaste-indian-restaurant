@@ -14,7 +14,7 @@ export default async function Footer() {
 
   const name = settings.restaurant_name || 'Namaste Indian Restaurant';
   const displayName = settings.public_display_name || 'Namaste Indian Restaurant';
-  const address = settings.restaurant_address || 'Warszawska 1/3, 06-400 Ciechanów, Poland';
+  const address = settings.restaurant_full_address || settings.restaurant_address || 'Warszawska 1/3, 06-400 Ciechanów, Poland';
   const phone = settings.restaurant_phone || '511984331';
   const email = settings.restaurant_email || 'contact@namaste-ciechanow.pl';
 

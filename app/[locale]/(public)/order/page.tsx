@@ -49,7 +49,7 @@ export default async function PublicOrderPage({ params }: Props) {
   const opStatus = opStatusRes.data;
 
   const isPl = locale === 'pl';
-  const address = settings.restaurant_address ?? 'Warszawska 1/3, Ciechanów';
+  const address = settings.restaurant_full_address || settings.restaurant_address || 'Warszawska 1/3, 06-400 Ciechanów, Poland';
   const phone = settings.restaurant_phone ?? '511 984 331';
 
   return (
