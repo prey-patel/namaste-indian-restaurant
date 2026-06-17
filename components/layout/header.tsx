@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import LanguageSwitcher from '../public/language-switcher';
 import { ROUTES } from '@/lib/routes/path';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { Search } from 'lucide-react';
 
 export default function Header() {
   const t = useTranslations('nav');
@@ -183,6 +184,24 @@ export default function Header() {
         <div className="hidden md:flex items-center space-x-4">
           <LanguageSwitcher />
           
+          {/* Vertical Separator Line */}
+          <div className="w-[1px] h-6 bg-primary/20" />
+
+          {/* Track Order Icon Button */}
+          <Link
+            href={ROUTES.status}
+            title={t('status')}
+            aria-label={t('status')}
+            className={`flex items-center gap-1.5 text-[10px] font-sans font-bold uppercase tracking-widest transition-all duration-300 px-3 py-2 rounded border ${
+              isActive(ROUTES.status)
+                ? 'border-primary/40 text-primary bg-primary/5'
+                : 'border-transparent text-foreground/70 hover:text-primary hover:border-primary/20 hover:bg-primary/5'
+            }`}
+          >
+            <Search className="w-3.5 h-3.5" />
+            {t('status')}
+          </Link>
+
           {/* Vertical Separator Line */}
           <div className="w-[1px] h-6 bg-primary/20" />
           
