@@ -559,5 +559,26 @@
     "statusConnected": "Połączono / Live Connected",
     "roleOwner": "Właściciel",
     "logoutButton": "Wyloguj"
+  },
+  "adminDashboard": {
+    "title": "Panel Administratora",
+    "subtitle": "Namaste Restaurant Management Control",
+    "cards": {
+      "pendingReservations": "Rezerwacje oczekujące",
+      "pendingReservationsSub": "Oczekujące na zatwierdzenie",
+      "todayReservations": "Dzisiejsze Rezerwacje",
+      "todayReservationsSub": "Dzisiejsze rezerwacje (Aktywne)",
+      "activeOrders": "Aktywne Zamówienia",
+      "activeOrdersSub": "Aktywne zamówienia (W toku)",
+      "kitchenOrders": "Zlecenia w Kuchni (KDS)",
+      "kitchenOrdersSub": "Kolejka kuchenna (W przygotowaniu)"
+    },
+    "shortcuts": {
+      "title": "Szybkie skróty",
+      "orders": "Akceptacja Zamówień",
+      "reservations": "Terminarz Rezerwacji",
+      "kds": "Monitor Kuchenny",
+      "menu": "Zarządzanie Menu CMS"
+    }
   }
 }

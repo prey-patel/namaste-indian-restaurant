@@ -559,5 +559,26 @@
     "statusConnected": "Live Connected",
     "roleOwner": "Owner",
     "logoutButton": "Logout"
+  },
+  "adminDashboard": {
+    "title": "Admin Dashboard",
+    "subtitle": "Namaste Restaurant Management Control",
+    "cards": {
+      "pendingReservations": "Pending Reservations",
+      "pendingReservationsSub": "Pending Reservations",
+      "todayReservations": "Today's Reservations",
+      "todayReservationsSub": "Today's Bookings (Active)",
+      "activeOrders": "Active Orders",
+      "activeOrdersSub": "Active Orders (In Progress)",
+      "kitchenOrders": "Kitchen Queue (KDS)",
+      "kitchenOrdersSub": "Kitchen Queue (Preparing)"
+    },
+    "shortcuts": {
+      "title": "Operations Shortcuts",
+      "orders": "Orders Approval",
+      "reservations": "Reservations Grid",
+      "kds": "Kitchen Display System",
+      "menu": "Menu & Categories CMS"
+    }
   }
 }

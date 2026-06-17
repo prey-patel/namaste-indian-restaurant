@@ -5,6 +5,9 @@ import PremiumCard from '@/components/ui/premium-card';
 import StatusPill from '@/components/ui/status-pill';
 import { ROUTES } from '@/lib/routes/path';
 import { Calendar, ClipboardList, ChefHat, LayoutGrid } from 'lucide-react';
+import { cookies } from 'next/headers';
+import plMessages from '@/messages/pl.json';
+import enMessages from '@/messages/en.json';
 
 export const revalidate = 0; // Enforce dynamic rendering for fresh stats
 
@@ -13,6 +16,20 @@ export default async function AdminDashboardPage() {
   let activeOrders = 0;
   let kitchenOrders = 0;
   let todayReservations = 0;
+
+  const cookieStore = await cookies();
+  const locale = cookieStore.get('NEXT_LOCALE')?.value || 'pl';
+  const messages = locale === 'en' ? enMessages : plMessages;
+
+  const t = (key: string) => {
+    const parts = key.split('.');
+    let current: any = messages.adminDashboard;
+    for (const part of parts) {
+      if (current === undefined || current === null) return key;
+      current = current[part];
+    }
+    return current !== undefined ? current : key;
+  };
 
   try {
     const adminClient = createAdminClient();
@@ -53,8 +70,8 @@ export default async function AdminDashboardPage() {
       {/* Header section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-primary/10 pb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-primary">Panel Administratora</h1>
-          <p className="text-xs text-muted-foreground mt-1">Namaste Restaurant Management Control</p>
+          <h1 className="text-3xl font-serif font-bold text-primary">{t('title')}</h1>
+          <p className="text-xs text-muted-foreground mt-1">{t('subtitle')}</p>
         </div>
         <StatusPill status="success" label="Live Production" />
       </div>
@@ -67,7 +84,7 @@ export default async function AdminDashboardPage() {
           <PremiumCard hoverable className="relative overflow-hidden transition-all duration-300 group-hover:border-primary/40">
             <div className="flex justify-between items-start mb-2">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Rezerwacje oczekujące
+                {t('cards.pendingReservations')}
               </p>
               <Calendar className="w-4 h-4 text-primary opacity-60 group-hover:opacity-100 transition-opacity" />
             </div>
@@ -75,7 +92,7 @@ export default async function AdminDashboardPage() {
               <p className="text-3xl font-bold text-primary font-serif">{pendingReservations}</p>
             </div>
             <p className="text-[10px] text-muted-foreground/40 mt-3 border-t border-primary/5 pt-2">
-              Pending Reservations
+              {t('cards.pendingReservationsSub')}
             </p>
           </PremiumCard>
         </Link>
@@ -85,7 +102,7 @@ export default async function AdminDashboardPage() {
           <PremiumCard hoverable className="relative overflow-hidden transition-all duration-300 group-hover:border-primary/40">
             <div className="flex justify-between items-start mb-2">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Dzisiejsze Rezerwacje
+                {t('cards.todayReservations')}
               </p>
               <Calendar className="w-4 h-4 text-primary opacity-60 group-hover:opacity-100 transition-opacity" />
             </div>
@@ -93,7 +110,7 @@ export default async function AdminDashboardPage() {
               <p className="text-3xl font-bold text-primary font-serif">{todayReservations}</p>
             </div>
             <p className="text-[10px] text-muted-foreground/40 mt-3 border-t border-primary/5 pt-2">
-              Today&apos;s Bookings (Active)
+              {t('cards.todayReservationsSub')}
             </p>
           </PremiumCard>
         </Link>
@@ -103,7 +120,7 @@ export default async function AdminDashboardPage() {
           <PremiumCard hoverable className="relative overflow-hidden transition-all duration-300 group-hover:border-primary/40">
             <div className="flex justify-between items-start mb-2">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Aktywne Zamówienia
+                {t('cards.activeOrders')}
               </p>
               <ClipboardList className="w-4 h-4 text-primary opacity-60 group-hover:opacity-100 transition-opacity" />
             </div>
@@ -111,7 +128,7 @@ export default async function AdminDashboardPage() {
               <p className="text-3xl font-bold text-primary font-serif">{activeOrders}</p>
             </div>
             <p className="text-[10px] text-muted-foreground/40 mt-3 border-t border-primary/5 pt-2">
-              Active Orders (In Progress)
+              {t('cards.activeOrdersSub')}
             </p>
           </PremiumCard>
         </Link>
@@ -121,7 +138,7 @@ export default async function AdminDashboardPage() {
           <PremiumCard hoverable className="relative overflow-hidden transition-all duration-300 group-hover:border-primary/40">
             <div className="flex justify-between items-start mb-2">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Zlecenia w Kuchni (KDS)
+                {t('cards.kitchenOrders')}
               </p>
               <ChefHat className="w-4 h-4 text-primary opacity-60 group-hover:opacity-100 transition-opacity" />
             </div>
@@ -129,7 +146,7 @@ export default async function AdminDashboardPage() {
               <p className="text-3xl font-bold text-primary font-serif">{kitchenOrders}</p>
             </div>
             <p className="text-[10px] text-muted-foreground/40 mt-3 border-t border-primary/5 pt-2">
-              Kitchen Queue (Preparing)
+              {t('cards.kitchenOrdersSub')}
             </p>
           </PremiumCard>
         </Link>
@@ -140,20 +157,20 @@ export default async function AdminDashboardPage() {
       <div className="border border-primary/10 rounded-2xl bg-card/10 p-6 md:p-8 space-y-6">
         <div className="flex items-center space-x-2 text-primary">
           <LayoutGrid className="w-5 h-5" />
-          <h2 className="text-lg font-serif font-bold">Szybkie skróty / Operations Shortcuts</h2>
+          <h2 className="text-lg font-serif font-bold">{t('shortcuts.title')}</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           <Link href={ROUTES.admin.orders} className="px-4 py-3 rounded-lg border border-primary/20 hover:bg-primary/5 text-center text-xs font-bold uppercase tracking-wider text-primary transition-all duration-300">
-            Akceptacja Zamówień / Orders Approval
+            {t('shortcuts.orders')}
           </Link>
           <Link href={ROUTES.admin.reservations} className="px-4 py-3 rounded-lg border border-primary/20 hover:bg-primary/5 text-center text-xs font-bold uppercase tracking-wider text-primary transition-all duration-300">
-            Terminarz Rezerwacji / Reservations Grid
+            {t('shortcuts.reservations')}
           </Link>
           <Link href={ROUTES.admin.kds} className="px-4 py-3 rounded-lg border border-primary/20 hover:bg-primary/5 text-center text-xs font-bold uppercase tracking-wider text-primary transition-all duration-300">
-            Monitor Kuchenny / Kitchen Display System
+            {t('shortcuts.kds')}
           </Link>
           <Link href={ROUTES.admin.menu} className="px-4 py-3 rounded-lg border border-primary/20 hover:bg-primary/5 text-center text-xs font-bold uppercase tracking-wider text-primary transition-all duration-300 sm:col-span-2 md:col-span-3">
-            Zarządzanie Menu CMS / Menu & Categories CMS
+            {t('shortcuts.menu')}
           </Link>
         </div>
       </div>
