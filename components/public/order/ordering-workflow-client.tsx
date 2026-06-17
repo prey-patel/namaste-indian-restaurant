@@ -108,8 +108,6 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
     durationMinutes: number;
     zoneName: string;
     action: 'allow' | 'contact' | 'block';
-    messagePl: string | null;
-    messageEn: string | null;
     geocodedAddress: string;
     loading: boolean;
     error: string | null;
@@ -141,8 +139,6 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
       durationMinutes: prev?.durationMinutes ?? 0,
       zoneName: prev?.zoneName ?? '',
       action: prev?.action ?? 'allow',
-      messagePl: prev?.messagePl ?? null,
-      messageEn: prev?.messageEn ?? null,
       geocodedAddress: prev?.geocodedAddress ?? '',
       loading: true,
       error: null,
@@ -166,8 +162,6 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
           durationMinutes: data.durationMinutes,
           zoneName: data.zoneName,
           action: data.action,
-          messagePl: data.messagePl,
-          messageEn: data.messageEn,
           geocodedAddress: data.geocodedAddress,
           loading: false,
           error: null,
@@ -175,7 +169,7 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
         });
       } else {
         setDeliveryFeeInfo(prev => ({
-          ...(prev ?? { fee: 0, distanceKm: 0, durationMinutes: 0, zoneName: '', action: 'allow' as const, messagePl: null, messageEn: null, geocodedAddress: '', errorCode: null }),
+          ...(prev ?? { fee: 0, distanceKm: 0, durationMinutes: 0, zoneName: '', action: 'allow' as const, geocodedAddress: '', errorCode: null }),
           loading: false,
           error: data.error ?? (locale === 'pl' ? 'Nie można obliczyć kosztu dostawy.' : 'Could not calculate delivery fee.'),
           errorCode: data.code ?? null,
@@ -183,7 +177,7 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
       }
     } catch {
       setDeliveryFeeInfo(prev => ({
-        ...(prev ?? { fee: 0, distanceKm: 0, durationMinutes: 0, zoneName: '', action: 'allow' as const, messagePl: null, messageEn: null, geocodedAddress: '', errorCode: null }),
+        ...(prev ?? { fee: 0, distanceKm: 0, durationMinutes: 0, zoneName: '', action: 'allow' as const, geocodedAddress: '', errorCode: null }),
         loading: false,
         error: locale === 'pl' ? 'Błąd połączenia. Spróbuj ponownie.' : 'Connection error. Please try again.',
         errorCode: 'CONNECTION_ERROR',
@@ -970,8 +964,8 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
                         </p>
                         <p>
                           {locale === 'pl'
-                            ? (deliveryFeeInfo.messagePl || 'Skontaktuj się z restauracją w sprawie dostawy.')
-                            : (deliveryFeeInfo.messageEn || 'Please contact the restaurant regarding delivery.')}
+                            ? 'Skontaktuj się z restauracją w sprawie dostawy.'
+                            : 'Please contact the restaurant regarding delivery.'}
                         </p>
                         <p>
                           <a href={`tel:${restaurantInfo.phone}`} className="font-bold text-primary underline">
@@ -1180,8 +1174,8 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
                         </p>
                         <p>
                           {locale === 'pl'
-                            ? (deliveryFeeInfo.messagePl || 'Zadzwoń, żebyśmy mogli potwierdzić dostawę.')
-                            : (deliveryFeeInfo.messageEn || 'Call us to confirm delivery to your area.')}
+                            ? 'Zadzwoń, żebyśmy mogli potwierdzić dostawę.'
+                            : 'Call us to confirm delivery to your area.'}
                         </p>
                         <p>
                           <a href={`tel:${restaurantInfo.phone}`} className="font-bold text-primary underline">

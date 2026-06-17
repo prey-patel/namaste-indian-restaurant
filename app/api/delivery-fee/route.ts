@@ -27,8 +27,6 @@ export interface DeliveryFeeResult {
   durationMinutes: number;
   zoneName: string;
   action: 'allow' | 'contact' | 'block';
-  messagePl: string | null;
-  messageEn: string | null;
   geocodedAddress: string;
 }
 
@@ -145,7 +143,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<DeliveryFeeRe
     const adminClient = createAdminClient();
     const { data: rules, error: rulesError } = await adminClient
       .from('delivery_fee_rules')
-      .select('name, min_distance_km, max_distance_km, fee_amount, rule_action, message_pl, message_en')
+      .select('name, min_distance_km, max_distance_km, fee_amount, rule_action')
       .eq('is_active', true)
       .order('min_distance_km', { ascending: true });
 
@@ -158,8 +156,6 @@ export async function POST(req: NextRequest): Promise<NextResponse<DeliveryFeeRe
         durationMinutes,
         zoneName: 'Default',
         action: 'contact',
-        messagePl: 'Prosimy o kontakt w sprawie kosztu dostawy.',
-        messageEn: 'Please contact us regarding delivery cost.',
         geocodedAddress: customerGeo.formattedAddress,
       });
     }
@@ -194,8 +190,6 @@ export async function POST(req: NextRequest): Promise<NextResponse<DeliveryFeeRe
       durationMinutes,
       zoneName: matchingRule.name,
       action,
-      messagePl: matchingRule.message_pl ?? null,
-      messageEn: matchingRule.message_en ?? null,
       geocodedAddress: customerGeo.formattedAddress,
     });
 

@@ -205,8 +205,6 @@ export default function SettingsClient({
         max_distance_km: r.max_distance_km ? Number(r.max_distance_km) : null,
         fee_amount: Number(r.fee_amount),
         rule_action: r.rule_action,
-        message_pl: r.message_pl || null,
-        message_en: r.message_en || null,
         is_active: r.is_active
       })),
       delivery_minimum_order_value: Number(deliveryMinOrderValue)
@@ -874,8 +872,6 @@ export default function SettingsClient({
                       max_distance_km: null,
                       fee_amount: 0,
                       rule_action: 'allow',
-                      message_pl: '',
-                      message_en: '',
                       is_active: true,
                       display_order: prev.length
                     }])}
@@ -893,7 +889,6 @@ export default function SettingsClient({
                         <th className="p-3 font-bold">Max (km)</th>
                         <th className="p-3 font-bold">Fee (PLN)</th>
                         <th className="p-3 font-bold">Action</th>
-                        <th className="p-3 font-bold">Message (PL)</th>
                         <th className="p-3 font-bold">Active</th>
                         <th className="p-3 font-bold"></th>
                       </tr>
@@ -972,18 +967,7 @@ export default function SettingsClient({
                               <option value="block">Block</option>
                             </select>
                           </td>
-                          <td className="p-3">
-                            <input 
-                              type="text" 
-                              value={rule.message_pl || ''}
-                              onChange={e => {
-                                const updated = [...rulesState];
-                                updated[idx].message_pl = e.target.value;
-                                setRulesState(updated);
-                              }}
-                              className="w-full min-w-[120px] bg-[#FAF9F5] border border-border rounded px-1.5 py-0.5 text-xs outline-none"
-                            />
-                          </td>
+
                           <td className="p-3 text-center">
                             <input 
                               type="checkbox"

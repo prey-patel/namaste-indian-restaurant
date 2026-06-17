@@ -433,14 +433,21 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                         </div>
                         <div className="text-muted-foreground/60">{order.customer_phone}</div>
                         {order.order_type === 'delivery' && (
-                          <div className="text-[10px] flex items-center gap-1 mt-1 text-primary">
-                            <MapPin className="w-3 h-3 flex-shrink-0 text-primary" />
-                            {order.delivery_geocoding_status === 'success' && order.delivery_distance_car_meters ? (
-                              <span>{(order.delivery_distance_car_meters / 1000).toFixed(1)} km ({Math.ceil(order.delivery_duration_car_seconds! / 60)}m)</span>
-                            ) : order.delivery_geocoding_status === 'failed' || order.delivery_distance_error ? (
-                              <span className="text-red-400 font-semibold" title={order.delivery_distance_error || ''}>Distance unavailable</span>
-                            ) : (
-                              <span className="text-yellow-500 font-light">Pending distance...</span>
+                          <div className="flex flex-col gap-0.5 mt-1">
+                            <div className="text-[10px] flex items-center gap-1 text-primary">
+                              <MapPin className="w-3 h-3 flex-shrink-0 text-primary" />
+                              {order.delivery_geocoding_status === 'success' && order.delivery_distance_car_meters ? (
+                                <span>🚗 {(order.delivery_distance_car_meters / 1000).toFixed(1)} km ({Math.ceil(order.delivery_duration_car_seconds! / 60)}m)</span>
+                              ) : order.delivery_geocoding_status === 'failed' || order.delivery_distance_error ? (
+                                <span className="text-red-400 font-semibold" title={order.delivery_distance_error || ''}>Distance unavailable</span>
+                              ) : (
+                                <span className="text-yellow-500 font-light">Pending distance...</span>
+                              )}
+                            </div>
+                            {order.delivery_geocoding_status === 'success' && order.delivery_distance_walk_meters && (
+                              <div className="text-[10px] pl-4 text-muted-foreground">
+                                <span>🚶 {(order.delivery_distance_walk_meters / 1000).toFixed(1)} km ({Math.ceil(order.delivery_duration_walk_seconds! / 60)}m)</span>
+                              </div>
                             )}
                           </div>
                         )}
@@ -548,6 +555,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                           {/* Update ETA */}
                           {(order.status === 'approved' || order.status === 'preparing') && (
                             <Button
+                              variant="outline"
                               onClick={() => handleOpenModal(order, 'updateEta')}
                               disabled={isPending}
                               className="border border-primary/30 hover:bg-primary/10 text-primary font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
@@ -559,9 +567,10 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                           {/* Cancel button */}
                           {['approved', 'preparing', 'pending'].includes(order.status) && (
                             <Button
+                              variant="ghost"
                               onClick={() => handleOpenModal(order, 'cancel')}
                               disabled={isPending}
-                              className="text-muted-foreground/60 hover:text-red-400 p-1"
+                              className="text-muted-foreground/60 hover:text-red-400 hover:bg-red-50 p-1"
                               title={t('cancelButton')}
                             >
                               <X className="w-3.5 h-3.5" />
@@ -618,14 +627,21 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                       <span className="font-bold text-primary font-mono">{order.total_amount.toFixed(2)} PLN</span>
                     </div>
                     {order.order_type === 'delivery' && (
-                      <div className="col-span-2 pt-1.5 border-t border-border/20 text-[10px] text-primary flex items-center gap-1">
-                        <MapPin className="w-3 h-3 flex-shrink-0 text-primary" />
-                        {order.delivery_geocoding_status === 'success' && order.delivery_distance_car_meters ? (
-                          <span>Distance: {(order.delivery_distance_car_meters / 1000).toFixed(1)} km ({Math.ceil(order.delivery_duration_car_seconds! / 60)} mins)</span>
-                        ) : order.delivery_geocoding_status === 'failed' || order.delivery_distance_error ? (
-                          <span className="text-red-400 font-semibold">Distance unavailable</span>
-                        ) : (
-                          <span className="text-yellow-500">Pending distance...</span>
+                      <div className="col-span-2 pt-1.5 border-t border-border/20 text-[10px] text-primary flex flex-col gap-0.5">
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3 flex-shrink-0 text-primary" />
+                          {order.delivery_geocoding_status === 'success' && order.delivery_distance_car_meters ? (
+                            <span>🚗 {(order.delivery_distance_car_meters / 1000).toFixed(1)} km ({Math.ceil(order.delivery_duration_car_seconds! / 60)} mins)</span>
+                          ) : order.delivery_geocoding_status === 'failed' || order.delivery_distance_error ? (
+                            <span className="text-red-400 font-semibold">Distance unavailable</span>
+                          ) : (
+                            <span className="text-yellow-500">Pending distance...</span>
+                          )}
+                        </div>
+                        {order.delivery_geocoding_status === 'success' && order.delivery_distance_walk_meters && (
+                          <div className="pl-4 text-muted-foreground">
+                            <span>🚶 {(order.delivery_distance_walk_meters / 1000).toFixed(1)} km ({Math.ceil(order.delivery_duration_walk_seconds! / 60)} mins)</span>
+                          </div>
                         )}
                       </div>
                     )}
@@ -702,6 +718,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                     {/* Update ETA */}
                     {(order.status === 'approved' || order.status === 'preparing') && (
                       <Button
+                        variant="outline"
                         onClick={() => handleOpenModal(order, 'updateEta')}
                         disabled={isPending}
                         className="border border-primary/30 hover:bg-primary/10 text-primary font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
@@ -713,6 +730,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                     {/* Cancel button */}
                     {['approved', 'preparing', 'pending'].includes(order.status) && (
                       <Button
+                        variant="outline"
                         onClick={() => handleOpenModal(order, 'cancel')}
                         disabled={isPending}
                         className="border border-red-500/30 text-red-600 [.admin-theme_&]:text-red-700 hover:bg-red-500/10 dark:text-red-400 font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"

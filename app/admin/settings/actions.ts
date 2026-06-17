@@ -271,8 +271,6 @@ const DeliveryFeeRuleSchema = z.object({
   max_distance_km: z.number().min(0).nullable().optional(),
   fee_amount: z.number().min(0),
   rule_action: z.enum(['allow', 'contact_restaurant', 'block']),
-  message_pl: z.string().max(300).nullable().optional(),
-  message_en: z.string().max(300).nullable().optional(),
   is_active: z.boolean()
 });
 
@@ -341,8 +339,6 @@ export async function updateDeliveryTakeawaySettingsAction(rawData: unknown) {
         max_distance_km: rule.max_distance_km ?? null,
         fee_amount: rule.fee_amount,
         rule_action: rule.rule_action,
-        message_pl: rule.message_pl ?? null,
-        message_en: rule.message_en ?? null,
         is_active: rule.is_active,
         display_order: i,
         updated_by: userId,
