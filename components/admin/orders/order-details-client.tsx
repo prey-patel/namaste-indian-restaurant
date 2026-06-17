@@ -621,8 +621,8 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
 
             {/* Order Created / ETA */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-primary/10">
-              <div className="p-3.5 bg-[#070B1E] border border-primary/10 rounded-lg flex gap-3 items-center">
-                <div className="w-9 h-9 rounded-full bg-primary/5 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0">
+              <div className="p-3.5 bg-background border border-border rounded-lg flex gap-3 items-center">
+                <div className="w-9 h-9 rounded-full bg-primary/5 border border-border flex items-center justify-center text-primary flex-shrink-0">
                   <Calendar className="w-4 h-4" />
                 </div>
                 <div>
@@ -636,7 +636,7 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
               </div>
 
               {etaInfo && (
-                <div className="p-3.5 bg-[#070B1E] border border-primary/10 rounded-lg flex gap-3 items-center">
+                <div className="p-3.5 bg-background border border-border rounded-lg flex gap-3 items-center">
                   <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
                     etaInfo.isPast
                       ? 'bg-red-500/10 border border-red-500/20 text-red-400'
