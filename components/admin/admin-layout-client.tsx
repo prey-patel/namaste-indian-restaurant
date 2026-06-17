@@ -31,7 +31,10 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
 
   if (isLoginPage) {
     return (
-      <div className="min-h-screen admin-theme bg-background text-foreground flex items-center justify-center">
+      <div 
+        className="min-h-screen admin-theme bg-background text-foreground flex items-center justify-center notranslate"
+        translate="no"
+      >
         {children}
       </div>
     );
@@ -41,9 +44,12 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
   if (isKdsPage) {
     const isLight = kdsTheme === 'light';
     return (
-      <div className={`min-h-screen transition-colors duration-300 ${
-        isLight ? 'admin-theme bg-background text-foreground' : 'bg-[#070B1E] text-white'
-      }`}>
+      <div 
+        className={`min-h-screen transition-colors duration-300 notranslate ${
+          isLight ? 'admin-theme bg-background text-foreground' : 'bg-[#070B1E] text-white'
+        }`}
+        translate="no"
+      >
         <main className="p-4 sm:p-6">
           {children}
         </main>
@@ -52,7 +58,10 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
   }
 
   return (
-    <div className="flex w-full min-h-screen admin-theme bg-background text-foreground">
+    <div 
+      className="flex w-full min-h-screen admin-theme bg-background text-foreground notranslate"
+      translate="no"
+    >
       <AdminSidebar />
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         <AdminTopbar />
