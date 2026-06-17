@@ -3,6 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import AdminLanguageSwitcher from './admin-language-switcher';
 
 export default function AdminTopbar() {
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function AdminTopbar() {
 
       {/* Admin Profile Details */}
       <div className="flex items-center space-x-6">
+        <AdminLanguageSwitcher />
         <div className="flex items-center space-x-3 border-r border-border pr-6">
           {/* Mock user initials avatar */}
           <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-xs" aria-hidden="true">
