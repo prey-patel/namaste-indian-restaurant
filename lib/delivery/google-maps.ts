@@ -15,7 +15,7 @@ export interface RouteResult {
  * Resolves Google Maps API Key from environment variables.
  */
 function getApiKey(): string | null {
-  return process.env.GOOGLE_MAPS_API_KEY || process.env.ROUTING_PROVIDER_API_KEY || "AIzaSyB1wIYCSXcvVOEtVRDiN5s5yBzw9JIkI74";
+  return process.env.GOOGLE_MAPS_API_KEY || process.env.ROUTING_PROVIDER_API_KEY || null;
 }
 
 /**
