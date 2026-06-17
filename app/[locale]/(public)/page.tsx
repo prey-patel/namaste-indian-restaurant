@@ -11,6 +11,8 @@ import { getPublicSystemSettings } from '@/lib/supabase/settings';
 import { getSiteContent } from '@/lib/supabase/content';
 import WhyChooseNamaste from '@/components/public/why-choose-namaste';
 import HeroSection from '@/components/public/hero-section';
+import { getPublicOpeningHours } from '@/lib/public/opening-hours';
+import TodaysHoursCard from '@/components/public/opening-hours/todays-hours-card';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -38,9 +40,10 @@ export default async function HomePage({ params }: Props) {
   const t = await getTranslations('home');
   const tNav = await getTranslations('nav');
 
-  // Load public settings and CMS content server-side
+  // Load public settings, CMS content, and opening hours server-side
   const settings = await getPublicSystemSettings();
   const cmsHero = await getSiteContent('home_hero');
+  const openingHoursData = await getPublicOpeningHours(locale);
 
   // Dynamic content loading with fallback to translation dictionaries
   const heroTitle = (cmsHero as any)?.[`value_${locale}`]?.title || t('heroTitle');
@@ -114,6 +117,12 @@ export default async function HomePage({ params }: Props) {
         reserveTableText={t('reserveTable')}
         viewMenuText={t('viewMenu')}
         locale={locale}
+        todaysHoursCard={
+          <TodaysHoursCard 
+            dineIn={openingHoursData.dineIn} 
+            delivery={openingHoursData.delivery} 
+          />
+        }
       />
 
       {/* 3. WHY NAMASTE */}

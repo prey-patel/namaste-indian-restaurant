@@ -18,6 +18,7 @@ type HeroSectionProps = {
   reserveTableText: string;
   viewMenuText: string;
   locale: string;
+  todaysHoursCard?: React.ReactNode;
 };
 
 export default function HeroSection({
@@ -32,6 +33,7 @@ export default function HeroSection({
   reserveTableText,
   viewMenuText,
   locale,
+  todaysHoursCard,
 }: HeroSectionProps) {
   
   // Format address: remove "Poland" or ", Poland" and prepend "ul. " if not present
@@ -196,20 +198,21 @@ export default function HeroSection({
 
           </div>
 
-          {/* Right Column: Dish Image inside Arch Frame */}
+          {/* Right Column: Today's Hours Card & Dish Image stack */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, type: 'spring', stiffness: 50, damping: 15 }}
-            className="lg:col-span-5 relative flex items-center justify-center"
+            className="lg:col-span-5 flex flex-col items-center justify-center gap-6 w-full"
           >
-            <div className="relative w-[340px] h-[340px] sm:w-[450px] sm:h-[450px] md:w-[500px] md:h-[500px] transition-all duration-300">
+            {todaysHoursCard}
+            
+            <div className="relative w-[260px] h-[260px] hidden xl:block transition-all duration-300 opacity-80 hover:opacity-100">
               <Image
                 src="/images/hero_kebabs.png"
                 alt="Signature Kebabs"
                 fill
-                priority
-                className="object-contain filter drop-shadow-[0_10px_35px_rgba(0,0,0,0.6)]"
+                className="object-contain filter drop-shadow-[0_8px_25px_rgba(0,0,0,0.5)]"
               />
             </div>
           </motion.div>

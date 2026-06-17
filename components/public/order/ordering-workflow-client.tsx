@@ -10,6 +10,8 @@ import PremiumCard from '@/components/ui/premium-card';
 import GoldSpinner from '@/components/ui/gold-spinner';
 import StatusPill from '@/components/ui/status-pill';
 import { Plus, Minus, Trash2, ShoppingBag, MapPin, Phone, User, Mail, CreditCard, DollarSign, Clock } from 'lucide-react';
+import { type ServiceStatusInfo } from '@/lib/public/opening-hours';
+import DeliveryHoursCard from '@/components/public/opening-hours/delivery-hours-card';
 
 type Category = {
   id: string;
@@ -58,9 +60,10 @@ type Props = {
     address: string;
     phone: string;
   };
+  deliveryHours: ServiceStatusInfo;
 };
 
-export default function OrderingWorkflowClient({ categories, items, operationalStatus, locale, restaurantInfo }: Props) {
+export default function OrderingWorkflowClient({ categories, items, operationalStatus, locale, restaurantInfo, deliveryHours }: Props) {
   const t = useTranslations('order');
 
   // Order Type State (defaults to takeaway or whichever is enabled)
@@ -511,6 +514,9 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
             {/* Delivery address (rendered only if Delivery is selected) */}
             {orderType === 'delivery' && (
               <div className="space-y-4 pt-4 border-t border-primary/10">
+                <div className="lg:hidden">
+                  <DeliveryHoursCard delivery={deliveryHours} />
+                </div>
                 <h3 className="text-sm font-bold uppercase tracking-wider text-primary">
                   {t('addressHeader')}
                 </h3>
@@ -682,7 +688,7 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
 
             <Button
               type="submit"
-              disabled={loading || basket.length === 0}
+              disabled={loading || basket.length === 0 || (orderType === 'delivery' && !deliveryHours.isOpen)}
               className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold tracking-wide uppercase text-xs py-3"
             >
               {loading ? <GoldSpinner size="sm" /> : t('submitButton')}
@@ -694,6 +700,9 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
 
       {/* Right Column: Sticky Basket (4 cols on desktop) */}
       <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-28 hidden lg:block space-y-4 text-left">
+        {orderType === 'delivery' && (
+          <DeliveryHoursCard delivery={deliveryHours} />
+        )}
         <PremiumCard hoverable={false} className="border-primary/20 bg-[#050B1E]/60 p-6 space-y-6">
           <h3 className="text-lg font-serif font-bold text-primary border-b border-primary/20 pb-2 flex items-center justify-between">
             <span>{t('basketHeader')}</span>

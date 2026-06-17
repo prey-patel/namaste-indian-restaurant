@@ -6,6 +6,7 @@ import { getPublicMenuData } from '@/lib/supabase/menu';
 import { createAdminClient } from '@/lib/supabase/admin';
 import OrderingWorkflowClient from '@/components/public/order/ordering-workflow-client';
 import { getPublicSystemSettings } from '@/lib/supabase/settings';
+import { getPublicOpeningHours } from '@/lib/public/opening-hours';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -38,11 +39,12 @@ export default async function PublicOrderPage({ params }: Props) {
   const { categories, items } = await getPublicMenuData();
   const availableItems = items.filter(item => item.is_available);
 
-  // Load operational status to see if delivery or takeaway is enabled
+  // Load operational status, settings, and opening hours concurrently
   const adminClient = createAdminClient();
-  const [opStatusRes, settings] = await Promise.all([
+  const [opStatusRes, settings, openingHoursData] = await Promise.all([
     adminClient.from('operational_status').select('delivery_enabled, takeaway_enabled').single(),
-    getPublicSystemSettings()
+    getPublicSystemSettings(),
+    getPublicOpeningHours(locale)
   ]);
   const opStatus = opStatusRes.data;
 
@@ -75,6 +77,7 @@ export default async function PublicOrderPage({ params }: Props) {
           }}
           locale={locale as 'pl' | 'en'}
           restaurantInfo={{ address, phone }}
+          deliveryHours={openingHoursData.delivery}
         />
       </SectionContainer>
     </PageTransition>

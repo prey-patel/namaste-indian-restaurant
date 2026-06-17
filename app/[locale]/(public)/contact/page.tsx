@@ -7,6 +7,8 @@ import LuxuryAlert from '@/components/ui/luxury-alert';
 import { getPublicSystemSettings } from '@/lib/supabase/settings';
 import ContactMap from '@/components/public/contact-map';
 import ContactForm from './contact-form';
+import { getPublicOpeningHours } from '@/lib/public/opening-hours';
+import WeeklyHoursTable from '@/components/public/opening-hours/weekly-hours-table';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -34,8 +36,9 @@ export default async function ContactPage({ params }: Props) {
   const tNav = await getTranslations('nav');
   const tHome = await getTranslations('home');
 
-  // Load public settings server-side
+  // Load public settings and opening hours server-side
   const settings = await getPublicSystemSettings();
+  const openingHoursData = await getPublicOpeningHours(locale);
 
   const address = settings.restaurant_address || 'Warszawska 1/3, 06-400 Ciechanów, Poland';
   const phone = settings.restaurant_phone || '511984331';
@@ -95,11 +98,7 @@ export default async function ContactPage({ params }: Props) {
                   <h3 className="font-bold text-foreground uppercase tracking-widest text-[10px] mb-1">Email</h3>
                   <p>{email}</p>
                 </div>
-                <div>
-                  <h3 className="font-bold text-foreground uppercase tracking-widest text-[10px] mb-1">Godziny Otwarcia / Opening Hours</h3>
-                  <p>{locale === 'pl' ? 'Na miejscu' : 'Dine-in'}: {dineInHours}</p>
-                  <p>{locale === 'pl' ? 'Dostawa' : 'Delivery'}: {deliveryHours}</p>
-                </div>
+
               </div>
             </PremiumCard>
 
@@ -114,6 +113,36 @@ export default async function ContactPage({ params }: Props) {
 
           {/* Contact Form client component */}
           <ContactForm locale={locale} />
+        </div>
+
+        {/* Weekly Opening Hours Section */}
+        <div className="border-t border-primary/10 pt-12 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          <div className="lg:col-span-1 space-y-4">
+            <h2 className="text-2xl sm:text-3xl font-serif font-black tracking-wide text-foreground">
+              {locale === 'pl' ? 'Godziny Otwarcia' : 'Opening Hours'}
+            </h2>
+            <p className="text-muted-foreground text-xs sm:text-sm font-light leading-relaxed">
+              {locale === 'pl' 
+                ? 'Jesteśmy otwarci każdego dnia, aby serwować Państwu najlepsze dania kuchni indyjskiej.'
+                : 'We are open every day to serve you the best of Indian cuisine.'}
+            </p>
+            <div className="space-y-3 pt-2 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                <span>{locale === 'pl' ? 'Obsługa na miejscu' : 'Restaurant Dine-in Service'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                <span>{locale === 'pl' ? 'Dostawa do domu' : 'Delivery Service to your doorstep'}</span>
+              </div>
+            </div>
+          </div>
+          <div className="lg:col-span-2">
+            <WeeklyHoursTable 
+              weeklyHours={openingHoursData.weeklyHours} 
+              todayDayOfWeek={openingHoursData.todayDayOfWeek} 
+            />
+          </div>
         </div>
       </SectionContainer>
     </PageTransition>

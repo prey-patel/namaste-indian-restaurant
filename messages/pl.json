@@ -503,5 +503,26 @@
     "exitFullscreen": "Zamknij pełny ekran",
     "dismiss": "Zamknij",
     "errorGeneric": "Wystąpił błąd. Spróbuj ponownie."
+  },
+  "openingHours": {
+    "todaysHours": "Dzisiejsze godziny",
+    "openingHours": "Godziny otwarcia",
+    "dineIn": "Na miejscu",
+    "delivery": "Dostawa",
+    "openNow": "Otwarte teraz",
+    "closedNow": "Teraz zamknięte",
+    "closedToday": "Dzisiaj zamknięte",
+    "viewFullWeeklyHours": "Zobacz pełne godziny",
+    "deliveryToday": "Dostawa dzisiaj",
+    "deliveryClosedMsg": "Dostawa jest obecnie niedostępna. Prosimy sprawdzić godziny otwarcia lub skontaktować się z restauracją.",
+    "days": {
+      "1": "Poniedziałek",
+      "2": "Wtorek",
+      "3": "Środa",
+      "4": "Czwartek",
+      "5": "Piątek",
+      "6": "Sobota",
+      "0": "Niedziela"
+    }
   }
 }

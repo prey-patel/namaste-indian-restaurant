@@ -503,5 +503,26 @@
     "exitFullscreen": "Exit Fullscreen",
     "dismiss": "Dismiss",
     "errorGeneric": "An error occurred. Please try again."
+  },
+  "openingHours": {
+    "todaysHours": "Today's Hours",
+    "openingHours": "Opening Hours",
+    "dineIn": "Dine-in",
+    "delivery": "Delivery",
+    "openNow": "Open now",
+    "closedNow": "Closed now",
+    "closedToday": "Closed today",
+    "viewFullWeeklyHours": "View full weekly hours",
+    "deliveryToday": "Delivery today",
+    "deliveryClosedMsg": "Delivery is currently unavailable. Please check our opening hours or call the restaurant.",
+    "days": {
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday",
+      "0": "Sunday"
+    }
   }
 }
