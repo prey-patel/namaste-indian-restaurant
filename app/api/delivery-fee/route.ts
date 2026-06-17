@@ -175,7 +175,8 @@ export async function POST(req: NextRequest): Promise<NextResponse<DeliveryFeeRe
       );
     }
 
-    const action = (matchingRule.rule_action as 'allow' | 'contact' | 'block') || 'allow';
+    const action = (((matchingRule.rule_action as string) || 'allow').toLowerCase()) as 'allow' | 'contact' | 'block';
+    // Only charge a fee for 'allow' action
     const fee = action === 'block' ? 0 : Number(matchingRule.fee_amount);
 
     return NextResponse.json({

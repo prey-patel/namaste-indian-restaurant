@@ -170,7 +170,7 @@ export async function calculateOrderTotalServerSide(
           });
 
           if (matchingRule) {
-            deliveryZoneAction = (matchingRule.rule_action as 'allow' | 'contact' | 'block') || 'allow';
+            deliveryZoneAction = (((matchingRule.rule_action as string) || 'allow').toLowerCase()) as 'allow' | 'contact' | 'block';
             // Only charge a fee for 'allow' action (not 'contact' or 'block')
             if (deliveryZoneAction === 'allow') {
               deliveryFeeGrosz = Math.round(Number(matchingRule.fee_amount) * 100);
