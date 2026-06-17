@@ -1,5 +1,7 @@
 "use client";
 
+import { useLocale } from 'next-intl';
+
 import React, { useState } from "react";
 import { 
   Calendar, 
@@ -29,6 +31,7 @@ export default function AnalyticsDashboard({
   defaultStartDate,
   defaultEndDate,
 }: AnalyticsDashboardProps) {
+  const locale = useLocale();
   const [data, setData] = useState<AnalyticsData>(initialData);
   const [startDate, setStartDate] = useState<string>(defaultStartDate);
   const [endDate, setEndDate] = useState<string>(defaultEndDate);
@@ -54,7 +57,7 @@ export default function AnalyticsDashboard({
       setEndDate(end);
       setActivePreset(preset);
     } catch (err: any) {
-      setError(err.message || "Wystąpił błąd podczas ładowania danych. / An error occurred while loading data.");
+      setError(err.message || (locale === 'en' ? 'An error occurred while loading data.' : 'Wystąpił błąd podczas ładowania danych.'));
     } finally {
       setIsLoading(false);
     }
@@ -83,7 +86,7 @@ export default function AnalyticsDashboard({
   const handleCustomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!customStart || !customEnd) {
-      setError("Wybierz obie daty. / Please select both dates.");
+      setError(locale === 'en' ? 'Please select both dates.' : 'Wybierz obie daty.');
       return;
     }
 
@@ -91,14 +94,14 @@ export default function AnalyticsDashboard({
     const end = new Date(customEnd);
 
     if (start > end) {
-      setError("Data początkowa nie może być późniejsza niż końcowa. / Start date cannot be after end date.");
+      setError(locale === 'en' ? 'Start date cannot be after end date.' : 'Data początkowa nie może być późniejsza niż końcowa.');
       return;
     }
 
     const diffTime = Math.abs(end.getTime() - start.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     if (diffDays > 366) {
-      setError("Zakres dat nie może przekraczać 12 miesięcy. / Date range cannot exceed 12 months.");
+      setError(locale === 'en' ? 'Date range cannot exceed 12 months.' : 'Zakres dat nie może przekraczać 12 miesięcy.');
       return;
     }
 
@@ -173,7 +176,7 @@ export default function AnalyticsDashboard({
                   : "bg-secondary hover:bg-primary/10 text-foreground"
               }`}
             >
-              Dzisiaj / Today
+              {locale === 'en' ? 'Today' : 'Dzisiaj'}
             </button>
             <button
               onClick={() => handlePresetClick("7d")}
@@ -184,7 +187,7 @@ export default function AnalyticsDashboard({
                   : "bg-secondary hover:bg-primary/10 text-foreground"
               }`}
             >
-              7 Dni / 7 Days
+              {locale === 'en' ? '7 Days' : '7 Dni'}
             </button>
             <button
               onClick={() => handlePresetClick("30d")}
@@ -195,13 +198,13 @@ export default function AnalyticsDashboard({
                   : "bg-secondary hover:bg-primary/10 text-foreground"
               }`}
             >
-              30 Dni / 30 Days
+              {locale === 'en' ? '30 Days' : '30 Dni'}
             </button>
           </div>
 
           <form onSubmit={handleCustomSubmit} className="flex flex-wrap items-center gap-3">
             <div className="flex items-center space-x-2 text-xs">
-              <label htmlFor="startDateInput" className="font-bold text-muted-foreground uppercase">Od / From</label>
+              <label htmlFor="startDateInput" className="font-bold text-muted-foreground uppercase">{locale === 'en' ? 'From' : 'Od'}</label>
               <input
                 id="startDateInput"
                 type="date"
@@ -213,7 +216,7 @@ export default function AnalyticsDashboard({
               />
             </div>
             <div className="flex items-center space-x-2 text-xs">
-              <label htmlFor="endDateInput" className="font-bold text-muted-foreground uppercase">Do / To</label>
+              <label htmlFor="endDateInput" className="font-bold text-muted-foreground uppercase">{locale === 'en' ? 'To' : 'Do'}</label>
               <input
                 id="endDateInput"
                 type="date"
@@ -230,7 +233,7 @@ export default function AnalyticsDashboard({
               className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded text-xs font-bold uppercase tracking-wider hover:bg-primary/95 transition-all duration-200"
             >
               {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              Filtruj / Filter
+              {locale === 'en' ? 'Filter' : 'Filtruj'}
             </button>
           </form>
         </div>
@@ -247,7 +250,7 @@ export default function AnalyticsDashboard({
         <div className="flex flex-col items-center justify-center py-20 space-y-4">
           <Loader2 className="w-10 h-10 text-primary animate-spin" />
           <p className="text-sm text-muted-foreground font-serif italic">
-            Ładowanie analiz... / Loading analytics...
+            {locale === 'en' ? 'Loading analytics...' : 'Ładowanie analiz...'}
           </p>
         </div>
       ) : isEmptyState ? (
@@ -281,7 +284,7 @@ export default function AnalyticsDashboard({
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
-                    Przychód Netto / Net Revenue
+                    {locale === 'en' ? 'Net Revenue' : 'Przychód Netto'}
                   </p>
                   <h3 className="text-2xl font-serif font-bold text-foreground mt-1">
                     {formatPLN(data.kpis.revenue)}
@@ -293,10 +296,10 @@ export default function AnalyticsDashboard({
               </div>
               <div className="mt-4 pt-3 border-t border-border/50 text-[10px] text-muted-foreground font-medium grid grid-cols-2 gap-y-1">
                 <div>Subtotal: {formatPLN(data.kpis.subtotal)}</div>
-                <div>Dostawa / Delivery: {formatPLN(data.kpis.deliveryFees)}</div>
-                <div>Opakowania / Pack: {formatPLN(data.kpis.packagingFees)}</div>
+                <div>{locale === 'en' ? 'Delivery' : 'Dostawa'}: {formatPLN(data.kpis.deliveryFees)}</div>
+                <div>{locale === 'en' ? 'Packaging' : 'Opakowania'}: {formatPLN(data.kpis.packagingFees)}</div>
                 <div className="text-red-600 [.admin-theme_&]:text-red-800">
-                  Rabaty / Dis: -{formatPLN(data.kpis.discounts)}
+                  {locale === 'en' ? 'Discounts' : 'Rabaty'}: -{formatPLN(data.kpis.discounts)}
                 </div>
               </div>
             </PremiumCard>
@@ -306,7 +309,7 @@ export default function AnalyticsDashboard({
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
-                    Średnie Zamówienie / AOV
+                    {locale === 'en' ? 'AOV' : 'Średnie Zamówienie'}
                   </p>
                   <h3 className="text-2xl font-serif font-bold text-foreground mt-1">
                     {formatPLN(data.kpis.aov)}
@@ -317,7 +320,7 @@ export default function AnalyticsDashboard({
                 </div>
               </div>
               <p className="text-[10px] text-muted-foreground font-medium mt-4 pt-3 border-t border-border/50">
-                Wartość opłaconego koszyka / Finalized basket size
+                {locale === 'en' ? 'Finalized basket size' : 'Wartość opłaconego koszyka'}
               </p>
             </PremiumCard>
 
@@ -326,7 +329,7 @@ export default function AnalyticsDashboard({
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
-                    Zamówienia / Orders
+                    {locale === 'en' ? 'Orders' : 'Zamówienia'}
                   </p>
                   <h3 className="text-2xl font-serif font-bold text-foreground mt-1">
                     {data.kpis.ordersCount}
@@ -338,7 +341,7 @@ export default function AnalyticsDashboard({
               </div>
               <div className="mt-4 pt-3 border-t border-border/50 flex items-center justify-between text-[10px]">
                 <span className="font-bold text-green-700">Opłacone: {data.kpis.ordersCount}</span>
-                <span className="font-bold text-yellow-600">W toku / Active: {data.kpis.activeOrdersCount}</span>
+                <span className="font-bold text-yellow-600">{locale === 'en' ? 'Active' : 'W toku'}: {data.kpis.activeOrdersCount}</span>
               </div>
             </PremiumCard>
 
@@ -347,7 +350,7 @@ export default function AnalyticsDashboard({
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
-                    Rezerwacje / Reservations
+                    {locale === 'en' ? 'Reservations' : 'Rezerwacje'}
                   </p>
                   <h3 className="text-2xl font-serif font-bold text-foreground mt-1">
                     {data.kpis.reservationsCount}
@@ -358,7 +361,7 @@ export default function AnalyticsDashboard({
                 </div>
               </div>
               <p className="text-[10px] text-muted-foreground font-medium mt-4 pt-3 border-t border-border/50">
-                Liczba gości / Guests: <span className="font-bold text-foreground">{data.kpis.guestsCount}</span> (opłacone/aktywne)
+                {locale === 'en' ? 'Guests' : 'Liczba gości'}: <span className="font-bold text-foreground">{data.kpis.guestsCount}</span> ({locale === 'en' ? 'paid/active' : 'opłacone/aktywne'})
               </p>
             </PremiumCard>
           </div>
@@ -369,10 +372,10 @@ export default function AnalyticsDashboard({
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h2 className="text-lg font-serif font-bold text-foreground">
-                    Trend Przychodów / Sales Revenue Trend
+                    {locale === 'en' ? 'Sales Revenue Trend' : 'Trend Przychodów'}
                   </h2>
                   <p className="text-xs text-muted-foreground">
-                    Analiza dziennych obrotów (PLN) / Daily net sales values
+                    {locale === 'en' ? 'Daily Net Sales Values (PLN)' : 'Analiza dziennych obrotów (PLN)'}
                   </p>
                 </div>
                 <div className="flex items-center space-x-2 text-[10px] font-bold uppercase tracking-widest border bg-primary/5 text-primary border-primary/20 px-3 py-1 rounded-full">
@@ -512,15 +515,15 @@ export default function AnalyticsDashboard({
                       {hoveredPoint.date}
                     </div>
                     <div className="flex justify-between gap-4">
-                      <span>Przychód / Rev:</span>
+                      <span>{locale === 'en' ? 'Revenue' : 'Przychód'}:</span>
                       <span className="font-bold text-primary">{formatPLN(hoveredPoint.revenue)}</span>
                     </div>
                     <div className="flex justify-between gap-4 mt-0.5">
-                      <span>Zamówienia / Orders:</span>
+                      <span>{locale === 'en' ? 'Orders' : 'Zamówienia'}:</span>
                       <span className="font-bold">{hoveredPoint.ordersCount}</span>
                     </div>
                     <div className="flex justify-between gap-4 mt-0.5">
-                      <span>Rezerwacje / Res:</span>
+                      <span>{locale === 'en' ? 'Reservations' : 'Rezerwacje'}:</span>
                       <span className="font-bold text-blue-600">{hoveredPoint.reservationsCount}</span>
                     </div>
                   </div>
@@ -535,11 +538,11 @@ export default function AnalyticsDashboard({
             {/* Category Performance */}
             <PremiumCard hoverable={false}>
               <h2 className="text-lg font-serif font-bold text-foreground mb-4">
-                Wyniki według kategorii / Category Performance
+                {locale === 'en' ? 'Category Performance' : 'Wyniki według kategorii'}
               </h2>
               {data.categoryBreakdown.length === 0 ? (
                 <p className="text-xs text-muted-foreground italic text-center py-6">
-                  Brak danych kategorii. / No category data.
+                  {locale === 'en' ? 'No category data.' : 'Brak danych kategorii.'}
                 </p>
               ) : (
                 <div className="space-y-4">
@@ -550,10 +553,10 @@ export default function AnalyticsDashboard({
                       <div key={cat.id} className="space-y-1">
                         <div className="flex justify-between text-xs font-sans">
                           <span className="font-bold">
-                            {cat.namePl} / {cat.nameEn}
+                            {locale === 'en' ? cat.nameEn : cat.namePl}
                           </span>
                           <span className="text-muted-foreground">
-                            {formatPLN(cat.revenue)} ({cat.quantity} szt. / pcs)
+                            {formatPLN(cat.revenue)} ({cat.quantity} {locale === 'en' ? 'pcs' : 'szt.'})
                           </span>
                         </div>
                         <div className="w-full bg-secondary h-2.5 rounded overflow-hidden">
@@ -573,10 +576,10 @@ export default function AnalyticsDashboard({
             <PremiumCard hoverable={false} className="flex flex-col justify-between">
               <div>
                 <h2 className="text-lg font-serif font-bold text-foreground mb-1">
-                  Kanały Sprzedaży / Order Channels
+                  {locale === 'en' ? 'Order Channels' : 'Kanały Sprzedaży'}
                 </h2>
                 <p className="text-xs text-muted-foreground mb-6">
-                  Porównanie dostaw i odbiorów osobistych / Delivery vs Takeaway
+                  {locale === 'en' ? 'Delivery vs Takeaway' : 'Porównanie dostaw i odbiorów osobistych'}
                 </p>
               </div>
 
@@ -597,14 +600,14 @@ export default function AnalyticsDashboard({
                         <div 
                           className="bg-gold-gradient h-full flex items-center justify-center text-[9px] font-bold text-primary-foreground transition-all duration-500"
                           style={{ width: `${takPct}%` }}
-                          title={`Dostawa / Delivery: ${formatPLN(del.revenue)}`}
+                          title={`${locale === 'en' ? 'Delivery' : 'Dostawa'}: ${formatPLN(del.revenue)}`}
                         >
                           {takPct > 15 && `Takeaway ${Math.round(takPct)}%`}
                         </div>
                         <div 
                           className="bg-foreground/10 h-full flex items-center justify-center text-[9px] font-bold text-foreground transition-all duration-500"
                           style={{ width: `${delPct}%` }}
-                          title={`Takeaway / Odbiór: ${formatPLN(tak.revenue)}`}
+                          title={`${locale === 'en' ? 'Takeaway' : 'Odbiór osobisty'}: ${formatPLN(tak.revenue)}`}
                         >
                           {delPct > 15 && `Delivery ${Math.round(delPct)}%`}
                         </div>
@@ -614,26 +617,26 @@ export default function AnalyticsDashboard({
                         <div className="border border-border/60 bg-muted/20 p-3.5 rounded-lg text-center">
                           <span className="inline-block w-2.5 h-2.5 bg-primary rounded-full mr-1.5" />
                           <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground block">
-                            Odbiór / Takeaway
+                            {locale === 'en' ? 'Takeaway' : 'Odbiór osobisty'}
                           </span>
                           <span className="text-lg font-serif font-bold text-foreground block mt-1">
                             {formatPLN(tak.revenue)}
                           </span>
                           <span className="text-[10px] text-muted-foreground block">
-                            {tak.count} zamówień / orders
+                            {tak.count} {locale === 'en' ? 'orders' : 'zamówień'}
                           </span>
                         </div>
 
                         <div className="border border-border/60 bg-muted/20 p-3.5 rounded-lg text-center">
                           <span className="inline-block w-2.5 h-2.5 bg-foreground/20 rounded-full mr-1.5" />
                           <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground block">
-                            Dostawa / Delivery
+                            {locale === 'en' ? 'Delivery' : 'Dostawa'}
                           </span>
                           <span className="text-lg font-serif font-bold text-foreground block mt-1">
                             {formatPLN(del.revenue)}
                           </span>
                           <span className="text-[10px] text-muted-foreground block">
-                            {del.count} zamówień / orders
+                            {del.count} {locale === 'en' ? 'orders' : 'zamówień'}
                           </span>
                         </div>
                       </div>
@@ -649,21 +652,21 @@ export default function AnalyticsDashboard({
             <div className="lg:col-span-2 rounded-xl border border-border bg-card shadow-sm p-6 relative">
               <div className="absolute inset-1.5 rounded-[8px] border border-primary/5 pointer-events-none" />
               <h2 className="text-lg font-serif font-bold text-foreground mb-4">
-                Najpopularniejsze dania / Top 10 Dishes
+                {locale === 'en' ? 'Top 10 Dishes' : 'Najpopularniejsze dania'}
               </h2>
               {data.popularItems.length === 0 ? (
                 <p className="text-xs text-muted-foreground italic text-center py-6">
-                  Brak danych o popularności dań. / No dish popularity data.
+                  {locale === 'en' ? 'No dish popularity data.' : 'Brak danych o popularności dań.'}
                 </p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
                       <tr className="border-b border-border/60 text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-                        <th className="py-2.5">Pozycja / Item</th>
-                        <th className="py-2.5">Kategoria / Category</th>
-                        <th className="py-2.5 text-right">Sprzedano / Qty</th>
-                        <th className="py-2.5 text-right">Obrót / Revenue</th>
+                        <th className="py-2.5">{locale === 'en' ? 'Item' : 'Pozycja'}</th>
+                        <th className="py-2.5">{locale === 'en' ? 'Category' : 'Kategoria'}</th>
+                        <th className="py-2.5 text-right">{locale === 'en' ? 'Qty' : 'Sprzedano'}</th>
+                        <th className="py-2.5 text-right">{locale === 'en' ? 'Revenue' : 'Obrót'}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/40">
@@ -696,16 +699,16 @@ export default function AnalyticsDashboard({
             <PremiumCard hoverable={false} className="flex flex-col justify-between">
               <div>
                 <h2 className="text-lg font-serif font-bold text-foreground mb-1">
-                  Źródła rezerwacji / Booking Channels
+                  {locale === 'en' ? 'Booking Channels' : 'Źródła rezerwacji'}
                 </h2>
                 <p className="text-xs text-muted-foreground mb-6">
-                  Kanały, z których spływają rezerwacje / Reservation sources
+                  {locale === 'en' ? 'Reservation sources' : 'Kanały, z których spływają rezerwacje'}
                 </p>
               </div>
 
               {data.reservationSources.length === 0 ? (
                 <p className="text-xs text-muted-foreground italic text-center py-6">
-                  Brak danych rezerwacji. / No booking data.
+                  {locale === 'en' ? 'No booking data.' : 'Brak danych rezerwacji.'}
                 </p>
               ) : (
                 <div className="space-y-4">
@@ -714,10 +717,10 @@ export default function AnalyticsDashboard({
                     const pct = Math.round((source.count / totalRes) * 100);
                     
                     const labelMap: Record<string, string> = {
-                      website: "Strona WWW / Website",
-                      phone: "Telefon / Phone",
-                      walk_in: "Z ulicy / Walk-in",
-                      admin: "Panel Admina / Admin Panel"
+                      website: locale === 'en' ? 'Website' : 'Strona WWW',
+                      phone: locale === 'en' ? 'Phone' : 'Telefon',
+                      walk_in: locale === 'en' ? 'Walk-in' : 'Z ulicy',
+                      admin: locale === 'en' ? 'Admin Panel' : 'Panel Admina'
                     };
 
                     return (
@@ -739,7 +742,7 @@ export default function AnalyticsDashboard({
               )}
 
               <div className="mt-6 pt-4 border-t border-border/50 text-[10px] text-muted-foreground">
-                <h3 className="font-bold uppercase tracking-wider mb-2 text-foreground">Statusy rezerwacji / Status summary</h3>
+                <h3 className="font-bold uppercase tracking-wider mb-2 text-foreground">{locale === 'en' ? 'Status Summary' : 'Statusy rezerwacji'}</h3>
                 <div className="grid grid-cols-2 gap-2 text-[9px]">
                   {data.reservationStatuses.map((stat) => (
                     <div key={stat.status} className="flex justify-between border-b border-border/30 pb-0.5">

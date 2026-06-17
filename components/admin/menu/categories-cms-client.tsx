@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { getLocalizedText } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { deleteCategoryAction } from '@/app/admin/menu/actions';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,8 @@ type CategoriesCmsClientProps = {
 export default function CategoriesCmsClient({ categories }: CategoriesCmsClientProps) {
   const router = useRouter();
   const t = useTranslations('adminMenu');
+  const locale = useLocale();
+  const l = (text: string) => getLocalizedText(text, locale);
 
   const [editingCategory, setEditingCategory] = useState<Category | undefined>(undefined);
 
@@ -66,12 +69,14 @@ export default function CategoriesCmsClient({ categories }: CategoriesCmsClientP
         <div>
           <h2 className="text-2xl font-serif font-bold text-primary">{t('categoriesTab')}</h2>
           <p className="text-xs text-muted-foreground mt-1">
-            Zarządzaj sekcjami karty dań. Kolejność określa pozycję na stronie głównej menu.
+            {locale === 'en'
+              ? 'Manage menu card sections. Display order determines the position on the main menu page.'
+              : 'Zarządzaj sekcjami karty dań. Kolejność określa pozycję na stronie głównej menu.'}
           </p>
         </div>
         <Link href="/admin/menu">
           <Button variant="outline" className="border-primary/25 hover:bg-primary/5 text-primary text-xs uppercase tracking-wider font-bold">
-            ← Wróć do Menu / Back to CMS
+            {l('← Wróć do Menu / Back to CMS')}
           </Button>
         </Link>
       </div>
@@ -85,11 +90,11 @@ export default function CategoriesCmsClient({ categories }: CategoriesCmsClientP
               <table className="min-w-full divide-y divide-border text-left">
                 <thead className="bg-muted/50 text-[10px] uppercase tracking-wider text-primary font-bold">
                   <tr>
-                    <th className="px-6 py-4">Nazwa / Name</th>
+                    <th className="px-6 py-4">{l('Nazwa / Name')}</th>
                     <th className="px-6 py-4">Slug</th>
-                    <th className="px-6 py-4">Widoczność / Active</th>
+                    <th className="px-6 py-4">{l('Widoczność / Active')}</th>
                     <th className="px-6 py-4">Sort</th>
-                    <th className="px-6 py-4 text-right">Akcje / Actions</th>
+                    <th className="px-6 py-4 text-right">{l('Akcje / Actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-card/40 text-xs">
@@ -108,10 +113,7 @@ export default function CategoriesCmsClient({ categories }: CategoriesCmsClientP
                         }`}
                       >
                         <td className="px-6 py-4 font-medium text-foreground">
-                          <div className="flex flex-col">
-                            <span>{cat.name_pl}</span>
-                            <span className="text-[10px] text-muted-foreground/60">{cat.name_en}</span>
-                          </div>
+                          <span>{locale === 'en' ? cat.name_en : cat.name_pl}</span>
                         </td>
                         <td className="px-6 py-4 font-mono text-muted-foreground">
                           {cat.slug}
@@ -131,7 +133,7 @@ export default function CategoriesCmsClient({ categories }: CategoriesCmsClientP
                             onClick={() => setEditingCategory(cat)}
                             className="text-primary hover:opacity-80 font-bold uppercase tracking-wider text-[10px]"
                           >
-                            Edytuj / Edit
+                            {l('Edytuj / Edit')}
                           </button>
                           <button
                             onClick={() => setDeletingId(cat.id)}
@@ -165,7 +167,7 @@ export default function CategoriesCmsClient({ categories }: CategoriesCmsClientP
               onClick={() => setEditingCategory(undefined)}
               className="w-full text-xs uppercase tracking-wider hover:bg-primary/5 text-muted-foreground hover:text-foreground"
             >
-              Anuluj Edycję / Cancel Editing
+              {l('Anuluj Edycję / Cancel Editing')}
             </Button>
           )}
         </div>

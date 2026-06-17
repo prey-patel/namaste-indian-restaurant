@@ -1,5 +1,7 @@
 'use client';
 
+import { useLocale } from 'next-intl';
+
 import React, { useState } from 'react';
 import { 
   Users, UserCheck, ShieldCheck, ChefHat, UserX, 
@@ -30,6 +32,7 @@ interface UsersDashboardProps {
 }
 
 export default function UsersDashboard({ initialUsers, caller }: UsersDashboardProps) {
+  const locale = useLocale();
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [search, setSearch] = useState('');
   
@@ -138,7 +141,7 @@ export default function UsersDashboard({ initialUsers, caller }: UsersDashboardP
       {/* Header section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-primary/10 pb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-primary">Użytkownicy i Uprawnienia / Users & Roles</h1>
+          <h1 className="text-3xl font-serif font-bold text-primary">{locale === 'en' ? 'Users & Roles' : 'Użytkownicy i Uprawnienia'}</h1>
           <p className="text-xs text-muted-foreground mt-1">
             Manage staff login credentials, administrative levels, and operational roles.
           </p>
@@ -148,7 +151,7 @@ export default function UsersDashboard({ initialUsers, caller }: UsersDashboardP
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-md hover:shadow-lg transition-all"
         >
           <Plus className="w-4 h-4" />
-          Dodaj Użytkownika / Add New User
+          {locale === 'en' ? 'Add New User' : 'Dodaj Użytkownika'}
         </button>
       </div>
 
@@ -258,7 +261,7 @@ export default function UsersDashboard({ initialUsers, caller }: UsersDashboardP
                 {filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-8 text-center text-xs text-muted-foreground/75 font-semibold">
-                      Brak użytkowników spełniających kryteria / No matching users found.
+                      {locale === 'en' ? 'No matching users found.' : 'Brak użytkowników spełniających kryteria.'}
                     </td>
                   </tr>
                 ) : (

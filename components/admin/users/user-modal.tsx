@@ -1,5 +1,7 @@
 'use client';
 
+import { useLocale } from 'next-intl';
+
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Lock, ShieldAlert, Sparkles, X } from 'lucide-react';
 import { createUserAction, updateUserAction } from '@/app/admin/users/actions';
@@ -29,6 +31,7 @@ export default function UserModal({
   callerRole,
   isActiveOwnerLast,
 }: UserModalProps) {
+  const locale = useLocale();
   const isEdit = !!user;
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -185,7 +188,7 @@ export default function UserModal({
         <div className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-primary/10">
           <div>
             <h3 className="text-lg font-serif font-bold text-primary">
-              {isEdit ? 'Edytuj Konto / Edit User' : 'Dodaj Nowego Użytkownika / Add User'}
+              {isEdit ? (locale === 'en' ? 'Edit User' : 'Edytuj Konto') : (locale === 'en' ? 'Add User' : 'Dodaj Nowego Użytkownika')}
             </h3>
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">
               {isEdit ? 'Update details & access controls' : 'Register a new team member'}
@@ -313,7 +316,7 @@ export default function UserModal({
             {/* Role select */}
             <div className="space-y-1.5 col-span-2 sm:col-span-1">
               <label className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                Role / Uprawnienia *
+                {locale === 'en' ? 'Role / Permissions *' : 'Rola / Uprawnienia *'}
               </label>
               <select
                 disabled={isReadOnlyForCaller || isLastOwnerProtectionActive}
@@ -324,7 +327,7 @@ export default function UserModal({
                 {/* Owners can select any role. Managers can only select staff and kitchen */}
                 {callerRole === 'owner' && <option value="owner">Owner (Właściciel)</option>}
                 {callerRole === 'owner' && <option value="manager">Manager (Menedżer)</option>}
-                <option value="kitchen">Kitchen (Kucharz / KDS)</option>
+                <option value="kitchen">{locale === 'en' ? 'Kitchen (KDS)' : 'Kuchnia (Kucharz / KDS)'}</option>
                 <option value="staff">Staff (Obsługa kelnerska)</option>
               </select>
             </div>
@@ -353,7 +356,7 @@ export default function UserModal({
               onClick={onClose}
               className="px-5 py-2.5 border border-primary/10 text-muted-foreground hover:bg-primary/5 text-xs font-bold uppercase tracking-wider rounded transition-colors"
             >
-              Anuluj / Cancel
+              {locale === 'en' ? 'Cancel' : 'Anuluj'}
             </button>
             {!isReadOnlyForCaller && (
               <button
@@ -361,7 +364,7 @@ export default function UserModal({
                 disabled={loading}
                 className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold uppercase tracking-wider rounded shadow-md hover:shadow-lg transition-all disabled:opacity-50"
               >
-                {loading ? 'Zapisywanie...' : (isEdit ? 'Zapisz / Save' : 'Dodaj / Add User')}
+                {loading ? 'Zapisywanie...' : (isEdit ? (locale === 'en' ? 'Save' : 'Zapisz') : (locale === 'en' ? 'Add User' : 'Dodaj'))}
               </button>
             )}
           </div>

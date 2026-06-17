@@ -1,5 +1,7 @@
 "use client";
 
+import { useLocale } from 'next-intl';
+
 import React, { useState } from "react";
 import { 
   Clock, 
@@ -28,6 +30,7 @@ export default function PerformanceDashboard({
   defaultStartDate,
   defaultEndDate,
 }: PerformanceDashboardProps) {
+  const locale = useLocale();
   const [data, setData] = useState<PerformanceData>(initialData);
   const [startDate, setStartDate] = useState<string>(defaultStartDate);
   const [endDate, setEndDate] = useState<string>(defaultEndDate);
@@ -52,7 +55,7 @@ export default function PerformanceDashboard({
       setEndDate(end);
       setActivePreset(preset);
     } catch (err: any) {
-      setError(err.message || "Wystąpił błąd podczas ładowania raportów. / An error occurred while loading reports.");
+      setError(err.message || (locale === 'en' ? 'An error occurred while loading reports.' : 'Wystąpił błąd podczas ładowania raportów.'));
     } finally {
       setIsLoading(false);
     }
@@ -81,7 +84,7 @@ export default function PerformanceDashboard({
   const handleCustomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!customStart || !customEnd) {
-      setError("Wybierz obie daty. / Please select both dates.");
+      setError(locale === 'en' ? 'Please select both dates.' : 'Wybierz obie daty.');
       return;
     }
 
@@ -89,14 +92,14 @@ export default function PerformanceDashboard({
     const end = new Date(customEnd);
 
     if (start > end) {
-      setError("Data początkowa nie może być późniejsza niż końcowa. / Start date cannot be after end date.");
+      setError(locale === 'en' ? 'Start date cannot be after end date.' : 'Data początkowa nie może być późniejsza niż końcowa.');
       return;
     }
 
     const diffTime = Math.abs(end.getTime() - start.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     if (diffDays > 366) {
-      setError("Zakres dat nie może przekraczać 12 miesięcy. / Date range cannot exceed 12 months.");
+      setError(locale === 'en' ? 'Date range cannot exceed 12 months.' : 'Zakres dat nie może przekraczać 12 miesięcy.');
       return;
     }
 
@@ -172,7 +175,7 @@ export default function PerformanceDashboard({
                   : "bg-secondary hover:bg-primary/10 text-foreground"
               }`}
             >
-              Dzisiaj / Today
+              {locale === 'en' ? 'Today' : 'Dzisiaj'}
             </button>
             <button
               onClick={() => handlePresetClick("7d")}
@@ -183,7 +186,7 @@ export default function PerformanceDashboard({
                   : "bg-secondary hover:bg-primary/10 text-foreground"
               }`}
             >
-              7 Dni / 7 Days
+              {locale === 'en' ? '7 Days' : '7 Dni'}
             </button>
             <button
               onClick={() => handlePresetClick("30d")}
@@ -194,13 +197,13 @@ export default function PerformanceDashboard({
                   : "bg-secondary hover:bg-primary/10 text-foreground"
               }`}
             >
-              30 Dni / 30 Days
+              {locale === 'en' ? '30 Days' : '30 Dni'}
             </button>
           </div>
 
           <form onSubmit={handleCustomSubmit} className="flex flex-wrap items-center gap-3">
             <div className="flex items-center space-x-2 text-xs">
-              <label htmlFor="startDateInput" className="font-bold text-muted-foreground uppercase">Od / From</label>
+              <label htmlFor="startDateInput" className="font-bold text-muted-foreground uppercase">{locale === 'en' ? 'From' : 'Od'}</label>
               <input
                 id="startDateInput"
                 type="date"
@@ -212,7 +215,7 @@ export default function PerformanceDashboard({
               />
             </div>
             <div className="flex items-center space-x-2 text-xs">
-              <label htmlFor="endDateInput" className="font-bold text-muted-foreground uppercase">Do / To</label>
+              <label htmlFor="endDateInput" className="font-bold text-muted-foreground uppercase">{locale === 'en' ? 'To' : 'Do'}</label>
               <input
                 id="endDateInput"
                 type="date"
@@ -229,7 +232,7 @@ export default function PerformanceDashboard({
               className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded text-xs font-bold uppercase tracking-wider hover:bg-primary/95 transition-all duration-200"
             >
               {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              Filtruj / Filter
+              {locale === 'en' ? 'Filter' : 'Filtruj'}
             </button>
           </form>
         </div>
@@ -246,7 +249,7 @@ export default function PerformanceDashboard({
         <div className="flex flex-col items-center justify-center py-20 space-y-4">
           <Loader2 className="w-10 h-10 text-primary animate-spin" />
           <p className="text-sm text-muted-foreground font-serif italic">
-            Analiza wskaźników wydajności... / Evaluating operational performance...
+            {locale === 'en' ? 'Evaluating Operational Performance...' : 'Analiza wskaźników wydajności...'}
           </p>
         </div>
       ) : (
@@ -259,7 +262,7 @@ export default function PerformanceDashboard({
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
-                    Czas przygotowania / Prep Time
+                    {locale === 'en' ? 'Prep Time' : 'Czas przygotowania'}
                   </p>
                   <h3 className="text-xl font-serif font-bold text-foreground mt-1">
                     {formatMins(data.kpis.avgPrepTime.value)}
@@ -271,8 +274,8 @@ export default function PerformanceDashboard({
               </div>
               <p className="text-[10px] text-muted-foreground font-medium mt-4 pt-3 border-t border-border/50">
                 {data.kpis.avgPrepTime.value !== null 
-                  ? `Based on ${data.kpis.avgPrepTime.count} completed orders / Na podstawie ${data.kpis.avgPrepTime.count} dań`
-                  : `Requires min. 3 records (found ${data.kpis.avgPrepTime.count}) / Wymaga min. 3 rekordów`}
+                  ? (locale === 'en' ? `Based on ${data.kpis.avgPrepTime.count} completed orders` : `Na podstawie ${data.kpis.avgPrepTime.count} dań`)
+                  : (locale === 'en' ? `Requires min. 3 records (found ${data.kpis.avgPrepTime.count})` : `Wymaga min. 3 rekordów`)}
               </p>
             </PremiumCard>
 
@@ -281,7 +284,7 @@ export default function PerformanceDashboard({
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
-                    Terminowość / On-Time Rate
+                    {locale === 'en' ? 'On-Time Rate' : 'Terminowość'}
                   </p>
                   <h3 className="text-xl font-serif font-bold text-foreground mt-1">
                     {formatPct(data.kpis.onTimeRate.value)}
@@ -303,7 +306,7 @@ export default function PerformanceDashboard({
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
-                    Reakcja na Rezerwacje / Booking Response
+                    {locale === 'en' ? 'Booking Response' : 'Reakcja na Rezerwacje'}
                   </p>
                   <h3 className="text-xl font-serif font-bold text-foreground mt-1">
                     {formatMins(data.kpis.avgResResponseTime.value)}
@@ -325,10 +328,10 @@ export default function PerformanceDashboard({
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
-                    Stan Kuchni Live / Live Kitchen Queue
+                    {locale === 'en' ? 'Live Kitchen Queue' : 'Stan Kuchni Live'}
                   </p>
                   <h3 className="text-xl font-serif font-bold text-foreground mt-1">
-                    {data.kpis.liveActiveQueueSize} w toku / active
+                    {data.kpis.liveActiveQueueSize} {locale === 'en' ? 'active' : 'w toku'}
                   </h3>
                 </div>
                 <div className="p-2 rounded-lg bg-red-500/10 text-red-600">
@@ -336,7 +339,7 @@ export default function PerformanceDashboard({
                 </div>
               </div>
               <div className="mt-4 pt-3 border-t border-border/50 flex items-center justify-between text-[10px]">
-                <span className="font-bold text-red-700">Opóźnione / Overdue: {data.kpis.liveOverdueCount}</span>
+                <span className="font-bold text-red-700">{locale === 'en' ? 'Overdue' : 'Opóźnione'}: {data.kpis.liveOverdueCount}</span>
                 <span className="text-muted-foreground font-medium">Realtime monitoring</span>
               </div>
             </PremiumCard>
@@ -349,18 +352,18 @@ export default function PerformanceDashboard({
               <Info className="w-5 h-5 shrink-0 mt-0.5" />
               <div>
                 <h3 className="text-xs uppercase font-bold tracking-widest text-primary">
-                  Wnioski i Sugestie Operacyjne / Operational Insights
+                  {locale === 'en' ? 'Operational Insights' : 'Wnioski i Sugestie Operacyjne'}
                 </h3>
                 <ul className="mt-3 space-y-2 text-xs text-foreground font-medium list-disc list-inside">
                   {/* Insight 1: Kitchen speeds */}
                   {data.kpis.avgPrepTime.value !== null ? (
                     data.kpis.avgPrepTime.value > 30 ? (
                       <li>
-                        Kuchnia ma wydłużony średni czas przygotowania dań ({data.kpis.avgPrepTime.value.toFixed(1)} min). Rozważ dodanie personelu w godzinach szczytu. / Prep times are running high. Consider adding staff during busy periods.
+                        {locale === 'en' ? 'Prep times are running high. Consider adding staff during busy periods.' : `Kuchnia ma wydłużony średni czas przygotowania dań (${data.kpis.avgPrepTime.value.toFixed(1)} min). Rozważ dodanie personelu w godzinach szczytu.`}
                       </li>
                     ) : (
                       <li>
-                        Średni czas przygotowania dań ({data.kpis.avgPrepTime.value.toFixed(1)} min) jest w normie (poniżej 30 minut). / Kitchen prep times are healthy.
+                        {locale === 'en' ? 'Kitchen prep times are healthy.' : `Średni czas przygotowania dań (${data.kpis.avgPrepTime.value.toFixed(1)} min) jest w normie (poniżej 30 minut).`}
                       </li>
                     )
                   ) : null}
@@ -369,11 +372,11 @@ export default function PerformanceDashboard({
                   {data.kpis.onTimeRate.value !== null ? (
                     data.kpis.onTimeRate.value < 80 ? (
                       <li>
-                        Wskaźnik dostaw na czas wynosi zaledwie {data.kpis.onTimeRate.value.toFixed(1)}%. Sugerowane jest podniesienie szacowanego czasu przygotowania / dostawy o 10-15 minut. / Delivery SLA is low. Consider adjusting delivery buffer times.
+                        {locale === 'en' ? 'Delivery SLA is low. Consider adjusting delivery buffer times.' : `Wskaźnik dostaw na czas wynosi zaledwie ${data.kpis.onTimeRate.value.toFixed(1)}%. Sugerowane jest podniesienie szacowanego czasu przygotowania / dostawy o 10-15 minut.`}
                       </li>
                     ) : (
                       <li>
-                        Szybkość dostaw utrzymuje się na wysokim poziomie ({data.kpis.onTimeRate.value.toFixed(1)}% na czas). / On-time fulfillment rate is strong.
+                        {locale === 'en' ? 'On-time fulfillment rate is strong.' : `Szybkość dostaw utrzymuje się na wysokim poziomie (${data.kpis.onTimeRate.value.toFixed(1)}% na czas).`}
                       </li>
                     )
                   ) : null}
@@ -382,11 +385,11 @@ export default function PerformanceDashboard({
                   {data.kpis.avgResResponseTime.value !== null ? (
                     data.kpis.avgResResponseTime.value > 15 ? (
                       <li>
-                        Potwierdzanie rezerwacji trwa zbyt długo (średnio {data.kpis.avgResResponseTime.value.toFixed(1)} min). Zwiększ monitoring powiadomień. / Reservation response times are slow. Monitor incoming pending bookings closer.
+                        {locale === 'en' ? 'Reservation response times are slow. Monitor incoming pending bookings closer.' : `Potwierdzanie rezerwacji trwa zbyt długo (średnio ${data.kpis.avgResResponseTime.value.toFixed(1)} min). Zwiększ monitoring powiadomień.`}
                       </li>
                     ) : (
                       <li>
-                        Wskaźnik potwierdzania rezerwacji działa bardzo sprawnie ({data.kpis.avgResResponseTime.value.toFixed(1)} min). / Booking confirmation response speeds are excellent.
+                        {locale === 'en' ? 'Booking confirmation response speeds are excellent.' : `Wskaźnik potwierdzania rezerwacji działa bardzo sprawnie (${data.kpis.avgResResponseTime.value.toFixed(1)} min).`}
                       </li>
                     )
                   ) : null}
@@ -394,7 +397,7 @@ export default function PerformanceDashboard({
                   {/* Threshold safety warning */}
                   {(data.kpis.avgPrepTime.value === null || data.kpis.onTimeRate.value === null || data.kpis.avgResResponseTime.value === null) && (
                     <li className="text-muted-foreground font-normal italic">
-                      Niektóre wskaźniki operacyjne nie zostały wyznaczone ze względu na zbyt niską liczbę rekordów w wybranym przedziale czasowym (wymagane min. 3 valid rekordy). / Some operational metrics are hidden due to low cohort sample sizes.
+                      {locale === 'en' ? 'Some operational metrics are hidden due to low cohort sample sizes.' : 'Niektóre wskaźniki operacyjne nie zostały wyznaczone ze względu na zbyt niską liczbę rekordów w wybranym przedziale czasowym (wymagane min. 3 valid rekordy).'}
                     </li>
                   )}
                 </ul>
@@ -411,10 +414,10 @@ export default function PerformanceDashboard({
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h2 className="text-lg font-serif font-bold text-foreground">
-                    Czas Kuchni w Czasie / Kitchen Prep Trend
+                    {locale === 'en' ? 'Kitchen Prep Trend' : 'Czas Kuchni w Czasie'}
                   </h2>
                   <p className="text-xs text-muted-foreground">
-                    Dzienne średnie czasy przygotowania (minuty) / Daily average prep times
+                    {locale === 'en' ? 'Daily Average Prep Times (Minutes)' : 'Dzienne średnie czasy przygotowania (minuty)'}
                   </p>
                 </div>
               </div>
@@ -511,7 +514,7 @@ export default function PerformanceDashboard({
                         transform: "translateX(-50%)"
                       }}
                     >
-                      <strong>{hoveredPoint.date}</strong>: Czas kuchni / Prep time: <span className="font-bold text-primary">{hoveredPoint.avgPrepTime.toFixed(1)} min</span> ({hoveredPoint.totalOrders} zamówień)
+                      <strong>{hoveredPoint.date}</strong>: {locale === 'en' ? 'Prep time' : 'Czas kuchni'}: <span className="font-bold text-primary">{hoveredPoint.avgPrepTime.toFixed(1)} min</span> ({hoveredPoint.totalOrders} {locale === 'en' ? 'orders' : 'zamówień'})
                     </div>
                   )}
                 </div>
@@ -522,23 +525,23 @@ export default function PerformanceDashboard({
             <PremiumCard hoverable={false} className="flex flex-col justify-between">
               <div>
                 <h2 className="text-lg font-serif font-bold text-foreground">
-                  Statusy Rezerwacji / Booking Outcomes
+                  {locale === 'en' ? 'Booking Outcomes' : 'Statusy Rezerwacji'}
                 </h2>
                 <p className="text-xs text-muted-foreground mb-4">
-                  Podsumowanie rezerwacji / Reservations outcome
+                  {locale === 'en' ? 'Reservations Outcome Summary' : 'Podsumowanie rezerwacji'}
                 </p>
               </div>
 
               {data.reservationsSummary.total === 0 ? (
                 <p className="text-xs text-muted-foreground italic text-center py-6">
-                  Brak rezerwacji w tym okresie. / No reservations.
+                  {locale === 'en' ? 'No reservations in this period.' : 'Brak rezerwacji w tym okresie.'}
                 </p>
               ) : (
                 <div className="space-y-4">
                   {/* Confirmed */}
                   <div className="space-y-1">
                     <div className="flex justify-between text-xs font-sans">
-                      <span className="font-bold text-green-700">Potwierdzone / Confirmed</span>
+                      <span className="font-bold text-green-700">{locale === 'en' ? 'Confirmed' : 'Potwierdzone'}</span>
                       <span className="text-muted-foreground">
                         {data.reservationsSummary.confirmed} ({Math.round((data.reservationsSummary.confirmed / data.reservationsSummary.total) * 100)}%)
                       </span>
@@ -554,7 +557,7 @@ export default function PerformanceDashboard({
                   {/* Cancelled */}
                   <div className="space-y-1">
                     <div className="flex justify-between text-xs font-sans">
-                      <span className="font-bold text-red-700">Anulowane / Cancelled</span>
+                      <span className="font-bold text-red-700">{locale === 'en' ? 'Cancelled' : 'Anulowane'}</span>
                       <span className="text-muted-foreground">
                         {data.reservationsSummary.cancelled} ({Math.round((data.reservationsSummary.cancelled / data.reservationsSummary.total) * 100)}%)
                       </span>
@@ -586,7 +589,7 @@ export default function PerformanceDashboard({
               )}
 
               <div className="mt-4 pt-3 border-t border-border/50 text-[10px] text-muted-foreground font-semibold">
-                Łącznie rezerwacji / Total bookings: {data.reservationsSummary.total}
+                {locale === 'en' ? 'Total bookings' : 'Łącznie rezerwacji'}: {data.reservationsSummary.total}
               </div>
             </PremiumCard>
           </div>
@@ -596,7 +599,7 @@ export default function PerformanceDashboard({
             <div className="absolute inset-1.5 rounded-[8px] border border-primary/5 pointer-events-none" />
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-serif font-bold text-foreground">
-                Tabela Wydajności / Operational Log
+                {locale === 'en' ? 'Operational Log / Performance' : 'Tabela Wydajności'}
               </h2>
               <p className="text-xs text-muted-foreground">
                 Szczegółowy dzienny dziennik wydajności / Daily performance records

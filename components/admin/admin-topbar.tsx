@@ -52,7 +52,7 @@ export default function AdminTopbar() {
         <button
           onClick={handleLogout}
           className="text-[9px] font-bold uppercase tracking-widest border border-red-500/40 text-red-600 [.admin-theme_&]:text-red-700 dark:text-red-400 hover:bg-red-500/10 px-4 py-2.5 rounded transition-all duration-300 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
-          aria-label="Wyloguj się z panelu / Logout"
+          aria-label={t('logoutButton')}
         >
           {t('logoutButton')}
         </button>

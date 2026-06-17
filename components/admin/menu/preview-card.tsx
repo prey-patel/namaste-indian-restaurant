@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import MenuItemCard, { PublicMenuItem } from '@/components/public/menu/menu-item-card';
 import { getSingleSignedUrlAction } from '@/app/admin/menu/actions';
+import { useLocale } from 'next-intl';
+import { getLocalizedText } from '@/lib/utils';
 
 type PreviewCardProps = {
   itemData: {
@@ -24,6 +26,9 @@ type PreviewCardProps = {
 };
 
 export default function PreviewCard({ itemData }: PreviewCardProps) {
+  const locale = useLocale();
+  const l = (text: string) => getLocalizedText(text, locale);
+
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -81,11 +86,11 @@ export default function PreviewCard({ itemData }: PreviewCardProps) {
     <div className="space-y-4 font-sans text-left">
       <div className="flex border-b border-border pb-2">
         <span className="text-xs uppercase tracking-wider text-primary font-bold">
-          Podgląd Menu (PL) / Polish Preview
+          {l('Podgląd Menu / Menu Preview')}
         </span>
       </div>
       <div className="max-w-[320px] mx-auto">
-        <MenuItemCard item={dummyItem} locale="pl" />
+        <MenuItemCard item={dummyItem} locale={locale as 'pl' | 'en'} />
       </div>
     </div>
   );

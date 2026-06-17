@@ -1,5 +1,7 @@
 'use client';
 
+import { useLocale } from 'next-intl';
+
 import React, { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -116,6 +118,7 @@ type Props = {
 };
 
 export default function OrderDetailsClient({ order, items, timeline }: Props) {
+  const locale = useLocale();
   const router = useRouter();
   const t = useTranslations('adminOrders');
   const [isPending, startTransition] = useTransition();
@@ -503,7 +506,7 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
                   <span className="text-sm font-mono font-bold text-primary">
                     {order.suggested_delivery_fee_amount !== null && order.suggested_delivery_fee_amount !== undefined
                       ? `${(order.suggested_delivery_fee_amount / 100).toFixed(2)} PLN`
-                      : 'TBD / No Rule Match'}
+                      : (locale === 'en' ? 'TBD / No Rule Match' : 'Do ustalenia / Brak pasującej reguły')}
                   </span>
                 </div>
 

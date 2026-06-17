@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { getLocalizedText } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { deleteMenuItemAction } from '@/app/admin/menu/actions';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,8 @@ type MenuCmsClientProps = {
 export default function MenuCmsClient({ categories, items }: MenuCmsClientProps) {
   const router = useRouter();
   const t = useTranslations('adminMenu');
+  const locale = useLocale();
+  const l = (text: string) => getLocalizedText(text, locale);
 
   // Filter States
   const [search, setSearch] = useState('');
@@ -54,7 +57,7 @@ export default function MenuCmsClient({ categories, items }: MenuCmsClientProps)
 
   const getCategoryName = (id: string) => {
     const cat = categories.find((c) => c.id === id);
-    return cat ? `${cat.name_pl} / ${cat.name_en}` : 'Nieznana / Unknown';
+    return cat ? (locale === 'en' ? cat.name_en : cat.name_pl) : (locale === 'en' ? 'Unknown' : 'Nieznana');
   };
 
   // Filter items
@@ -113,7 +116,9 @@ export default function MenuCmsClient({ categories, items }: MenuCmsClientProps)
         <div>
           <h2 className="text-2xl font-serif font-bold text-primary">{t('title')}</h2>
           <p className="text-xs text-muted-foreground mt-1">
-            Zarządzaj potrawami, cenami, dostępnością i kategoriami menu.
+            {locale === 'en'
+              ? 'Manage menu items, prices, availability and categories.'
+              : 'Zarządzaj potrawami, cenami, dostępnością i kategoriami menu.'}
           </p>
         </div>
         <div className="flex flex-wrap gap-2.5">
@@ -136,7 +141,7 @@ export default function MenuCmsClient({ categories, items }: MenuCmsClientProps)
         {/* Search */}
         <div className="space-y-1">
           <label htmlFor="search" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-            Szukaj / Search
+            {l('Szukaj / Search')}
           </label>
           <input
             id="search"
@@ -162,7 +167,7 @@ export default function MenuCmsClient({ categories, items }: MenuCmsClientProps)
             <option value="all">{t('all')}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.name_pl}
+                {locale === 'en' ? c.name_en : c.name_pl}
               </option>
             ))}
           </select>
@@ -210,30 +215,27 @@ export default function MenuCmsClient({ categories, items }: MenuCmsClientProps)
           <table className="min-w-full divide-y divide-border text-left">
             <thead className="bg-muted/50 text-[10px] uppercase tracking-wider text-primary font-bold">
               <tr>
-                <th className="px-6 py-4">Nazwa Dań / Dish Name</th>
-                <th className="px-6 py-4">Kategoria / Category</th>
-                <th className="px-6 py-4">Cena / Price</th>
-                <th className="px-6 py-4">Widoczność / Active</th>
-                <th className="px-6 py-4">Dostępność / Available</th>
+                <th className="px-6 py-4">{l('Nazwa Dań / Dish Name')}</th>
+                <th className="px-6 py-4">{l('Kategoria / Category')}</th>
+                <th className="px-6 py-4">{l('Cena / Price')}</th>
+                <th className="px-6 py-4">{l('Widoczność / Active')}</th>
+                <th className="px-6 py-4">{l('Dostępność / Available')}</th>
                 <th className="px-6 py-4">Sort</th>
-                <th className="px-6 py-4 text-right">Akcje / Actions</th>
+                <th className="px-6 py-4 text-right">{l('Akcje / Actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border bg-card/40 text-xs">
               {filteredItems.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-10 text-center text-muted-foreground">
-                    Brak wyników spełniających kryteria wyszukiwania.
+                    {locale === 'en' ? 'No results matching the search criteria.' : 'Brak wyników spełniających kryteria wyszukiwania.'}
                   </td>
                 </tr>
               ) : (
                 filteredItems.map((item) => (
                   <tr key={item.id} className="hover:bg-primary/5 transition-colors">
                     <td className="px-6 py-4 font-medium text-foreground">
-                      <div className="flex flex-col">
-                        <span>{item.name_pl}</span>
-                        <span className="text-[10px] text-muted-foreground/60">{item.name_en}</span>
-                      </div>
+                      <span>{locale === 'en' ? item.name_en : item.name_pl}</span>
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">
                       {getCategoryName(item.category_id)}
@@ -261,7 +263,7 @@ export default function MenuCmsClient({ categories, items }: MenuCmsClientProps)
                     <td className="px-6 py-4 text-right space-x-2.5">
                       <Link href={`/admin/menu/items/${item.id}/edit`}>
                         <button className="text-primary hover:text-primary-foreground font-bold uppercase tracking-wider text-[10px]">
-                          Edytuj / Edit
+                          {l('Edytuj / Edit')}
                         </button>
                       </Link>
                       <button

@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { getLocalizedText } from '@/lib/utils';
 import { categoryFormSchema } from '@/lib/validation/admin-menu';
 import { createCategoryAction, updateCategoryAction } from '@/app/admin/menu/actions';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ type CategoryFormProps = {
 export default function CategoryForm({ initialData, onSuccess }: CategoryFormProps) {
   const router = useRouter();
   const t = useTranslations('adminMenu');
+  const locale = useLocale();
   
   const [namePl, setNamePl] = useState(initialData?.name_pl || '');
   const [nameEn, setNameEn] = useState(initialData?.name_en || '');
@@ -50,7 +52,7 @@ export default function CategoryForm({ initialData, onSuccess }: CategoryFormPro
     // Form validation
     const result = categoryFormSchema.safeParse(payload);
     if (!result.success) {
-      setError(result.error.errors[0]?.message || 'Walidacja nie powiodła się / Validation failed');
+      setError(result.error.errors[0]?.message || (locale === 'en' ? 'Validation failed' : 'Walidacja nie powiodła się'));
       setLoading(false);
       return;
     }
@@ -138,7 +140,7 @@ export default function CategoryForm({ initialData, onSuccess }: CategoryFormPro
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <label htmlFor="slug" className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-            Slug / URL path
+            {locale === 'en' ? 'Slug / URL path' : 'Slug / Ścieżka URL'}
           </label>
           <input
             id="slug"

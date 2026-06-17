@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { uploadMenuImageAction, getAvailableMenuImages } from '@/app/admin/menu/actions';
 import GoldSpinner from '@/components/ui/gold-spinner';
 import { Button } from '@/components/ui/button';
+import { useLocale } from 'next-intl';
+import { getLocalizedText } from '@/lib/utils';
 
 type ImageUploaderProps = {
   value: string | null | undefined;
@@ -11,6 +13,9 @@ type ImageUploaderProps = {
 };
 
 export default function ImageUploader({ value, onChange }: ImageUploaderProps) {
+  const locale = useLocale();
+  const l = (text: string) => getLocalizedText(text, locale);
+
   const [gallery, setGallery] = useState<{ id: string; file_path: string }[]>([]);
   const [loadingGallery, setLoadingGallery] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -75,7 +80,7 @@ export default function ImageUploader({ value, onChange }: ImageUploaderProps) {
             tab === 'upload' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          Prześlij / Upload
+          {l('Prześlij / Upload')}
         </button>
         <button
           type="button"
@@ -84,7 +89,7 @@ export default function ImageUploader({ value, onChange }: ImageUploaderProps) {
             tab === 'gallery' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          Galeria / Gallery
+          {l('Galeria / Gallery')}
         </button>
       </div>
 
@@ -99,7 +104,7 @@ export default function ImageUploader({ value, onChange }: ImageUploaderProps) {
           {uploading ? (
             <div className="flex flex-col items-center justify-center space-y-2 py-4">
               <GoldSpinner size="md" />
-              <span className="text-xs text-muted-foreground">Przesyłanie zdjęcia... / Uploading...</span>
+              <span className="text-xs text-muted-foreground">{l('Przesyłanie zdjęcia... / Uploading...')}</span>
             </div>
           ) : (
             <div className="space-y-4">
@@ -109,12 +114,12 @@ export default function ImageUploader({ value, onChange }: ImageUploaderProps) {
                 </svg>
               </div>
               <div className="text-xs space-y-1">
-                <p className="font-semibold text-foreground">Wybierz zdjęcie potrawy / Choose dish photo</p>
+                <p className="font-semibold text-foreground">{l('Wybierz zdjęcie potrawy / Choose dish photo')}</p>
                 <p className="text-muted-foreground/60">Maks. 5MB (PNG, JPEG, WEBP)</p>
               </div>
               <div className="flex justify-center">
                 <label className="cursor-pointer bg-primary/10 hover:bg-primary/20 border border-primary/30 px-4 py-2 rounded text-xs font-bold text-primary transition-colors tracking-wide uppercase">
-                  Wybierz plik / Browse File
+                  {l('Wybierz plik / Browse File')}
                   <input
                     type="file"
                     accept="image/*"
@@ -136,7 +141,7 @@ export default function ImageUploader({ value, onChange }: ImageUploaderProps) {
             </div>
           ) : gallery.length === 0 ? (
             <p className="text-xs text-center text-muted-foreground py-8">
-              Brak zdjęć w galerii. / Gallery is empty.
+              {l('Brak zdjęć w galerii. / Gallery is empty.')}
             </p>
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 max-h-[220px] overflow-y-auto p-1 scrollbar-thin">
@@ -181,7 +186,7 @@ export default function ImageUploader({ value, onChange }: ImageUploaderProps) {
             onClick={() => onChange(null)}
             className="text-[10px] text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-bold uppercase tracking-wider"
           >
-            Usuń / Remove
+            {l('Usuń / Remove')}
           </button>
         </div>
       )}

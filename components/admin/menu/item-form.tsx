@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { menuItemFormSchema } from '@/lib/validation/admin-menu';
 import { createMenuItemAction, updateMenuItemAction } from '@/app/admin/menu/actions';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import GoldSpinner from '@/components/ui/gold-spinner';
 import ImageUploader from './image-uploader';
 import PreviewCard from './preview-card';
 import { createClient } from '@/lib/supabase/client';
+import { getLocalizedText } from '@/lib/utils';
 
 type CategoryOption = {
   id: string;
@@ -45,6 +46,8 @@ type ItemFormProps = {
 export default function ItemForm({ categories, initialData }: ItemFormProps) {
   const router = useRouter();
   const t = useTranslations('adminMenu');
+  const locale = useLocale();
+  const l = (text: string) => getLocalizedText(text, locale);
 
   const [categoryId, setCategoryId] = useState(initialData?.category_id || categories[0]?.id || '');
   const [namePl, setNamePl] = useState(initialData?.name_pl || '');
@@ -141,7 +144,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
     // Zod schema validation
     const result = menuItemFormSchema.safeParse(payload);
     if (!result.success) {
-      setError(result.error.errors[0]?.message || 'Walidacja nie powiodła się / Validation failed');
+      setError(result.error.errors[0]?.message || (locale === 'en' ? 'Validation failed' : 'Walidacja nie powiodła się'));
       setLoading(false);
       return;
     }
@@ -216,7 +219,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
           >
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
-                {cat.name_pl} / {cat.name_en}
+                {locale === 'en' ? cat.name_en : cat.name_pl}
               </option>
             ))}
           </select>
@@ -342,7 +345,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
             type="text"
             value={allergensText}
             onChange={(e) => setAllergensText(e.target.value)}
-            placeholder="np. nerkowce, gluten, nabiał / e.g. cashews, gluten, dairy"
+            placeholder={locale === 'en' ? 'e.g. cashews, gluten, dairy' : 'np. nerkowce, gluten, nabiał'}
             className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
         </div>
@@ -358,7 +361,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
         {/* Section: Dietary Flags */}
         <div className="border-t border-border pt-4 space-y-3">
           <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium block">
-            Cechy potrawy / Dietary & Promo Tags
+            {l('Cechy potrawy / Dietary & Promo Tags')}
           </span>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <label className="flex items-center space-x-2.5 text-xs text-foreground cursor-pointer">
@@ -426,7 +429,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
         {/* Section: Status (Available & Active) */}
         <div className="border-t border-border pt-4 space-y-3">
           <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium block">
-            Status Widoczności i Dostępności / Visibility & Availability
+            {l('Status Widoczności i Dostępności / Visibility & Availability')}
           </span>
           <div className="flex space-x-6">
             <label className="flex items-center space-x-2.5 text-xs text-foreground cursor-pointer">
@@ -455,10 +458,10 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
         {allPackagingRules.length > 0 && (
           <div className="space-y-3 border-t border-border pt-4">
             <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium block">
-              Opłaty za opakowanie / Packaging Charges
+              {l('Opłaty za opakowanie / Packaging Charges')}
             </span>
             <p className="text-[11px] text-muted-foreground leading-normal">
-              Wybierz opłaty doliczane do tego dania przy zamówieniach na wynos lub z dostawą.
+              {locale === 'en' ? 'Select packaging charges added to this dish for takeaway or delivery orders.' : 'Wybierz opłaty doliczane do tego dania przy zamówieniach na wynos lub z dostawą.'}
             </p>
             
             <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
@@ -483,7 +486,7 @@ export default function ItemForm({ categories, initialData }: ItemFormProps) {
                         className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary"
                       />
                       <span className="font-medium">
-                        {rule.name_pl} / {rule.name_en} ({Number(rule.amount).toFixed(2)} PLN)
+                        {locale === 'en' ? rule.name_en : rule.name_pl} ({Number(rule.amount).toFixed(2)} PLN)
                       </span>
                     </label>
                     
