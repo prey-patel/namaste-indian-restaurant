@@ -24,6 +24,8 @@ export type PublicSettings = {
   reservation_min_lead_time_hours?: number;
   reservation_max_days_ahead?: number;
   reservation_contact_instructions?: string;
+  // Delivery settings
+  delivery_minimum_order_value?: number;
 };
 
 /**
@@ -50,7 +52,8 @@ export async function getPublicSystemSettings(): Promise<PublicSettings> {
     reservation_max_guests: 8,
     reservation_min_lead_time_hours: 2,
     reservation_max_days_ahead: 30,
-    reservation_contact_instructions: 'For large parties, please call the restaurant directly.'
+    reservation_contact_instructions: 'For large parties, please call the restaurant directly.',
+    delivery_minimum_order_value: 0
   };
 
   try {
@@ -103,7 +106,8 @@ export async function getPublicSystemSettings(): Promise<PublicSettings> {
       reservation_max_guests: typeof settings.reservation_max_guests === 'number' ? settings.reservation_max_guests : defaults.reservation_max_guests,
       reservation_min_lead_time_hours: typeof settings.reservation_min_lead_time_hours === 'number' ? settings.reservation_min_lead_time_hours : defaults.reservation_min_lead_time_hours,
       reservation_max_days_ahead: typeof settings.reservation_max_days_ahead === 'number' ? settings.reservation_max_days_ahead : defaults.reservation_max_days_ahead,
-      reservation_contact_instructions: settings.reservation_contact_instructions || defaults.reservation_contact_instructions
+      reservation_contact_instructions: settings.reservation_contact_instructions || defaults.reservation_contact_instructions,
+      delivery_minimum_order_value: typeof settings.delivery_minimum_order_value === 'number' ? settings.delivery_minimum_order_value : (settings.delivery_minimum_order_value !== undefined ? Number(settings.delivery_minimum_order_value) : defaults.delivery_minimum_order_value)
     };
   } catch (err) {
     console.error('Failed to load public system settings:', err);

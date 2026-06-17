@@ -100,6 +100,9 @@ export default function SettingsClient({
   // Delivery & Takeaway States
   const [zonesState, setZonesState] = useState(initialZones);
   const [rulesState, setRulesState] = useState(initialRules);
+  const [deliveryMinOrderValue, setDeliveryMinOrderValue] = useState<number>(
+    Number(systemSettings.delivery_minimum_order_value ?? 0)
+  );
 
   // Charges & Fees State
   const [feesState, setFeesState] = useState(initialFees);
@@ -203,11 +206,12 @@ export default function SettingsClient({
         message_pl: r.message_pl || null,
         message_en: r.message_en || null,
         is_active: r.is_active
-      }))
+      })),
+      delivery_minimum_order_value: Number(deliveryMinOrderValue)
     });
     setIsSaving(false);
     if (res.success) {
-      showFeedback('success', 'Delivery zones and distance rules updated successfully.');
+      showFeedback('success', 'Delivery settings updated successfully.');
     } else {
       showFeedback('error', res.error || 'Failed to update delivery rules.');
     }
@@ -835,95 +839,20 @@ export default function SettingsClient({
                 <p className="text-xs text-muted-foreground mt-0.5">Manage geographical radius fees and distance-based pricing policies.</p>
               </div>
 
-              {/* Delivery Zones Table */}
-              <div className="space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-widest text-[#0A192F]">Geographical Zones</h3>
-                <div className="border border-border rounded-lg overflow-x-auto bg-white">
-                  <table className="w-full text-left border-collapse text-xs">
-                    <thead>
-                      <tr className="bg-muted/10 border-b border-border">
-                        <th className="p-3 font-bold">Zone Name</th>
-                        <th className="p-3 font-bold">Radius (km)</th>
-                        <th className="p-3 font-bold">Min Order (PLN)</th>
-                        <th className="p-3 font-bold">Delivery Fee (PLN)</th>
-                        <th className="p-3 font-bold">Est. Time (min)</th>
-                        <th className="p-3 font-bold">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/60">
-                      {zonesState.length === 0 ? (
-                        <tr>
-                          <td colSpan={6} className="p-4 text-center text-muted-foreground">No zones configured.</td>
-                        </tr>
-                      ) : (
-                        zonesState.map((zone, idx) => (
-                          <tr key={zone.id} className="hover:bg-muted/5">
-                            <td className="p-3 font-medium text-foreground">{zone.name}</td>
-                            <td className="p-3">
-                              <input 
-                                type="number" 
-                                value={zone.radius_km || ''}
-                                onChange={e => {
-                                  const updated = [...zonesState];
-                                  updated[idx].radius_km = e.target.value === '' ? null : Number(e.target.value);
-                                  setZonesState(updated);
-                                }}
-                                className="w-16 bg-[#FAF9F5] border border-border rounded px-1.5 py-0.5 text-xs outline-none"
-                              />
-                            </td>
-                            <td className="p-3">
-                              <input 
-                                type="number" 
-                                value={zone.min_order_amount}
-                                onChange={e => {
-                                  const updated = [...zonesState];
-                                  updated[idx].min_order_amount = Number(e.target.value);
-                                  setZonesState(updated);
-                                }}
-                                className="w-20 bg-[#FAF9F5] border border-border rounded px-1.5 py-0.5 text-xs outline-none"
-                              />
-                            </td>
-                            <td className="p-3">
-                              <input 
-                                type="number" 
-                                value={zone.delivery_fee}
-                                onChange={e => {
-                                  const updated = [...zonesState];
-                                  updated[idx].delivery_fee = Number(e.target.value);
-                                  setZonesState(updated);
-                                }}
-                                className="w-20 bg-[#FAF9F5] border border-border rounded px-1.5 py-0.5 text-xs outline-none"
-                              />
-                            </td>
-                            <td className="p-3">
-                              <input 
-                                type="number" 
-                                value={zone.estimated_delivery_minutes}
-                                onChange={e => {
-                                  const updated = [...zonesState];
-                                  updated[idx].estimated_delivery_minutes = Number(e.target.value);
-                                  setZonesState(updated);
-                                }}
-                                className="w-16 bg-[#FAF9F5] border border-border rounded px-1.5 py-0.5 text-xs outline-none"
-                              />
-                            </td>
-                            <td className="p-3">
-                              <input 
-                                type="checkbox"
-                                checked={zone.is_active}
-                                onChange={e => {
-                                  const updated = [...zonesState];
-                                  updated[idx].is_active = e.target.checked;
-                                  setZonesState(updated);
-                                }}
-                                className="rounded text-primary focus:ring-primary"
-                              />
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+              {/* Minimum Order Value for Delivery */}
+              <div className="bg-[#FAF9F5] border border-border p-4 rounded-lg space-y-3">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-[#0A192F]">Minimum Order Value (Delivery)</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Set the minimum cart subtotal required for delivery orders. The delivery charge is not included in this subtotal.</p>
+                <div className="flex items-center gap-2 max-w-xs">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={deliveryMinOrderValue}
+                    onChange={e => setDeliveryMinOrderValue(Number(e.target.value))}
+                    className="w-32 bg-white border border-border rounded px-3 py-2 text-sm font-semibold outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  />
+                  <span className="text-sm font-semibold text-foreground">PLN</span>
                 </div>
               </div>
 

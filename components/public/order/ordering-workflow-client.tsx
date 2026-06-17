@@ -61,9 +61,10 @@ type Props = {
     phone: string;
   };
   deliveryHours: ServiceStatusInfo;
+  deliveryMinimumOrderValue?: number;
 };
 
-export default function OrderingWorkflowClient({ categories, items, operationalStatus, locale, restaurantInfo, deliveryHours }: Props) {
+export default function OrderingWorkflowClient({ categories, items, operationalStatus, locale, restaurantInfo, deliveryHours, deliveryMinimumOrderValue = 0 }: Props) {
   const t = useTranslations('order');
 
   // Order Type State (defaults to takeaway or whichever is enabled)
@@ -145,6 +146,7 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
 
   // Calculate Subtotal
   const itemsSubtotal = basket.reduce((sum, item) => sum + item.menuItem.price * item.quantity, 0);
+  const isBelowMinimumOrder = orderType === 'delivery' && itemsSubtotal < deliveryMinimumOrderValue && basket.length > 0;
 
   // Submit Handler
   const handleSubmitOrder = async (e: React.FormEvent) => {
@@ -678,6 +680,21 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
               />
             </div>
 
+            {/* Minimum order value warning */}
+            {isBelowMinimumOrder && (
+              <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-200 rounded text-xs space-y-1 font-sans">
+                <p className="font-bold flex items-center gap-1.5 text-red-400">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+                  {locale === 'pl' ? 'Wymagana minimalna wartość zamówienia' : 'Minimum order value required'}
+                </p>
+                <p className="text-[10px] text-red-300 font-light leading-normal">
+                  {locale === 'pl'
+                    ? `Minimalna wartość zamówienia dla dostawy to ${deliveryMinimumOrderValue.toFixed(2)} PLN (bez kosztów dostawy). Do pełnej kwoty brakuje ${(deliveryMinimumOrderValue - itemsSubtotal).toFixed(2)} PLN.`
+                    : `The minimum order value for delivery is ${deliveryMinimumOrderValue.toFixed(2)} PLN (excluding delivery charge). You need ${(deliveryMinimumOrderValue - itemsSubtotal).toFixed(2)} PLN more.`}
+                </p>
+              </div>
+            )}
+
             {/* Offline notice & Submission notice */}
             <div className="p-3 bg-primary/5 border border-primary/15 rounded text-xs space-y-1.5 text-primary/80">
               <p className="font-semibold">{t('noOnlinePayment')}</p>
@@ -688,7 +705,7 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
 
             <Button
               type="submit"
-              disabled={loading || basket.length === 0 || (orderType === 'delivery' && !deliveryHours.isOpen)}
+              disabled={loading || basket.length === 0 || (orderType === 'delivery' && !deliveryHours.isOpen) || isBelowMinimumOrder}
               className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold tracking-wide uppercase text-xs py-3"
             >
               {loading ? <GoldSpinner size="sm" /> : t('submitButton')}
@@ -801,6 +818,20 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
                     {itemsSubtotal.toFixed(2)} PLN
                   </span>
                 </div>
+
+                {isBelowMinimumOrder && (
+                  <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 text-red-200 rounded text-xs space-y-1">
+                    <p className="font-bold flex items-center gap-1.5 text-red-400">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+                      {locale === 'pl' ? 'Dostawa od ' : 'Delivery from '}{deliveryMinimumOrderValue.toFixed(2)} PLN
+                    </p>
+                    <p className="text-[10px] text-red-300 font-light leading-normal font-sans">
+                      {locale === 'pl'
+                        ? `Do dostawy brakuje ${(deliveryMinimumOrderValue - itemsSubtotal).toFixed(2)} PLN.`
+                        : `Add ${(deliveryMinimumOrderValue - itemsSubtotal).toFixed(2)} PLN more to order.`}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -923,6 +954,20 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
                     {itemsSubtotal.toFixed(2)} PLN
                   </span>
                 </div>
+
+                {isBelowMinimumOrder && (
+                  <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 text-red-200 rounded text-xs space-y-1">
+                    <p className="font-bold flex items-center gap-1.5 text-red-400">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+                      {locale === 'pl' ? 'Dostawa od ' : 'Delivery from '}{deliveryMinimumOrderValue.toFixed(2)} PLN
+                    </p>
+                    <p className="text-[10px] text-red-300 font-light leading-normal font-sans">
+                      {locale === 'pl'
+                        ? `Do dostawy brakuje ${(deliveryMinimumOrderValue - itemsSubtotal).toFixed(2)} PLN.`
+                        : `Add ${(deliveryMinimumOrderValue - itemsSubtotal).toFixed(2)} PLN more to order.`}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

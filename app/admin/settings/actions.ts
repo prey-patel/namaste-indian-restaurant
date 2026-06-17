@@ -276,7 +276,8 @@ const DeliveryFeeRuleSchema = z.object({
 
 const DeliveryTakeawaySettingsSchema = z.object({
   zones: z.array(DeliveryZoneSchema),
-  rules: z.array(DeliveryFeeRuleSchema)
+  rules: z.array(DeliveryFeeRuleSchema),
+  delivery_minimum_order_value: z.number().min(0)
 });
 
 export async function updateDeliveryTakeawaySettingsAction(rawData: unknown) {
@@ -320,6 +321,18 @@ export async function updateDeliveryTakeawaySettingsAction(rawData: unknown) {
 
       if (error) throw error;
     }
+
+    // Update delivery minimum order value
+    const { error: minOrderError } = await supabase
+      .from('system_settings')
+      .upsert({
+        key: 'delivery_minimum_order_value',
+        value: data.delivery_minimum_order_value,
+        updated_by: userId,
+        updated_at: new Date().toISOString()
+      });
+
+    if (minOrderError) throw minOrderError;
 
     revalidateAllPaths();
     return { success: true };

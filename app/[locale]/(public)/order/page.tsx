@@ -78,6 +78,7 @@ export default async function PublicOrderPage({ params }: Props) {
           locale={locale as 'pl' | 'en'}
           restaurantInfo={{ address, phone }}
           deliveryHours={openingHoursData.delivery}
+          deliveryMinimumOrderValue={settings.delivery_minimum_order_value}
         />
       </SectionContainer>
     </PageTransition>

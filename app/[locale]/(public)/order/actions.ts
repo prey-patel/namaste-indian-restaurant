@@ -175,6 +175,28 @@ export async function createOrderRequestAction(rawData: any) {
       data.order_type
     );
 
+    // 5.5 Minimum Order Value for Delivery Validation
+    if (data.order_type === 'delivery') {
+      const { data: minOrderSetting } = await adminClient
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'delivery_minimum_order_value')
+        .maybeSingle();
+
+      const minOrderValue = minOrderSetting?.value !== undefined && minOrderSetting?.value !== null
+        ? Number(minOrderSetting.value)
+        : 0;
+
+      if (pricingResult.itemsSubtotal < minOrderValue) {
+        return {
+          success: false,
+          error: data.source_language === 'pl'
+            ? `Wartość produktów w koszyku (${pricingResult.itemsSubtotal.toFixed(2)} PLN) jest mniejsza niż wymagana minimalna wartość zamówienia dla dostawy (${minOrderValue.toFixed(2)} PLN, wyłączając koszt dostawy).`
+            : `The subtotal of products in the basket (${pricingResult.itemsSubtotal.toFixed(2)} PLN) is below the minimum required order value for delivery (${minOrderValue.toFixed(2)} PLN, excluding delivery charge).`
+        };
+      }
+    }
+
     // Sanitize note fields
     const sanitizedCustomerNotes = data.customer_notes
       ? data.customer_notes.replace(/<[^>]*>/g, '')
