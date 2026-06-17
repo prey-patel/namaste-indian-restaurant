@@ -599,28 +599,28 @@ export default function PerformanceDashboard({
             <div className="absolute inset-1.5 rounded-[8px] border border-primary/5 pointer-events-none" />
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-serif font-bold text-foreground">
-                {locale === 'en' ? 'Operational Log / Performance' : 'Tabela Wydajności'}
+                {locale === 'en' ? 'Operational Log' : 'Dziennik Operacyjny'}
               </h2>
               <p className="text-xs text-muted-foreground">
-                Szczegółowy dzienny dziennik wydajności / Daily performance records
+                {locale === 'en' ? 'Daily performance records' : 'Szczegółowy dzienny dziennik wydajności'}
               </p>
             </div>
 
             {!hasHistory ? (
               <p className="text-xs text-muted-foreground italic text-center py-6">
-                Brak zarejestrowanych operacji dla wybranego okresu. / No operations logged.
+                {locale === 'en' ? 'No operations logged for the selected period.' : 'Brak zarejestrowanych operacji dla wybranego okresu.'}
               </p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="border-b border-border/60 text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-                      <th className="py-2.5">Data / Date</th>
-                      <th className="py-2.5 text-center">Zamówienia / Orders</th>
-                      <th className="py-2.5 text-center">Czas Kuchni / Avg Prep</th>
-                      <th className="py-2.5 text-center">Na czas / On-Time %</th>
-                      <th className="py-2.5 text-center">Rezerwacje / Reservations</th>
-                      <th className="py-2.5">Notatki / Flags</th>
+                      <th className="py-2.5">{locale === 'en' ? 'Date' : 'Data'}</th>
+                      <th className="py-2.5 text-center">{locale === 'en' ? 'Orders' : 'Zamówienia'}</th>
+                      <th className="py-2.5 text-center">{locale === 'en' ? 'Avg Prep' : 'Czas Kuchni'}</th>
+                      <th className="py-2.5 text-center">{locale === 'en' ? 'On-Time %' : 'Na czas'}</th>
+                      <th className="py-2.5 text-center">{locale === 'en' ? 'Reservations' : 'Rezerwacje'}</th>
+                      <th className="py-2.5">{locale === 'en' ? 'Flags' : 'Notatki'}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/40 font-medium">
@@ -653,16 +653,20 @@ export default function PerformanceDashboard({
                                 if (fl.includes("100%")) status = "success";
                                 else if (fl.includes("delays") || fl.includes("Slow") || fl.includes("Wolna") || fl.includes("Opóźnienia")) status = "warning";
                                 
+                                const textToShow = locale === 'en' 
+                                  ? (fl.split(" / ")[1] || fl.split(" / ")[0]) 
+                                  : fl.split(" / ")[0];
+
                                 return (
                                   <StatusPill 
                                     key={idx} 
                                     status={status} 
-                                    label={fl.split(" / ")[0]} // Show polish label in badge
+                                    label={textToShow} 
                                     className="text-[8px] px-1.5 py-0.5" 
                                   />
                                 );
                               })}
-                              {row.flags.length === 0 && <span className="text-muted-foreground/50 text-[10px]">Normal</span>}
+                              {row.flags.length === 0 && <span className="text-muted-foreground/50 text-[10px]">{locale === 'en' ? 'Normal' : 'Norma'}</span>}
                             </div>
                           </td>
                         </tr>
