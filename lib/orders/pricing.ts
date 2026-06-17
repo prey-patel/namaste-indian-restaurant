@@ -1,5 +1,7 @@
 import "server-only";
 import { createAdminClient } from '@/lib/supabase/admin';
+import { geocodeRestaurantAddress, calculateSuggestedDeliveryFee } from '@/lib/delivery/distance';
+import { geocodeAddressGoogle, calculateRouteGoogle } from '@/lib/delivery/google-maps';
 
 export interface PriceCalculationItem {
   menu_item_id: string;
@@ -9,8 +11,11 @@ export interface PriceCalculationItem {
 export interface PriceCalculationResult {
   itemsSubtotal: number; // decimal (PLN)
   packagingTotal: number; // decimal (PLN)
-  deliveryFee: number; // decimal (PLN), defaults to 0.00 if TBD
+  deliveryFee: number; // decimal (PLN)
   isDeliveryFeeCalculated: boolean;
+  deliveryDistanceKm: number | null;
+  deliveryDurationMinutes: number | null;
+  deliveryZoneAction: 'allow' | 'contact' | 'block' | null;
   totalAmount: number; // decimal (PLN)
   dbItemsSnapshots: Record<string, {
     priceGrosz: number;
@@ -22,14 +27,25 @@ export interface PriceCalculationResult {
   packagingGrosz: number;
 }
 
+export interface DeliveryAddressInput {
+  street: string;
+  postalCode?: string | null;
+  city?: string | null;
+}
+
 /**
  * Server-side trusted pricing calculator.
  * Prevents client-side price manipulation by fetching raw database values.
  * Performs all arithmetic using grosz integers (cents) to avoid rounding issues.
+ *
+ * When deliveryAddress is provided and orderType is 'delivery', calculates
+ * the real delivery fee by geocoding the customer address and matching
+ * against admin-configured distance zone rules.
  */
 export async function calculateOrderTotalServerSide(
   items: PriceCalculationItem[],
-  orderType: 'delivery' | 'takeaway'
+  orderType: 'delivery' | 'takeaway',
+  deliveryAddress?: DeliveryAddressInput | null
 ): Promise<PriceCalculationResult> {
   const adminClient = createAdminClient();
 
@@ -111,9 +127,63 @@ export async function calculateOrderTotalServerSide(
   }
 
   // 5. Delivery fee calculation
-  // Since automatic calculation is not ready/unsupported, delivery_fee defaults to 0.00 and isDeliveryFeeCalculated is false (TBD)
-  const deliveryFeeGrosz = 0;
-  const isDeliveryFeeCalculated = false;
+  let deliveryFeeGrosz = 0;
+  let isDeliveryFeeCalculated = false;
+  let deliveryDistanceKm: number | null = null;
+  let deliveryDurationMinutes: number | null = null;
+  let deliveryZoneAction: 'allow' | 'contact' | 'block' | null = null;
+
+  if (orderType === 'delivery' && deliveryAddress?.street) {
+    try {
+      // Get restaurant coordinates (cached)
+      const origin = await geocodeRestaurantAddress();
+
+      if (origin) {
+        const customerAddressStr = [
+          deliveryAddress.street,
+          deliveryAddress.postalCode,
+          deliveryAddress.city || 'Poland',
+          'Poland',
+        ]
+          .filter(Boolean)
+          .join(', ');
+
+        const customerGeo = await geocodeAddressGoogle(customerAddressStr);
+        const route = await calculateRouteGoogle(origin, customerGeo, 'driving');
+
+        deliveryDistanceKm = parseFloat((route.distanceMeters / 1000).toFixed(2));
+        deliveryDurationMinutes = Math.ceil(route.durationSeconds / 60);
+
+        // Fetch and match the delivery zone rule
+        const { data: rules } = await adminClient
+          .from('delivery_fee_rules')
+          .select('fee_amount, rule_action, min_distance_km, max_distance_km')
+          .eq('is_active', true)
+          .order('min_distance_km', { ascending: true });
+
+        if (rules && rules.length > 0) {
+          const distanceKm = deliveryDistanceKm;
+          const matchingRule = rules.find((rule) => {
+            const min = Number(rule.min_distance_km);
+            const max = rule.max_distance_km !== null ? Number(rule.max_distance_km) : null;
+            return distanceKm >= min && (max === null || distanceKm < max);
+          });
+
+          if (matchingRule) {
+            deliveryZoneAction = (matchingRule.rule_action as 'allow' | 'contact' | 'block') || 'allow';
+            // Only charge a fee for 'allow' action (not 'contact' or 'block')
+            if (deliveryZoneAction === 'allow') {
+              deliveryFeeGrosz = Math.round(Number(matchingRule.fee_amount) * 100);
+            }
+            isDeliveryFeeCalculated = true;
+          }
+        }
+      }
+    } catch (err: any) {
+      // Non-fatal: log and fall back to uncalculated
+      console.warn('[Pricing] Delivery fee calculation failed, falling back to 0:', err?.message);
+    }
+  }
 
   // 6. Compute final total
   const totalGrosz = subtotalGrosz + packagingGrosz + deliveryFeeGrosz;
@@ -123,6 +193,9 @@ export async function calculateOrderTotalServerSide(
     packagingTotal: packagingGrosz / 100,
     deliveryFee: deliveryFeeGrosz / 100,
     isDeliveryFeeCalculated,
+    deliveryDistanceKm,
+    deliveryDurationMinutes,
+    deliveryZoneAction,
     totalAmount: totalGrosz / 100,
     dbItemsSnapshots,
     packagingGrosz

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { createOrderRequestAction } from '@/app/[locale]/(public)/order/actions';
@@ -101,15 +101,103 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
     orderType?: 'delivery' | 'takeaway';
   } | null>(null);
 
+  // Real-time delivery fee state
+  const [deliveryFeeInfo, setDeliveryFeeInfo] = useState<{
+    fee: number;
+    distanceKm: number;
+    durationMinutes: number;
+    zoneName: string;
+    action: 'allow' | 'contact' | 'block';
+    messagePl: string | null;
+    messageEn: string | null;
+    geocodedAddress: string;
+    loading: boolean;
+    error: string | null;
+  } | null>(null);
+
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   // Set default payment method when order type changes
   useEffect(() => {
     if (orderType === 'takeaway') {
       setPaymentMethod('cash_on_pickup');
+      setDeliveryFeeInfo(null); // Clear delivery fee when switching to takeaway
     } else {
       setPaymentMethod('cash_on_delivery');
     }
   }, [orderType]);
 
+  // Real-time delivery fee lookup — debounced, fires when address fields are filled
+  const lookupDeliveryFee = useCallback(async (street: string, postal: string, city: string) => {
+    if (!street || street.length < 3 || !city || city.length < 2) {
+      setDeliveryFeeInfo(null);
+      return;
+    }
+
+    setDeliveryFeeInfo(prev => ({
+      fee: prev?.fee ?? 0,
+      distanceKm: prev?.distanceKm ?? 0,
+      durationMinutes: prev?.durationMinutes ?? 0,
+      zoneName: prev?.zoneName ?? '',
+      action: prev?.action ?? 'allow',
+      messagePl: prev?.messagePl ?? null,
+      messageEn: prev?.messageEn ?? null,
+      geocodedAddress: prev?.geocodedAddress ?? '',
+      loading: true,
+      error: null,
+    }));
+
+    try {
+      const res = await fetch('/api/delivery-fee', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ street, postalCode: postal, city }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setDeliveryFeeInfo({
+          fee: data.fee,
+          distanceKm: data.distanceKm,
+          durationMinutes: data.durationMinutes,
+          zoneName: data.zoneName,
+          action: data.action,
+          messagePl: data.messagePl,
+          messageEn: data.messageEn,
+          geocodedAddress: data.geocodedAddress,
+          loading: false,
+          error: null,
+        });
+      } else {
+        setDeliveryFeeInfo(prev => ({
+          ...(prev ?? { fee: 0, distanceKm: 0, durationMinutes: 0, zoneName: '', action: 'allow' as const, messagePl: null, messageEn: null, geocodedAddress: '' }),
+          loading: false,
+          error: data.error ?? (locale === 'pl' ? 'Nie można obliczyć kosztu dostawy.' : 'Could not calculate delivery fee.'),
+        }));
+      }
+    } catch {
+      setDeliveryFeeInfo(prev => ({
+        ...(prev ?? { fee: 0, distanceKm: 0, durationMinutes: 0, zoneName: '', action: 'allow' as const, messagePl: null, messageEn: null, geocodedAddress: '' }),
+        loading: false,
+        error: locale === 'pl' ? 'Błąd połączenia. Spróbuj ponownie.' : 'Connection error. Please try again.',
+      }));
+    }
+  }, [locale]);
+
+  useEffect(() => {
+    if (orderType !== 'delivery') return;
+
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+
+    debounceTimerRef.current = setTimeout(() => {
+      lookupDeliveryFee(streetAddress, postalCode, city);
+    }, 600);
+
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, [streetAddress, postalCode, city, orderType, lookupDeliveryFee]);
 
 
   // Group items by category
@@ -147,6 +235,11 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
   // Calculate Subtotal
   const itemsSubtotal = basket.reduce((sum, item) => sum + item.menuItem.price * item.quantity, 0);
   const isBelowMinimumOrder = orderType === 'delivery' && itemsSubtotal < deliveryMinimumOrderValue && basket.length > 0;
+  const liveDeliveryFee = orderType === 'delivery' && deliveryFeeInfo && !deliveryFeeInfo.loading && !deliveryFeeInfo.error && deliveryFeeInfo.action !== 'block'
+    ? deliveryFeeInfo.fee
+    : 0;
+  const estimatedTotal = itemsSubtotal + liveDeliveryFee;
+  const isDeliveryBlocked = orderType === 'delivery' && deliveryFeeInfo && !deliveryFeeInfo.loading && deliveryFeeInfo.action === 'block';
 
   // Submit Handler
   const handleSubmitOrder = async (e: React.FormEvent) => {
@@ -705,7 +798,7 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
 
             <Button
               type="submit"
-              disabled={loading || basket.length === 0 || (orderType === 'delivery' && !deliveryHours.isOpen) || isBelowMinimumOrder}
+              disabled={loading || basket.length === 0 || (orderType === 'delivery' && !deliveryHours.isOpen) || isBelowMinimumOrder || !!isDeliveryBlocked}
               className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold tracking-wide uppercase text-xs py-3"
             >
               {loading ? <GoldSpinner size="sm" /> : t('submitButton')}
@@ -800,14 +893,60 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
                   <div className="flex justify-between items-start gap-1">
                     <span className="flex flex-col text-muted-foreground">
                       <span>{t('deliveryFee')}</span>
-                      <span className="text-[9px] text-primary/75 italic leading-tight max-w-[170px]">
-                        {t('deliveryFeeNotice')}
+                      {deliveryFeeInfo && !deliveryFeeInfo.loading && !deliveryFeeInfo.error && (
+                        <span className="text-[9px] text-primary/75 leading-tight">
+                          {deliveryFeeInfo.distanceKm.toFixed(1)} km &bull; ~{deliveryFeeInfo.durationMinutes} min
+                        </span>
+                      )}
+                    </span>
+
+                    {!deliveryFeeInfo || (!deliveryFeeInfo.loading && !deliveryFeeInfo.error && !deliveryFeeInfo.action) ? (
+                      <span className="text-primary font-medium italic">{t('deliveryFeeTbd')}</span>
+                    ) : deliveryFeeInfo.loading ? (
+                      <span className="text-primary/60 italic text-[10px] animate-pulse">
+                        {locale === 'pl' ? 'Obliczam...' : 'Calculating...'}
                       </span>
-                    </span>
-                    <span className="text-primary font-medium italic">
-                      {t('deliveryFeeTbd')}
-                    </span>
+                    ) : deliveryFeeInfo.error ? (
+                      <span className="text-primary font-medium italic">{t('deliveryFeeTbd')}</span>
+                    ) : deliveryFeeInfo.action === 'block' ? (
+                      <span className="text-red-400 font-medium text-[10px]">
+                        {locale === 'pl' ? 'Poza zasięgiem' : 'Out of range'}
+                      </span>
+                    ) : deliveryFeeInfo.action === 'contact' ? (
+                      <span className="text-amber-400 font-medium italic text-[10px]">
+                        {locale === 'pl' ? 'Do ustalenia' : 'To confirm'}
+                      </span>
+                    ) : (
+                      <span className="text-primary font-bold">
+                        {deliveryFeeInfo.fee === 0 ? (locale === 'pl' ? 'Bezpłatna' : 'Free') : `${deliveryFeeInfo.fee.toFixed(2)} PLN`}
+                      </span>
+                    )}
                   </div>
+                )}
+
+                {/* Delivery zone info messages */}
+                {orderType === 'delivery' && deliveryFeeInfo && !deliveryFeeInfo.loading && (
+                  <>
+                    {deliveryFeeInfo.error && (
+                      <div className="p-2 bg-amber-500/10 border border-amber-500/25 text-amber-300 rounded text-[10px] leading-normal">
+                        {deliveryFeeInfo.error}
+                      </div>
+                    )}
+                    {!deliveryFeeInfo.error && deliveryFeeInfo.action === 'block' && (
+                      <div className="p-2 bg-red-500/10 border border-red-500/25 text-red-300 rounded text-[10px] leading-normal">
+                        {locale === 'pl'
+                          ? (deliveryFeeInfo.messagePl || 'Twój adres jest poza zasięgiem dostawy.')
+                          : (deliveryFeeInfo.messageEn || 'Your address is outside our delivery area.')}
+                      </div>
+                    )}
+                    {!deliveryFeeInfo.error && deliveryFeeInfo.action === 'contact' && (
+                      <div className="p-2 bg-amber-500/10 border border-amber-500/25 text-amber-300 rounded text-[10px] leading-normal">
+                        {locale === 'pl'
+                          ? (deliveryFeeInfo.messagePl || 'Skontaktuj się z restauracją w sprawie dostawy.')
+                          : (deliveryFeeInfo.messageEn || 'Please contact the restaurant regarding delivery.')}
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <div className="flex justify-between text-foreground font-bold text-sm pt-2 border-t border-primary/15">
@@ -815,7 +954,7 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
                     {orderType === 'delivery' ? t('estimatedTotal') : t('finalTotal')}
                   </span>
                   <span className="text-primary">
-                    {itemsSubtotal.toFixed(2)} PLN
+                    {estimatedTotal.toFixed(2)} PLN
                   </span>
                 </div>
 
@@ -936,14 +1075,60 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
                   <div className="flex justify-between items-start gap-1">
                     <span className="flex flex-col text-muted-foreground">
                       <span>{t('deliveryFee')}</span>
-                      <span className="text-[9px] text-primary/75 italic leading-tight max-w-[220px]">
-                        {t('deliveryFeeNotice')}
+                      {deliveryFeeInfo && !deliveryFeeInfo.loading && !deliveryFeeInfo.error && (
+                        <span className="text-[9px] text-primary/75 leading-tight">
+                          {deliveryFeeInfo.distanceKm.toFixed(1)} km &bull; ~{deliveryFeeInfo.durationMinutes} min
+                        </span>
+                      )}
+                    </span>
+
+                    {!deliveryFeeInfo || (!deliveryFeeInfo.loading && !deliveryFeeInfo.error && !deliveryFeeInfo.action) ? (
+                      <span className="text-primary font-bold italic">{t('deliveryFeeTbd')}</span>
+                    ) : deliveryFeeInfo.loading ? (
+                      <span className="text-primary/60 italic text-[10px] animate-pulse">
+                        {locale === 'pl' ? 'Obliczam...' : 'Calculating...'}
                       </span>
-                    </span>
-                    <span className="text-primary font-bold italic">
-                      {t('deliveryFeeTbd')}
-                    </span>
+                    ) : deliveryFeeInfo.error ? (
+                      <span className="text-primary font-bold italic">{t('deliveryFeeTbd')}</span>
+                    ) : deliveryFeeInfo.action === 'block' ? (
+                      <span className="text-red-400 font-medium text-[10px]">
+                        {locale === 'pl' ? 'Poza zasięgiem' : 'Out of range'}
+                      </span>
+                    ) : deliveryFeeInfo.action === 'contact' ? (
+                      <span className="text-amber-400 font-medium italic text-[10px]">
+                        {locale === 'pl' ? 'Do ustalenia' : 'To confirm'}
+                      </span>
+                    ) : (
+                      <span className="text-primary font-bold">
+                        {deliveryFeeInfo.fee === 0 ? (locale === 'pl' ? 'Bezpłatna' : 'Free') : `${deliveryFeeInfo.fee.toFixed(2)} PLN`}
+                      </span>
+                    )}
                   </div>
+                )}
+
+                {/* Delivery zone info messages */}
+                {orderType === 'delivery' && deliveryFeeInfo && !deliveryFeeInfo.loading && (
+                  <>
+                    {deliveryFeeInfo.error && (
+                      <div className="p-2 bg-amber-500/10 border border-amber-500/25 text-amber-300 rounded text-[10px]">
+                        {deliveryFeeInfo.error}
+                      </div>
+                    )}
+                    {!deliveryFeeInfo.error && deliveryFeeInfo.action === 'block' && (
+                      <div className="p-2 bg-red-500/10 border border-red-500/25 text-red-300 rounded text-[10px]">
+                        {locale === 'pl'
+                          ? (deliveryFeeInfo.messagePl || 'Twój adres jest poza zasięgiem dostawy.')
+                          : (deliveryFeeInfo.messageEn || 'Your address is outside our delivery area.')}
+                      </div>
+                    )}
+                    {!deliveryFeeInfo.error && deliveryFeeInfo.action === 'contact' && (
+                      <div className="p-2 bg-amber-500/10 border border-amber-500/25 text-amber-300 rounded text-[10px]">
+                        {locale === 'pl'
+                          ? (deliveryFeeInfo.messagePl || 'Skontaktuj się z restauracją.')
+                          : (deliveryFeeInfo.messageEn || 'Please contact the restaurant.')}
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <div className="flex justify-between text-foreground font-bold text-sm pt-2 border-t border-primary/15">
@@ -951,7 +1136,7 @@ export default function OrderingWorkflowClient({ categories, items, operationalS
                     {orderType === 'delivery' ? t('estimatedTotal') : t('finalTotal')}
                   </span>
                   <span className="text-primary">
-                    {itemsSubtotal.toFixed(2)} PLN
+                    {estimatedTotal.toFixed(2)} PLN
                   </span>
                 </div>
 

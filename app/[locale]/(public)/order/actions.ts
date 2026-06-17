@@ -169,13 +169,32 @@ export async function createOrderRequestAction(rawData: any) {
       }
     }
 
-    // 5. Server-side Pricing Recalculation
+    // 5. Server-side Pricing Recalculation (with real delivery fee when address is provided)
+    const deliveryAddressInput = data.order_type === 'delivery' && data.delivery_address
+      ? {
+          street: data.delivery_address,
+          postalCode: data.delivery_postal_code ?? null,
+          city: data.delivery_city ?? null,
+        }
+      : null;
+
     const pricingResult = await calculateOrderTotalServerSide(
       data.items.map(i => ({ menu_item_id: i.menu_item_id, quantity: i.quantity })),
-      data.order_type
+      data.order_type,
+      deliveryAddressInput
     );
 
-    // 5.5 Minimum Order Value for Delivery Validation
+    // 5.5 Block delivery if the matched zone has action='block'
+    if (data.order_type === 'delivery' && pricingResult.deliveryZoneAction === 'block') {
+      return {
+        success: false,
+        error: data.source_language === 'pl'
+          ? 'Twój adres znajduje się poza zasięgiem dostawy. Skontaktuj się z restauracją.'
+          : 'Your address is outside our delivery area. Please contact the restaurant.'
+      };
+    }
+
+    // 5.6 Minimum Order Value for Delivery Validation
     if (data.order_type === 'delivery') {
       const { data: minOrderSetting } = await adminClient
         .from('system_settings')
@@ -214,14 +233,15 @@ export async function createOrderRequestAction(rawData: any) {
       payment_status: 'pending', // Strictly pending
       payment_method: data.payment_method,
       customer_notes: sanitizedCustomerNotes,
-      // Save database-calculated totals
+      // Save database-calculated totals (delivery fee is real when address was geocoded)
       items_subtotal: pricingResult.itemsSubtotal,
       packaging_total: pricingResult.packagingTotal,
-      delivery_fee: pricingResult.deliveryFee, // defaults to 0.00
+      delivery_fee: pricingResult.deliveryFee,
       total_amount: pricingResult.totalAmount,
-      route_distance_km: null, // Indicates uncalculated delivery fee
-      route_provider: 'unresolved',
-      geocoding_status: 'pending',
+      route_distance_km: pricingResult.deliveryDistanceKm ?? null,
+      route_duration_car_minutes: pricingResult.deliveryDurationMinutes ?? null,
+      route_provider: pricingResult.isDeliveryFeeCalculated ? 'google_routes_v2' : 'unresolved',
+      geocoding_status: pricingResult.isDeliveryFeeCalculated ? 'success' : 'pending',
       customer_language: data.source_language,
       admin_notes: `Browser: ${userAgent.substring(0, 100)}`
     };
