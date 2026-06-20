@@ -10,6 +10,7 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
   const isLoginPage = pathname === '/admin/login';
   const isKdsPage = pathname === '/admin/kds';
   const [kdsTheme, setKdsTheme] = useState<'dark' | 'light'>('dark');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!isKdsPage) return;
@@ -28,6 +29,17 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
       window.removeEventListener('kds-theme-change', handleThemeChange);
     };
   }, [isKdsPage]);
+
+  // Close sidebar drawer on screen width changes (e.g., resizing to desktop)
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   if (isLoginPage) {
     return (
@@ -59,13 +71,22 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
 
   return (
     <div 
-      className="flex w-full min-h-screen admin-theme bg-background text-foreground notranslate"
+      className="flex w-full min-h-screen admin-theme bg-background text-foreground notranslate relative"
       translate="no"
     >
-      <AdminSidebar />
+      {/* Sidebar Backdrop Drawer Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-25 lg:hidden transition-all duration-300"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <AdminTopbar />
-        <main className="flex-1 p-8 overflow-y-auto bg-background">
+        <AdminTopbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+        <main className="flex-1 p-4 sm:p-8 overflow-y-auto bg-background">
           {children}
         </main>
       </div>

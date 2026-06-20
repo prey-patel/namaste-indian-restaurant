@@ -7,7 +7,12 @@ import { ROUTES } from '@/lib/routes/path';
 import { LayoutDashboard, ShoppingCart, CalendarDays, ChefHat, BookOpen, Settings, Users, BarChart3, Activity } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-export default function AdminSidebar() {
+interface AdminSidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function AdminSidebar({ isOpen = false, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
   const t = useTranslations('adminSidebar');
   const tTopbar = useTranslations('adminTopbar');
@@ -35,10 +40,15 @@ export default function AdminSidebar() {
   ];
 
   return (
-    <aside className="w-64 border-r border-border bg-card text-foreground flex flex-col h-screen sticky top-0 font-sans z-20 shrink-0" aria-label="Admin Navigation Sidebar">
+    <aside 
+      className={`fixed inset-y-0 left-0 w-64 border-r border-border bg-card text-foreground flex flex-col h-screen transition-transform duration-300 ease-in-out z-30 lg:static lg:translate-x-0 font-sans shrink-0 ${
+        isOpen ? 'translate-x-0' : '-translate-x-full'
+      }`} 
+      aria-label="Admin Navigation Sidebar"
+    >
       {/* Admin Branding Header */}
-      <div className="p-6 border-b border-border">
-        <Link href={ROUTES.admin.dashboard} className="flex flex-col group">
+      <div className="p-6 border-b border-border flex items-center justify-between">
+        <Link href={ROUTES.admin.dashboard} className="flex flex-col group" onClick={onClose}>
           <span className="text-lg font-serif font-black tracking-widest text-primary leading-tight group-hover:opacity-90 transition-opacity">
             NAMASTE ADMIN
           </span>
@@ -46,6 +56,17 @@ export default function AdminSidebar() {
             Management Panel
           </span>
         </Link>
+        
+        {/* Mobile Close Button */}
+        <button 
+          onClick={onClose}
+          className="lg:hidden p-2 -mr-2 text-muted-foreground hover:text-foreground rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          aria-label="Close menu"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
 
       {/* Admin Menu Links */}
@@ -63,6 +84,7 @@ export default function AdminSidebar() {
                 <Link 
                   key={item.href}
                   href={item.href} 
+                  onClick={onClose}
                   className={`flex items-center gap-3 px-3 py-2.5 text-xs font-bold uppercase tracking-wider rounded transition-all duration-200 ${
                     active 
                       ? 'text-primary bg-primary/10 border-l-4 border-primary pl-2' 
@@ -90,6 +112,7 @@ export default function AdminSidebar() {
                 <Link 
                   key={item.href}
                   href={item.href} 
+                  onClick={onClose}
                   className={`flex items-center gap-3 px-3 py-2.5 text-xs font-bold uppercase tracking-wider rounded transition-all duration-200 ${
                     active 
                       ? 'text-primary bg-primary/10 border-l-4 border-primary pl-2' 
