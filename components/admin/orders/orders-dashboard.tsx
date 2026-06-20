@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition, useEffect } from 'react';
+import React, { useState, useTransition, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useTranslations } from 'next-intl';
@@ -53,6 +53,7 @@ type Order = {
   cancellation_reason: string | null;
   customer_notes: string | null;
   created_at: string;
+  updated_at: string;
   delivery_geocoding_status?: string | null;
   delivery_distance_car_meters?: number | null;
   delivery_duration_car_seconds?: number | null;
@@ -87,8 +88,28 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
     setMounted(true);
   }, []);
 
+  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const latestClientUpdates = useRef<Record<string, { order: Order; updated_at: string }>>({});
+
+  useEffect(() => {
+    const mergedOrders = initialOrders.map(order => {
+      const localUpdate = latestClientUpdates.current[order.id];
+      if (localUpdate) {
+        const localTime = new Date(localUpdate.updated_at).getTime();
+        const serverTime = new Date(order.updated_at).getTime();
+        if (serverTime < localTime) {
+          return { ...order, ...localUpdate.order };
+        } else {
+          delete latestClientUpdates.current[order.id];
+        }
+      }
+      return order;
+    });
+    setOrders(mergedOrders);
+  }, [initialOrders]);
+
   const [isConnected, setIsConnected] = useState(false);
-  const pendingCount = initialOrders.filter(o => o.status === 'pending').length;
+  const pendingCount = orders.filter(o => o.status === 'pending').length;
   const { soundEnabled, toggleSound, unlockAudio } = useAdminOrderAlerts(pendingCount);
   
   useEffect(() => {
@@ -98,7 +119,22 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'orders' },
-        () => {
+        (payload) => {
+          console.log('[Realtime] Order event payload:', payload);
+          if (payload.eventType === 'UPDATE') {
+            const updatedOrder = payload.new as Order;
+            latestClientUpdates.current[updatedOrder.id] = {
+              order: updatedOrder,
+              updated_at: updatedOrder.updated_at
+            };
+            setOrders(prev => prev.map(o => o.id === updatedOrder.id ? { ...o, ...updatedOrder } : o));
+          } else if (payload.eventType === 'INSERT') {
+            const newOrder = payload.new as Order;
+            setOrders(prev => [newOrder, ...prev]);
+          } else if (payload.eventType === 'DELETE') {
+            const deletedOrder = payload.old as { id: string };
+            setOrders(prev => prev.filter(o => o.id !== deletedOrder.id));
+          }
           router.refresh();
         }
       )
@@ -456,14 +492,14 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {initialOrders.length === 0 ? (
+              {orders.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-muted-foreground/60 italic">
                     {t('noOrders')}
                   </td>
                 </tr>
               ) : (
-                initialOrders.map((order) => {
+                orders.map((order) => {
                   const mappedStatus = mapDbStatusToKey(order.status);
                   const isTakeaway = order.order_type === 'takeaway';
                   
@@ -653,12 +689,12 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
 
         {/* Mobile Grid Layout (Under 768px) */}
         <div className="md:hidden divide-y divide-border">
-          {initialOrders.length === 0 ? (
+          {orders.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground/60 italic">
               {t('noOrders')}
             </div>
           ) : (
-            initialOrders.map((order) => {
+            orders.map((order) => {
               const mappedStatus = mapDbStatusToKey(order.status);
               const isTakeaway = order.order_type === 'takeaway';
               
