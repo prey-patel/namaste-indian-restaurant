@@ -121,17 +121,19 @@ export async function fetchPerformanceRawData(
 
   // 4a. Process orders
   orders.forEach((o) => {
-    // Average Prep Time (ready_at - preparing_at)
-    if (o.ready_at && o.preparing_at) {
-      const diffMins = (new Date(o.ready_at).getTime() - new Date(o.preparing_at).getTime()) / 60000;
+    // Average Prep Time (ready_at for takeaway, dispatched_at for delivery)
+    const prepEndTime = o.order_type === 'delivery' ? (o.dispatched_at || o.ready_at) : o.ready_at;
+    if (prepEndTime && o.preparing_at) {
+      const diffMins = (new Date(prepEndTime).getTime() - new Date(o.preparing_at).getTime()) / 60000;
       if (diffMins >= 0) {
         prepTimeDiffs.push(diffMins);
       }
     }
 
-    // Confirmation to Ready (ready_at - approved_at)
-    if (o.ready_at && o.approved_at) {
-      const diffMins = (new Date(o.ready_at).getTime() - new Date(o.approved_at).getTime()) / 60000;
+    // Confirmation to Ready (ready_at for takeaway, dispatched_at for delivery)
+    const readyTime = o.order_type === 'delivery' ? (o.dispatched_at || o.ready_at) : o.ready_at;
+    if (readyTime && o.approved_at) {
+      const diffMins = (new Date(readyTime).getTime() - new Date(o.approved_at).getTime()) / 60000;
       if (diffMins >= 0) {
         confirmToReadyDiffs.push(diffMins);
       }
@@ -235,9 +237,10 @@ export async function fetchPerformanceRawData(
     if (dayPoint) {
       dayPoint.totalOrders += 1;
 
-      // Group prep times daily
-      if (o.ready_at && o.preparing_at) {
-        const diffMins = (new Date(o.ready_at).getTime() - new Date(o.preparing_at).getTime()) / 60000;
+      // Group prep times daily (takeaway ready_at, delivery dispatched_at)
+      const dailyPrepEndTime = o.order_type === 'delivery' ? (o.dispatched_at || o.ready_at) : o.ready_at;
+      if (dailyPrepEndTime && o.preparing_at) {
+        const diffMins = (new Date(dailyPrepEndTime).getTime() - new Date(o.preparing_at).getTime()) / 60000;
         if (diffMins >= 0) {
           const arr = dailyPrepDiffs.get(orderDateStr) || [];
           arr.push(diffMins);
