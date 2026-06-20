@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition, useEffect } from 'react';
+import React, { useState, useTransition, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useTranslations } from 'next-intl';
@@ -45,6 +45,7 @@ type Reservation = {
   token: string;
   table_id: string | null;
   created_at: string;
+  updated_at: string;
   dining_tables?: {
     table_number: number;
     capacity: number;
@@ -77,6 +78,26 @@ export default function ReservationsDashboard({ initialReservations, tables, met
     setMounted(true);
   }, []);
   
+  const [reservations, setReservations] = useState<Reservation[]>(initialReservations);
+  const latestReservationUpdates = useRef<Record<string, { reservation: Reservation; updated_at: string }>>({});
+
+  useEffect(() => {
+    const mergedReservations = initialReservations.map(res => {
+      const localUpdate = latestReservationUpdates.current[res.id];
+      if (localUpdate) {
+        const localTime = new Date(localUpdate.updated_at).getTime();
+        const serverTime = new Date(res.updated_at).getTime();
+        if (serverTime < localTime) {
+          return { ...res, ...localUpdate.reservation };
+        } else {
+          delete latestReservationUpdates.current[res.id];
+        }
+      }
+      return res;
+    });
+    setReservations(mergedReservations);
+  }, [initialReservations]);
+
   useEffect(() => {
     const supabase = createClient();
     const channel = supabase
@@ -84,7 +105,22 @@ export default function ReservationsDashboard({ initialReservations, tables, met
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'reservations' },
-        () => {
+        (payload) => {
+          console.log('[Realtime] Reservation event payload:', payload);
+          if (payload.eventType === 'UPDATE') {
+            const updatedRes = payload.new as Reservation;
+            latestReservationUpdates.current[updatedRes.id] = {
+              reservation: updatedRes,
+              updated_at: updatedRes.updated_at
+            };
+            setReservations(prev => prev.map(r => r.id === updatedRes.id ? { ...r, ...updatedRes } : r));
+          } else if (payload.eventType === 'INSERT') {
+            const newRes = payload.new as Reservation;
+            setReservations(prev => [newRes, ...prev]);
+          } else if (payload.eventType === 'DELETE') {
+            const deletedRes = payload.old as { id: string };
+            setReservations(prev => prev.filter(r => r.id !== deletedRes.id));
+          }
           router.refresh();
         }
       )
@@ -387,14 +423,14 @@ export default function ReservationsDashboard({ initialReservations, tables, met
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {initialReservations.length === 0 ? (
+              {reservations.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="p-8 text-center text-muted-foreground/60 italic">
                     No reservations found matching active filters.
                   </td>
                 </tr>
               ) : (
-                initialReservations.map((res) => {
+                reservations.map((res) => {
                   const startDate = new Date(res.reservation_start_at);
                   const timeStr = mounted 
                     ? startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) 
