@@ -16,6 +16,11 @@ const outfit = Outfit({
 });
 
 export const metadata = {
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon-192.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
