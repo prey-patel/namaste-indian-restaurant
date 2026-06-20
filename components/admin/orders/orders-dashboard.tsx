@@ -82,6 +82,11 @@ type Props = {
 export default function OrdersDashboard({ initialOrders, metrics, filters }: Props) {
   const router = useRouter();
   
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const [isConnected, setIsConnected] = useState(false);
   const pendingCount = initialOrders.filter(o => o.status === 'pending').length;
   const { soundEnabled, toggleSound, unlockAudio } = useAdminOrderAlerts(pendingCount);
@@ -535,9 +540,17 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                       <td className="p-4 text-foreground font-mono">
                         {order.estimated_time ? (
                           <div className="flex flex-col">
-                            <span>{new Date(order.estimated_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                            <span>
+                              {mounted 
+                                ? new Date(order.estimated_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) 
+                                : '--:--'
+                              }
+                            </span>
                             <span className="text-[9px] text-muted-foreground">
-                              {Math.max(1, Math.round((new Date(order.estimated_time).getTime() - Date.now()) / 60000))} mins left
+                              {mounted 
+                                ? `${Math.max(1, Math.round((new Date(order.estimated_time).getTime() - Date.now()) / 60000))} mins left` 
+                                : '-- mins left'
+                              }
                             </span>
                           </div>
                         ) : (
@@ -711,7 +724,12 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                       {order.estimated_time && (
                         <div className="text-right">
                           <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block">ETA</span>
-                          <span className="font-semibold font-mono text-foreground">{new Date(order.estimated_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                          <span className="font-semibold font-mono text-foreground">
+                            {mounted 
+                              ? new Date(order.estimated_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) 
+                              : '--:--'
+                            }
+                          </span>
                         </div>
                       )}
                     </div>

@@ -72,6 +72,10 @@ type Props = {
 
 export default function ReservationsDashboard({ initialReservations, tables, metrics, filters }: Props) {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   useEffect(() => {
     const supabase = createClient();
@@ -392,8 +396,12 @@ export default function ReservationsDashboard({ initialReservations, tables, met
               ) : (
                 initialReservations.map((res) => {
                   const startDate = new Date(res.reservation_start_at);
-                  const timeStr = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-                  const dateStr = startDate.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+                  const timeStr = mounted 
+                    ? startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) 
+                    : '--:--';
+                  const dateStr = mounted 
+                    ? startDate.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) 
+                    : '--- --, ----';
 
                   return (
                     <tr key={res.id} className="hover:bg-muted/50 transition-colors">
@@ -590,10 +598,16 @@ export default function ReservationsDashboard({ initialReservations, tables, met
                     <div>
                       <span className="text-[10px] uppercase text-muted-foreground/60 block">Date & Time</span>
                       <span className="text-foreground block font-medium">
-                        {new Date(selectedRes.reservation_start_at).toLocaleDateString([], { dateStyle: 'medium' })}
+                        {mounted 
+                          ? new Date(selectedRes.reservation_start_at).toLocaleDateString([], { dateStyle: 'medium' }) 
+                          : '--- --, ----'
+                        }
                       </span>
                       <span className="text-muted-foreground block text-[10px]">
-                        {new Date(selectedRes.reservation_start_at).toLocaleTimeString([], { timeStyle: 'short' })}
+                        {mounted 
+                          ? new Date(selectedRes.reservation_start_at).toLocaleTimeString([], { timeStyle: 'short' }) 
+                          : '--:--'
+                        }
                       </span>
                     </div>
                     <div>
@@ -659,7 +673,7 @@ export default function ReservationsDashboard({ initialReservations, tables, met
               {actionType === 'reject' && (
                 <div className="space-y-4">
                   <div className="text-xs text-muted-foreground leading-relaxed text-left">
-                    Rejecting table request for <strong className="text-foreground">{selectedRes.customer_name}</strong> ({selectedRes.guests_count} guests) on {new Date(selectedRes.reservation_start_at).toLocaleDateString()}.
+                    Rejecting table request for <strong className="text-foreground">{selectedRes.customer_name}</strong> ({selectedRes.guests_count} guests) on {mounted ? new Date(selectedRes.reservation_start_at).toLocaleDateString() : '---'}.
                   </div>
                   <div className="space-y-1.5 text-left">
                     <label htmlFor="reject_reason" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
@@ -698,7 +712,7 @@ export default function ReservationsDashboard({ initialReservations, tables, met
               {actionType === 'cancel' && (
                 <div className="space-y-4">
                   <div className="text-xs text-muted-foreground leading-relaxed text-left">
-                    Cancelling reservation for <strong className="text-foreground">{selectedRes.customer_name}</strong> ({selectedRes.guests_count} guests) on {new Date(selectedRes.reservation_start_at).toLocaleDateString()}.
+                    Cancelling reservation for <strong className="text-foreground">{selectedRes.customer_name}</strong> ({selectedRes.guests_count} guests) on {mounted ? new Date(selectedRes.reservation_start_at).toLocaleDateString() : '---'}.
                   </div>
                   <div className="space-y-1.5 text-left">
                     <label htmlFor="cancel_reason" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
