@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { ROUTES } from '@/lib/routes/path';
 import { LayoutDashboard, ShoppingCart, CalendarDays, ChefHat, BookOpen, Settings, Users, BarChart3, Activity } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useAdminSidebarBadges } from '@/hooks/use-admin-sidebar-badges';
 
 interface AdminSidebarProps {
   isOpen?: boolean;
@@ -16,6 +17,7 @@ export default function AdminSidebar({ isOpen = false, onClose }: AdminSidebarPr
   const pathname = usePathname();
   const t = useTranslations('adminSidebar');
   const tTopbar = useTranslations('adminTopbar');
+  const { ordersApprovalCount, kdsCount, reservationsCount } = useAdminSidebarBadges();
 
   const isActive = (href: string) => {
     if (href === ROUTES.admin.dashboard) {
@@ -80,6 +82,11 @@ export default function AdminSidebar({ isOpen = false, onClose }: AdminSidebarPr
               const Icon = item.icon;
               const active = isActive(item.href);
               
+              let badgeCount = 0;
+              if (item.key === 'orders') badgeCount = ordersApprovalCount;
+              if (item.key === 'kds') badgeCount = kdsCount;
+              if (item.key === 'reservations') badgeCount = reservationsCount;
+
               return (
                 <Link 
                   key={item.href}
@@ -92,7 +99,15 @@ export default function AdminSidebar({ isOpen = false, onClose }: AdminSidebarPr
                   }`}
                 >
                   <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-primary' : 'text-muted-foreground/75'}`} />
-                  {t(`links.${item.key}`)}
+                  <span className="flex-1 text-left">{t(`links.${item.key}`)}</span>
+                  {badgeCount > 0 && (
+                    <span 
+                      className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[10px] font-black text-white leading-none shadow-sm shadow-red-950/20 shrink-0 select-none animate-pulse"
+                      aria-label={`${badgeCount} items needing attention`}
+                    >
+                      {badgeCount > 99 ? '99+' : badgeCount}
+                    </span>
+                  )}
                 </Link>
               );
             })}
