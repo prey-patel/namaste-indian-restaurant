@@ -4,6 +4,7 @@ import { ReactNode, useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import AdminSidebar from './admin-sidebar';
 import AdminTopbar from './admin-topbar';
+import RealtimeTableListener from '@/components/common/realtime-table-listener';
 
 export default function AdminLayoutClient({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -57,11 +58,20 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
     const isLight = kdsTheme === 'light';
     return (
       <div 
-        className={`min-h-screen transition-colors duration-300 notranslate ${
+        className={`min-h-screen transition-colors duration-300 notranslate relative ${
           isLight ? 'admin-theme bg-background text-foreground' : 'bg-[#070B1E] text-white'
         }`}
         translate="no"
       >
+        <RealtimeTableListener
+          channelName="admin-kds-global-realtime"
+          tables={[
+            'system_settings',
+            'operational_status',
+            'orders',
+            'order_items'
+          ]}
+        />
         <main className="p-4 sm:p-6">
           {children}
         </main>
@@ -74,6 +84,24 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
       className="flex w-full min-h-screen admin-theme bg-background text-foreground notranslate relative"
       translate="no"
     >
+      <RealtimeTableListener
+        channelName="admin-global-realtime"
+        tables={[
+          'system_settings',
+          'operational_status',
+          'service_hours',
+          'holiday_closures',
+          'categories',
+          'menu_items',
+          'delivery_fee_rules',
+          'packaging_fee_rules',
+          'site_content',
+          'dining_tables',
+          'orders',
+          'order_items',
+          'reservations'
+        ]}
+      />
       {/* Sidebar Backdrop Drawer Overlay */}
       {isSidebarOpen && (
         <div 
