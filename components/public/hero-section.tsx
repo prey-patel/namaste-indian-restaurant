@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ROUTES } from '@/lib/routes/path';
 import { useTranslations } from 'next-intl';
+import ThreeDTiltCard from '@/components/ui/three-d-tilt';
 
 type HeroSectionProps = {
   heroTitle: string;
@@ -270,12 +271,13 @@ export default function HeroSection({
           >
             {todaysHoursCard}
             
-            <div className="relative w-[340px] h-[340px] hidden lg:block select-none mt-4">
+            <ThreeDTiltCard maxTilt={20} glareOpacity={0.2} translateZ="30px" className="relative w-[340px] h-[340px] hidden lg:block select-none mt-4">
               {/* Rotating background mandala */}
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}
                 className="absolute inset-0 w-full h-full opacity-[0.08] flex items-center justify-center pointer-events-none text-primary"
+                style={{ transform: "translateZ(5px)" }}
               >
                 <svg viewBox="0 0 100 100" className="w-full h-full stroke-current fill-none" strokeWidth="0.3">
                   <circle cx="50" cy="50" r="45" />
@@ -296,16 +298,17 @@ export default function HeroSection({
                 transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
                 className="relative w-full h-full cursor-grab active:cursor-grabbing"
                 whileHover={{ scale: 1.05 }}
+                style={{ transform: "translateZ(30px)", transformStyle: "preserve-3d" }}
               >
                 <Image
                   src="/images/hero_kebabs.png"
                   alt="Signature Kebabs"
                   fill
                   priority
-                  className="object-contain filter drop-shadow-[0_15px_35px_rgba(212,175,55,0.25)]"
+                  className="object-contain filter drop-shadow-[0_15px_35px_rgba(212,175,55,0.25)] pointer-events-none"
                 />
               </motion.div>
-            </div>
+            </ThreeDTiltCard>
           </motion.div>
 
         </div>

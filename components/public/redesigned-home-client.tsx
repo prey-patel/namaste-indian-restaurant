@@ -10,6 +10,7 @@ import PremiumButton from '@/components/ui/premium-button';
 import GoldFrame from '@/components/ui/gold-frame';
 import ContactMap from '@/components/public/contact-map';
 import MandalaWatermark from '@/components/ui/mandala-watermark';
+import ThreeDTiltCard from '@/components/ui/three-d-tilt';
 
 type RedesignedHomeClientProps = {
   locale: string;
@@ -104,111 +105,99 @@ export default function RedesignedHomeClient({
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
           >
             {/* Dish 1: Butter Chicken */}
-            <motion.div
-              variants={scrollFadeIn}
-              whileHover="hover"
-              className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-5 flex flex-col h-full justify-between transition-colors duration-300"
-              style={{ originY: 0.5 }}
-            >
-              <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
-              <motion.div variants={cardHoverEffect} className="space-y-4">
-                <div className="aspect-[4/3] w-full rounded-lg relative overflow-hidden border border-primary/10 shadow-lg">
-                  <Image
-                    src="/images/butter_chicken.png"
-                    alt={t('dishButter')}
-                    fill
-                    className="object-cover scale-105 hover:scale-100 transition-transform duration-700 pointer-events-none"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+            <motion.div variants={scrollFadeIn} className="flex flex-col h-full">
+              <ThreeDTiltCard maxTilt={15} glareOpacity={0.15} className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-5 flex flex-col h-full justify-between transition-colors duration-300 w-full">
+                <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
+                <div className="space-y-4" style={{ transform: "translateZ(15px)", transformStyle: "preserve-3d" }}>
+                  <div className="aspect-[4/3] w-full rounded-lg relative overflow-hidden border border-primary/10 shadow-lg" style={{ transform: "translateZ(10px)" }}>
+                    <Image
+                      src="/images/butter_chicken.png"
+                      alt={t('dishButter')}
+                      fill
+                      className="object-cover scale-105 hover:scale-100 transition-transform duration-700 pointer-events-none"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                  </div>
+                  <h3 className="text-xl font-serif font-bold text-foreground">{t('dishButter')}</h3>
+                  <p className="text-muted-foreground/80 text-xs leading-relaxed font-sans font-light">{t('dishButterDesc')}</p>
                 </div>
-                <h3 className="text-xl font-serif font-bold text-foreground">{t('dishButter')}</h3>
-                <p className="text-muted-foreground/80 text-xs leading-relaxed font-sans font-light">{t('dishButterDesc')}</p>
-              </motion.div>
-              <div className="pt-6 border-t border-primary/10 mt-6 flex justify-between items-center text-xs font-sans">
-                <span className="text-primary tracking-wider font-extrabold uppercase">39.00 PLN</span>
-                <span className="text-[10px] text-muted-foreground/50 italic">Signature Curry</span>
-              </div>
+                <div className="pt-6 border-t border-primary/10 mt-6 flex justify-between items-center text-xs font-sans" style={{ transform: "translateZ(10px)" }}>
+                  <span className="text-primary tracking-wider font-extrabold uppercase">39.00 PLN</span>
+                  <span className="text-[10px] text-muted-foreground/50 italic">Signature Curry</span>
+                </div>
+              </ThreeDTiltCard>
             </motion.div>
 
             {/* Dish 2: Dal Makhani */}
-            <motion.div
-              variants={scrollFadeIn}
-              whileHover="hover"
-              className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-5 flex flex-col h-full justify-between transition-colors duration-300"
-              style={{ originY: 0.5 }}
-            >
-              <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
-              <motion.div variants={cardHoverEffect} className="space-y-4">
-                <div className="aspect-[4/3] w-full rounded-lg relative overflow-hidden border border-primary/10 shadow-lg">
-                  <Image
-                    src="/images/dal_makhani.png"
-                    alt={t('dishDal')}
-                    fill
-                    className="object-cover scale-105 hover:scale-100 transition-transform duration-700 pointer-events-none"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+            <motion.div variants={scrollFadeIn} className="flex flex-col h-full">
+              <ThreeDTiltCard maxTilt={15} glareOpacity={0.15} className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-5 flex flex-col h-full justify-between transition-colors duration-300 w-full">
+                <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
+                <div className="space-y-4" style={{ transform: "translateZ(15px)", transformStyle: "preserve-3d" }}>
+                  <div className="aspect-[4/3] w-full rounded-lg relative overflow-hidden border border-primary/10 shadow-lg" style={{ transform: "translateZ(10px)" }}>
+                    <Image
+                      src="/images/dal_makhani.png"
+                      alt={t('dishDal')}
+                      fill
+                      className="object-cover scale-105 hover:scale-100 transition-transform duration-700 pointer-events-none"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                  </div>
+                  <h3 className="text-xl font-serif font-bold text-foreground">{t('dishDal')}</h3>
+                  <p className="text-muted-foreground/80 text-xs leading-relaxed font-sans font-light">{t('dishDalDesc')}</p>
                 </div>
-                <h3 className="text-xl font-serif font-bold text-foreground">{t('dishDal')}</h3>
-                <p className="text-muted-foreground/80 text-xs leading-relaxed font-sans font-light">{t('dishDalDesc')}</p>
-              </motion.div>
-              <div className="pt-6 border-t border-primary/10 mt-6 flex justify-between items-center text-xs font-sans">
-                <span className="text-primary tracking-wider font-extrabold uppercase">28.00 PLN</span>
-                <span className="text-[10px] text-muted-foreground/50 italic">Slow Cooked</span>
-              </div>
+                <div className="pt-6 border-t border-primary/10 mt-6 flex justify-between items-center text-xs font-sans" style={{ transform: "translateZ(10px)" }}>
+                  <span className="text-primary tracking-wider font-extrabold uppercase">28.00 PLN</span>
+                  <span className="text-[10px] text-muted-foreground/50 italic">Slow Cooked</span>
+                </div>
+              </ThreeDTiltCard>
             </motion.div>
 
             {/* Dish 3: Chicken Biryani */}
-            <motion.div
-              variants={scrollFadeIn}
-              whileHover="hover"
-              className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-5 flex flex-col h-full justify-between transition-colors duration-300"
-              style={{ originY: 0.5 }}
-            >
-              <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
-              <motion.div variants={cardHoverEffect} className="space-y-4">
-                <div className="aspect-[4/3] w-full rounded-lg relative overflow-hidden border border-primary/10 shadow-lg">
-                  <Image
-                    src="/images/chicken_biryani.png"
-                    alt={t('dishBiryani')}
-                    fill
-                    className="object-cover scale-105 hover:scale-100 transition-transform duration-700 pointer-events-none"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+            <motion.div variants={scrollFadeIn} className="flex flex-col h-full">
+              <ThreeDTiltCard maxTilt={15} glareOpacity={0.15} className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-5 flex flex-col h-full justify-between transition-colors duration-300 w-full">
+                <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
+                <div className="space-y-4" style={{ transform: "translateZ(15px)", transformStyle: "preserve-3d" }}>
+                  <div className="aspect-[4/3] w-full rounded-lg relative overflow-hidden border border-primary/10 shadow-lg" style={{ transform: "translateZ(10px)" }}>
+                    <Image
+                      src="/images/chicken_biryani.png"
+                      alt={t('dishBiryani')}
+                      fill
+                      className="object-cover scale-105 hover:scale-100 transition-transform duration-700 pointer-events-none"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                  </div>
+                  <h3 className="text-xl font-serif font-bold text-foreground">{t('dishBiryani')}</h3>
+                  <p className="text-muted-foreground/80 text-xs leading-relaxed font-sans font-light">{t('dishBiryaniDesc')}</p>
                 </div>
-                <h3 className="text-xl font-serif font-bold text-foreground">{t('dishBiryani')}</h3>
-                <p className="text-muted-foreground/80 text-xs leading-relaxed font-sans font-light">{t('dishBiryaniDesc')}</p>
-              </motion.div>
-              <div className="pt-6 border-t border-primary/10 mt-6 flex justify-between items-center text-xs font-sans">
-                <span className="text-primary tracking-wider font-extrabold uppercase">36.00 PLN</span>
-                <span className="text-[10px] text-muted-foreground/50 italic">Basmati Masterpiece</span>
-              </div>
+                <div className="pt-6 border-t border-primary/10 mt-6 flex justify-between items-center text-xs font-sans" style={{ transform: "translateZ(10px)" }}>
+                  <span className="text-primary tracking-wider font-extrabold uppercase">36.00 PLN</span>
+                  <span className="text-[10px] text-muted-foreground/50 italic">Basmati Masterpiece</span>
+                </div>
+              </ThreeDTiltCard>
             </motion.div>
 
             {/* Dish 4: Garlic Naan */}
-            <motion.div
-              variants={scrollFadeIn}
-              whileHover="hover"
-              className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-5 flex flex-col h-full justify-between transition-colors duration-300"
-              style={{ originY: 0.5 }}
-            >
-              <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
-              <motion.div variants={cardHoverEffect} className="space-y-4">
-                <div className="aspect-[4/3] w-full rounded-lg relative overflow-hidden border border-primary/10 shadow-lg">
-                  <Image
-                    src="/images/garlic_naan.png"
-                    alt={t('dishNaan')}
-                    fill
-                    className="object-cover scale-105 hover:scale-100 transition-transform duration-700 pointer-events-none"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+            <motion.div variants={scrollFadeIn} className="flex flex-col h-full">
+              <ThreeDTiltCard maxTilt={15} glareOpacity={0.15} className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-5 flex flex-col h-full justify-between transition-colors duration-300 w-full">
+                <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
+                <div className="space-y-4" style={{ transform: "translateZ(15px)", transformStyle: "preserve-3d" }}>
+                  <div className="aspect-[4/3] w-full rounded-lg relative overflow-hidden border border-primary/10 shadow-lg" style={{ transform: "translateZ(10px)" }}>
+                    <Image
+                      src="/images/garlic_naan.png"
+                      alt={t('dishNaan')}
+                      fill
+                      className="object-cover scale-105 hover:scale-100 transition-transform duration-700 pointer-events-none"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                  </div>
+                  <h3 className="text-xl font-serif font-bold text-foreground">{t('dishNaan')}</h3>
+                  <p className="text-muted-foreground/80 text-xs leading-relaxed font-sans font-light">{t('dishNaanDesc')}</p>
                 </div>
-                <h3 className="text-xl font-serif font-bold text-foreground">{t('dishNaan')}</h3>
-                <p className="text-muted-foreground/80 text-xs leading-relaxed font-sans font-light">{t('dishNaanDesc')}</p>
-              </motion.div>
-              <div className="pt-6 border-t border-primary/10 mt-6 flex justify-between items-center text-xs font-sans">
-                <span className="text-primary tracking-wider font-extrabold uppercase">12.00 PLN</span>
-                <span className="text-[10px] text-muted-foreground/50 italic">Tandoor Clay Baked</span>
-              </div>
+                <div className="pt-6 border-t border-primary/10 mt-6 flex justify-between items-center text-xs font-sans" style={{ transform: "translateZ(10px)" }}>
+                  <span className="text-primary tracking-wider font-extrabold uppercase">12.00 PLN</span>
+                  <span className="text-[10px] text-muted-foreground/50 italic">Tandoor Clay Baked</span>
+                </div>
+              </ThreeDTiltCard>
             </motion.div>
           </motion.div>
         </div>
@@ -252,18 +241,20 @@ export default function RedesignedHomeClient({
             transition={{ type: 'spring', stiffness: 50, damping: 15 }}
             className="w-full max-w-lg mx-auto"
           >
-            <GoldFrame className="w-full overflow-hidden rounded-xl">
-              <div className="aspect-[4/3] relative group overflow-hidden bg-[#070B1E]">
-                <Image
-                  src="/images/dining_ambience.png"
-                  alt="Restaurant Dining Interior"
-                  fill
-                  className="object-cover scale-105 group-hover:scale-100 transition-transform duration-1000 ease-out"
-                />
-                <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/60 to-transparent pointer-events-none" />
-                <span className="absolute bottom-3 right-3 text-[9px] uppercase tracking-widest text-primary/70 font-semibold font-sans">Namaste Ciechanów</span>
-              </div>
-            </GoldFrame>
+            <ThreeDTiltCard maxTilt={10} glareOpacity={0.18} translateZ="30px" className="w-full">
+              <GoldFrame className="w-full overflow-hidden rounded-xl">
+                <div className="aspect-[4/3] relative group overflow-hidden bg-[#070B1E]">
+                  <Image
+                    src="/images/dining_ambience.png"
+                    alt="Restaurant Dining Interior"
+                    fill
+                    className="object-cover scale-105 group-hover:scale-100 transition-transform duration-1000 ease-out pointer-events-none"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/60 to-transparent pointer-events-none" />
+                  <span className="absolute bottom-3 right-3 text-[9px] uppercase tracking-widest text-primary/70 font-semibold font-sans">Namaste Ciechanów</span>
+                </div>
+              </GoldFrame>
+            </ThreeDTiltCard>
           </motion.div>
 
         </div>
@@ -283,18 +274,20 @@ export default function RedesignedHomeClient({
             transition={{ type: 'spring', stiffness: 50, damping: 15 }}
             className="w-full max-w-lg mx-auto order-2 lg:order-1"
           >
-            <GoldFrame className="w-full overflow-hidden rounded-xl">
-              <div className="aspect-[4/3] relative group overflow-hidden bg-[#070B1E]">
-                <Image
-                  src="/images/chef_craft.png"
-                  alt="Tandoor Oven Baking"
-                  fill
-                  className="object-cover scale-105 group-hover:scale-100 transition-transform duration-1000 ease-out"
-                />
-                <div className="absolute inset-0 bg-gradient-to-bl from-slate-950/60 to-transparent pointer-events-none" />
-                <span className="absolute bottom-3 right-3 text-[9px] uppercase tracking-widest text-primary/70 font-semibold font-sans">Art of Culinary</span>
-              </div>
-            </GoldFrame>
+            <ThreeDTiltCard maxTilt={10} glareOpacity={0.18} translateZ="30px" className="w-full">
+              <GoldFrame className="w-full overflow-hidden rounded-xl">
+                <div className="aspect-[4/3] relative group overflow-hidden bg-[#070B1E]">
+                  <Image
+                    src="/images/chef_craft.png"
+                    alt="Tandoor Oven Baking"
+                    fill
+                    className="object-cover scale-105 group-hover:scale-100 transition-transform duration-1000 ease-out pointer-events-none"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-bl from-slate-950/60 to-transparent pointer-events-none" />
+                  <span className="absolute bottom-3 right-3 text-[9px] uppercase tracking-widest text-primary/70 font-semibold font-sans">Art of Culinary</span>
+                </div>
+              </GoldFrame>
+            </ThreeDTiltCard>
           </motion.div>
 
           {/* Right Side: Content */}
@@ -355,75 +348,67 @@ export default function RedesignedHomeClient({
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
           >
             {/* Service 1: Dine-In */}
-            <motion.div
-              variants={scrollFadeIn}
-              whileHover="hover"
-              className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-6 flex flex-col h-full justify-between transition-colors duration-300"
-            >
-              <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
-              <motion.div variants={cardHoverEffect} className="space-y-4 text-left font-sans">
-                <h3 className="text-xl font-serif font-bold text-primary">{t('servicesDine')}</h3>
-                <p className="text-muted-foreground/80 text-xs leading-relaxed font-light">{t('servicesDineDesc')}</p>
-              </motion.div>
-              <div className="pt-6 border-t border-primary/10 mt-6 text-left font-sans">
-                <Link href={ROUTES.reservations} className="text-primary text-[10px] uppercase font-bold tracking-wider hover:underline flex items-center gap-1">
-                  Book a Table &rarr;
-                </Link>
-              </div>
+            <motion.div variants={scrollFadeIn} className="flex flex-col h-full">
+              <ThreeDTiltCard maxTilt={15} glareOpacity={0.15} className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-6 flex flex-col h-full justify-between transition-colors duration-300 w-full h-full">
+                <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
+                <div style={{ transform: "translateZ(15px)", transformStyle: "preserve-3d" }} className="space-y-4 text-left font-sans">
+                  <h3 className="text-xl font-serif font-bold text-primary">{t('servicesDine')}</h3>
+                  <p className="text-muted-foreground/80 text-xs leading-relaxed font-light">{t('servicesDineDesc')}</p>
+                </div>
+                <div className="pt-6 border-t border-primary/10 mt-6 text-left font-sans" style={{ transform: "translateZ(10px)" }}>
+                  <Link href={ROUTES.reservations} className="text-primary text-[10px] uppercase font-bold tracking-wider hover:underline flex items-center gap-1">
+                    Book a Table &rarr;
+                  </Link>
+                </div>
+              </ThreeDTiltCard>
             </motion.div>
 
             {/* Service 2: Takeaway */}
-            <motion.div
-              variants={scrollFadeIn}
-              whileHover="hover"
-              className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-6 flex flex-col h-full justify-between transition-colors duration-300"
-            >
-              <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
-              <motion.div variants={cardHoverEffect} className="space-y-4 text-left font-sans">
-                <h3 className="text-xl font-serif font-bold text-primary">{t('servicesTakeaway')}</h3>
-                <p className="text-muted-foreground/80 text-xs leading-relaxed font-light">{t('servicesTakeawayDesc')}</p>
-              </motion.div>
-              <div className="pt-6 border-t border-primary/10 mt-6 text-left font-sans">
-                <Link href={ROUTES.menu} className="text-primary text-[10px] uppercase font-bold tracking-wider hover:underline flex items-center gap-1">
-                  View Menu &rarr;
-                </Link>
-              </div>
+            <motion.div variants={scrollFadeIn} className="flex flex-col h-full">
+              <ThreeDTiltCard maxTilt={15} glareOpacity={0.15} className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-6 flex flex-col h-full justify-between transition-colors duration-300 w-full h-full">
+                <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
+                <div style={{ transform: "translateZ(15px)", transformStyle: "preserve-3d" }} className="space-y-4 text-left font-sans">
+                  <h3 className="text-xl font-serif font-bold text-primary">{t('servicesTakeaway')}</h3>
+                  <p className="text-muted-foreground/80 text-xs leading-relaxed font-light">{t('servicesTakeawayDesc')}</p>
+                </div>
+                <div className="pt-6 border-t border-primary/10 mt-6 text-left font-sans" style={{ transform: "translateZ(10px)" }}>
+                  <Link href={ROUTES.menu} className="text-primary text-[10px] uppercase font-bold tracking-wider hover:underline flex items-center gap-1">
+                    View Menu &rarr;
+                  </Link>
+                </div>
+              </ThreeDTiltCard>
             </motion.div>
 
             {/* Service 3: Delivery */}
-            <motion.div
-              variants={scrollFadeIn}
-              whileHover="hover"
-              className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-6 flex flex-col h-full justify-between transition-colors duration-300"
-            >
-              <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
-              <motion.div variants={cardHoverEffect} className="space-y-4 text-left font-sans">
-                <h3 className="text-xl font-serif font-bold text-primary">{t('servicesDelivery')}</h3>
-                <p className="text-muted-foreground/80 text-xs leading-relaxed font-light">{t('servicesDeliveryDesc')}</p>
-              </motion.div>
-              <div className="pt-6 border-t border-primary/10 mt-6 text-left font-sans">
-                <Link href={ROUTES.order} className="text-primary text-[10px] uppercase font-bold tracking-wider hover:underline flex items-center gap-1">
-                  Order Delivery &rarr;
-                </Link>
-              </div>
+            <motion.div variants={scrollFadeIn} className="flex flex-col h-full">
+              <ThreeDTiltCard maxTilt={15} glareOpacity={0.15} className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-6 flex flex-col h-full justify-between transition-colors duration-300 w-full h-full">
+                <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
+                <div style={{ transform: "translateZ(15px)", transformStyle: "preserve-3d" }} className="space-y-4 text-left font-sans">
+                  <h3 className="text-xl font-serif font-bold text-primary">{t('servicesDelivery')}</h3>
+                  <p className="text-muted-foreground/80 text-xs leading-relaxed font-light">{t('servicesDeliveryDesc')}</p>
+                </div>
+                <div className="pt-6 border-t border-primary/10 mt-6 text-left font-sans" style={{ transform: "translateZ(10px)" }}>
+                  <Link href={ROUTES.order} className="text-primary text-[10px] uppercase font-bold tracking-wider hover:underline flex items-center gap-1">
+                    Order Delivery &rarr;
+                  </Link>
+                </div>
+              </ThreeDTiltCard>
             </motion.div>
 
             {/* Service 4: Reservations */}
-            <motion.div
-              variants={scrollFadeIn}
-              whileHover="hover"
-              className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-6 flex flex-col h-full justify-between transition-colors duration-300"
-            >
-              <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
-              <motion.div variants={cardHoverEffect} className="space-y-4 text-left font-sans">
-                <h3 className="text-xl font-serif font-bold text-primary">{t('servicesReservations')}</h3>
-                <p className="text-muted-foreground/80 text-xs leading-relaxed font-light">{t('servicesReservationsDesc')}</p>
-              </motion.div>
-              <div className="pt-6 border-t border-primary/10 mt-6 text-left font-sans">
-                <Link href={ROUTES.reservations} className="text-primary text-[10px] uppercase font-bold tracking-wider hover:underline flex items-center gap-1">
-                  Reserve Online &rarr;
-                </Link>
-              </div>
+            <motion.div variants={scrollFadeIn} className="flex flex-col h-full">
+              <ThreeDTiltCard maxTilt={15} glareOpacity={0.15} className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-6 flex flex-col h-full justify-between transition-colors duration-300 w-full h-full">
+                <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
+                <div style={{ transform: "translateZ(15px)", transformStyle: "preserve-3d" }} className="space-y-4 text-left font-sans">
+                  <h3 className="text-xl font-serif font-bold text-primary">{t('servicesReservations')}</h3>
+                  <p className="text-muted-foreground/80 text-xs leading-relaxed font-light">{t('servicesReservationsDesc')}</p>
+                </div>
+                <div className="pt-6 border-t border-primary/10 mt-6 text-left font-sans" style={{ transform: "translateZ(10px)" }}>
+                  <Link href={ROUTES.reservations} className="text-primary text-[10px] uppercase font-bold tracking-wider hover:underline flex items-center gap-1">
+                    Reserve Online &rarr;
+                  </Link>
+                </div>
+              </ThreeDTiltCard>
             </motion.div>
           </motion.div>
 
