@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ROUTES } from '@/lib/routes/path';
+import { useTranslations } from 'next-intl';
 
 type HeroSectionProps = {
   heroTitle: string;
@@ -35,6 +36,7 @@ export default function HeroSection({
   locale,
   todaysHoursCard,
 }: HeroSectionProps) {
+  const tHome = useTranslations('home');
   
   // Format address: remove "Poland" or ", Poland" and prepend "ul. " if not present
   let formattedAddress = address;
@@ -57,6 +59,21 @@ export default function HeroSection({
   };
 
   const formattedPhone = formatPhone(phone);
+
+  const splitText = (text: string, baseDelay = 0) => {
+    return text.split(' ').map((word, i) => (
+      <span key={i} className="inline-block overflow-hidden mr-[0.25em] pb-1.5 align-bottom">
+        <motion.span
+          initial={{ y: '100%', opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8, delay: i * 0.06 + baseDelay, ease: [0.16, 1, 0.3, 1] }}
+          className="inline-block"
+        >
+          {word}
+        </motion.span>
+      </span>
+    ));
+  };
 
   return (
     <section className="relative min-h-[90vh] lg:min-h-screen bg-[#040815] text-left overflow-hidden flex flex-col justify-between px-6 sm:px-12 pt-32 pb-12 select-none">
@@ -107,40 +124,35 @@ export default function HeroSection({
               transition={{ duration: 0.6 }}
               className="flex items-center space-x-2 text-primary"
             >
-              <svg className="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <svg className="w-4 h-4 text-primary animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M12 2l2.4 4.8 5.3.8-3.8 3.7.9 5.3-4.8-2.5-4.8 2.5.9-5.3-3.8-3.7 5.3-.8z" fill="currentColor" />
               </svg>
-              <span className="text-[10px] sm:text-xs font-sans tracking-[0.25em] font-extrabold uppercase text-primary/90">
-                {locale === 'pl' ? 'AUTHENTIC INDIAN CUISINE' : 'AUTHENTIC INDIAN CUISINE'}
+              <span className="text-[10px] sm:text-xs font-sans tracking-[0.25em] font-extrabold uppercase text-primary/95">
+                {locale === 'pl' ? 'AUTENTYCZNA KUCHNIA INDYJSKA' : 'AUTHENTIC INDIAN CUISINE'}
               </span>
             </motion.div>
 
             {/* Main Headline */}
             <div className="space-y-4">
-              <motion.h1
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.1 }}
-                className="text-4xl sm:text-6xl md:text-[66px] font-serif font-medium tracking-wide text-foreground leading-[1.15]"
-              >
-                {heroTitle} <br />
-                <span className="text-primary block mt-1 font-light">
-                  {heroTitleAccent}
+              <h1 className="text-4xl sm:text-6xl md:text-[62px] font-serif font-medium tracking-wide text-foreground leading-[1.12]">
+                {splitText(heroTitle, 0.1)} <br />
+                <span className="text-primary block mt-1 font-light italic">
+                  {splitText(heroTitleAccent, 0.45)}
                 </span>
-              </motion.h1>
+              </h1>
 
               {/* Gold divider line with diamond/star ornament - placed directly below the headline */}
               <motion.div
                 initial={{ opacity: 0, scaleX: 0 }}
                 animate={{ opacity: 1, scaleX: 1 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
+                transition={{ duration: 0.8, delay: 0.7, ease: 'easeOut' }}
                 className="flex items-center space-x-3 py-2 origin-left"
               >
-                <div className="w-16 h-[1px] bg-primary/45" />
-                <svg className="w-2.5 h-2.5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2L15 12L12 22L9 12Z" fill="currentColor" />
+                <div className="w-20 h-[1px] bg-gradient-to-r from-primary/60 to-transparent" />
+                <svg className="w-3.5 h-3.5 text-primary rotate-45 fill-primary/10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <rect x="5" y="5" width="14" height="14" />
                 </svg>
-                <div className="w-16 h-[1px] bg-primary/45" />
+                <div className="w-20 h-[1px] bg-gradient-to-l from-primary/60 to-transparent" />
               </motion.div>
             </div>
 
@@ -148,8 +160,8 @@ export default function HeroSection({
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.25 }}
-              className="text-muted-foreground/80 max-w-xl text-sm sm:text-base leading-relaxed font-light font-sans"
+              transition={{ duration: 0.6, delay: 0.8 }}
+              className="text-muted-foreground/90 max-w-xl text-sm sm:text-base leading-relaxed font-light font-sans"
             >
               {heroSubhead}
             </motion.p>
@@ -158,22 +170,30 @@ export default function HeroSection({
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.35 }}
+              transition={{ duration: 0.6, delay: 0.95 }}
               className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2"
             >
               {/* Order Online (Filled Gold) */}
-              <Link href={ROUTES.order}>
-                <button className="w-full sm:w-auto px-7 py-4 rounded bg-primary hover:bg-primary/95 text-black font-extrabold text-xs uppercase tracking-widest transition-all shadow-[0_4px_20px_rgba(212,175,55,0.25)] flex items-center justify-center gap-2.5">
+              <Link href={ROUTES.order} className="w-full sm:w-auto">
+                <motion.button 
+                  whileHover={{ scale: 1.03, boxShadow: '0 8px 30px rgba(212,175,55,0.45)' }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full sm:w-auto px-8 py-4.5 rounded bg-primary hover:bg-primary/95 text-black font-extrabold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2.5 font-sans"
+                >
                   <svg className="w-4 h-4 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <path d="M12 2l2.4 4.8 5.3.8-3.8 3.7.9 5.3-4.8-2.5-4.8 2.5.9-5.3-3.8-3.7 5.3-.8z" fill="currentColor" />
                   </svg>
                   {orderOnlineText}
-                </button>
+                </motion.button>
               </Link>
 
               {/* Reserve Table (Outline) */}
-              <Link href={ROUTES.reservations}>
-                <button className="w-full sm:w-auto px-7 py-4 rounded border border-primary/30 hover:border-primary/80 hover:bg-primary/5 text-primary font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2.5">
+              <Link href={ROUTES.reservations} className="w-full sm:w-auto">
+                <motion.button 
+                  whileHover={{ scale: 1.03, backgroundColor: 'rgba(212,175,55,0.06)' }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full sm:w-auto px-8 py-4.5 rounded border border-primary/30 hover:border-primary/80 hover:bg-primary/5 text-primary font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2.5 font-sans"
+                >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                     <line x1="16" y1="2" x2="16" y2="6" />
@@ -181,39 +201,110 @@ export default function HeroSection({
                     <line x1="3" y1="10" x2="21" y2="10" />
                   </svg>
                   {reserveTableText}
-                </button>
+                </motion.button>
               </Link>
 
               {/* View Menu (Outline) */}
-              <Link href={ROUTES.menu}>
-                <button className="w-full sm:w-auto px-7 py-4 rounded border border-primary/30 hover:border-primary/80 hover:bg-primary/5 text-primary font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2.5">
+              <Link href={ROUTES.menu} className="w-full sm:w-auto">
+                <motion.button 
+                  whileHover={{ scale: 1.03, backgroundColor: 'rgba(212,175,55,0.06)' }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full sm:w-auto px-8 py-4.5 rounded border border-primary/30 hover:border-primary/80 hover:bg-primary/5 text-primary font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2.5 font-sans"
+                >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                    <path d="M6.5 20.5H20" />
                     <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
                   </svg>
                   {viewMenuText}
-                </button>
+                </motion.button>
               </Link>
+            </motion.div>
+
+            {/* Stats Row */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 1.1 }}
+              className="grid grid-cols-3 gap-4 pt-6 border-t border-primary/10 max-w-xl text-left font-sans"
+            >
+              <div className="space-y-1">
+                <span className="text-xl sm:text-2xl font-serif font-bold text-primary block">5 ★</span>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground/80 block font-semibold">
+                  {tHome('heroQuality' as any)}
+                </span>
+                <span className="text-[9px] text-muted-foreground/50 block font-light leading-tight">
+                  {tHome('heroQualityDesc' as any)}
+                </span>
+              </div>
+              <div className="space-y-1 border-l border-primary/10 pl-4">
+                <span className="text-xl sm:text-2xl font-serif font-bold text-primary block">100%</span>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground/80 block font-semibold">
+                  {tHome('heroAroma' as any)}
+                </span>
+                <span className="text-[9px] text-muted-foreground/50 block font-light leading-tight">
+                  {tHome('heroAromaDesc' as any)}
+                </span>
+              </div>
+              <div className="space-y-1 border-l border-primary/10 pl-4">
+                <span className="text-xl sm:text-2xl font-serif font-bold text-primary block">
+                  {locale === 'pl' ? 'Kuchnia' : 'Artisans'}
+                </span>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground/80 block font-semibold">
+                  {tHome('heroService' as any)}
+                </span>
+                <span className="text-[9px] text-muted-foreground/50 block font-light leading-tight">
+                  {tHome('heroServiceDesc' as any)}
+                </span>
+              </div>
             </motion.div>
 
           </div>
 
           {/* Right Column: Today's Hours Card & Dish Image stack */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, type: 'spring', stiffness: 50, damping: 15 }}
+            transition={{ duration: 0.8, type: 'spring', stiffness: 50, damping: 15, delay: 0.45 }}
             className="lg:col-span-5 flex flex-col items-center justify-center gap-6 w-full"
           >
             {todaysHoursCard}
             
-            <div className="relative w-[260px] h-[260px] hidden xl:block transition-all duration-300 opacity-80 hover:opacity-100">
-              <Image
-                src="/images/hero_kebabs.png"
-                alt="Signature Kebabs"
-                fill
-                className="object-contain filter drop-shadow-[0_8px_25px_rgba(0,0,0,0.5)]"
-              />
+            <div className="relative w-[340px] h-[340px] hidden lg:block select-none mt-4">
+              {/* Rotating background mandala */}
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 50, repeat: Infinity, ease: 'linear' }}
+                className="absolute inset-0 w-full h-full opacity-[0.08] flex items-center justify-center pointer-events-none text-primary"
+              >
+                <svg viewBox="0 0 100 100" className="w-full h-full stroke-current fill-none" strokeWidth="0.3">
+                  <circle cx="50" cy="50" r="45" />
+                  <circle cx="50" cy="50" r="35" />
+                  <circle cx="50" cy="50" r="25" />
+                  {Array.from({ length: 36 }).map((_, i) => (
+                    <path
+                      key={i}
+                      d={`M 50 50 L ${50 + 45 * Math.cos((i * Math.PI) / 18)} ${50 + 45 * Math.sin((i * Math.PI) / 18)}`}
+                    />
+                  ))}
+                </svg>
+              </motion.div>
+
+              {/* Floating food image */}
+              <motion.div
+                animate={{ y: [0, -14, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+                className="relative w-full h-full cursor-grab active:cursor-grabbing"
+                whileHover={{ scale: 1.05 }}
+              >
+                <Image
+                  src="/images/hero_kebabs.png"
+                  alt="Signature Kebabs"
+                  fill
+                  priority
+                  className="object-contain filter drop-shadow-[0_15px_35px_rgba(212,175,55,0.25)]"
+                />
+              </motion.div>
             </div>
           </motion.div>
 
@@ -235,11 +326,11 @@ export default function HeroSection({
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.45 }}
+          transition={{ duration: 0.6, delay: 1.25 }}
           className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs sm:text-sm pt-2"
         >
           {/* Location */}
-          <div className="flex items-start space-x-4 p-1 md:border-r md:border-primary/20 md:pr-6">
+          <div className="flex items-start space-x-4 p-1 md:border-r md:border-primary/20 md:pr-6 text-left">
             {/* Octagonal Icon Frame */}
             <div className="flex-shrink-0 relative w-11 h-11 flex items-center justify-center text-primary">
               <svg className="absolute inset-0 w-full h-full text-primary/20 fill-primary/5 stroke-current" strokeWidth="1" viewBox="0 0 100 100">
@@ -251,17 +342,17 @@ export default function HeroSection({
               </svg>
             </div>
             <div className="space-y-1">
-              <span className="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block">
-                {locale === 'pl' ? 'LOCATION' : 'LOCATION'}
+              <span className="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block font-sans">
+                {locale === 'pl' ? 'LOKALIZACJA' : 'LOCATION'}
               </span>
-              <span className="text-muted-foreground/80 font-light block leading-relaxed whitespace-pre-line">
+              <span className="text-muted-foreground/80 font-light block leading-relaxed whitespace-pre-line font-sans">
                 {formattedAddress}
               </span>
             </div>
           </div>
 
           {/* Dine-In • Takeaway • Delivery */}
-          <div className="flex items-start space-x-4 p-1 md:border-r md:border-primary/20 md:px-6">
+          <div className="flex items-start space-x-4 p-1 md:border-r md:border-primary/20 md:px-6 text-left">
             {/* Octagonal Icon Frame */}
             <div className="flex-shrink-0 relative w-11 h-11 flex items-center justify-center text-primary">
               <svg className="absolute inset-0 w-full h-full text-primary/20 fill-primary/5 stroke-current" strokeWidth="1" viewBox="0 0 100 100">
@@ -272,17 +363,17 @@ export default function HeroSection({
               </svg>
             </div>
             <div className="space-y-1">
-              <span className="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block font-sans">
                 DINE-IN • TAKEAWAY • DELIVERY
               </span>
-              <span className="text-muted-foreground/80 font-light block leading-relaxed">
+              <span className="text-muted-foreground/80 font-light block leading-relaxed font-sans">
                 {locale === 'pl' ? 'Wybierz swój ulubiony sposób na delektowanie się Namaste' : 'Choose your favourite way to enjoy Namaste'}
               </span>
             </div>
           </div>
 
           {/* Call Us */}
-          <div className="flex items-start space-x-4 p-1 md:pl-6">
+          <div className="flex items-start space-x-4 p-1 md:pl-6 text-left">
             {/* Octagonal Icon Frame */}
             <div className="flex-shrink-0 relative w-11 h-11 flex items-center justify-center text-primary">
               <svg className="absolute inset-0 w-full h-full text-primary/20 fill-primary/5 stroke-current" strokeWidth="1" viewBox="0 0 100 100">
@@ -293,8 +384,8 @@ export default function HeroSection({
               </svg>
             </div>
             <div className="space-y-1">
-              <span className="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block">
-                {locale === 'pl' ? 'CALL US' : 'CALL US'}
+              <span className="text-[10px] uppercase tracking-[0.2em] text-primary font-bold block font-sans">
+                {locale === 'pl' ? 'ZADZWOŃ DO NAS' : 'CALL US'}
               </span>
               <span className="text-muted-foreground font-bold font-mono block text-sm sm:text-base tracking-wider">
                 {formattedPhone}
