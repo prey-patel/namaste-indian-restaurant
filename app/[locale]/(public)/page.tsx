@@ -12,7 +12,6 @@ import { getSiteContent } from '@/lib/supabase/content';
 import WhyChooseNamaste from '@/components/public/why-choose-namaste';
 import HeroSection from '@/components/public/hero-section';
 import { getPublicOpeningHours } from '@/lib/public/opening-hours';
-import TodaysHoursCard from '@/components/public/opening-hours/todays-hours-card';
 import RedesignedHomeClient from '@/components/public/redesigned-home-client';
 
 type Props = {
@@ -105,7 +104,6 @@ export default async function HomePage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* 1. HERO & INFO STRIP SECTION (Redesigned matching mock-ups) */}
       <HeroSection
         heroTitle={heroTitle}
         heroTitleAccent={heroTitleAccent}
@@ -118,12 +116,8 @@ export default async function HomePage({ params }: Props) {
         reserveTableText={t('reserveTable')}
         viewMenuText={t('viewMenu')}
         locale={locale}
-        todaysHoursCard={
-          <TodaysHoursCard 
-            dineIn={openingHoursData.dineIn} 
-            delivery={openingHoursData.delivery} 
-          />
-        }
+        dineInStatus={openingHoursData.dineIn}
+        deliveryStatus={openingHoursData.delivery}
       />
 
       {/* 3. WHY NAMASTE */}
