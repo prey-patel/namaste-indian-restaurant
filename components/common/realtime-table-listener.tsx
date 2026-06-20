@@ -19,6 +19,7 @@ export default function RealtimeTableListener({
 }: Props) {
   const router = useRouter();
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const statusRef = useRef<string>('INITIAL');
 
   // Debounced refresh function
   const triggerRefresh = useCallback(() => {
@@ -51,12 +52,15 @@ export default function RealtimeTableListener({
 
     channel.subscribe((status) => {
       console.log(`[Realtime] Channel '${channelName}' status:`, status);
+      statusRef.current = status;
     });
 
-    // Polling fallback: if Realtime fails or to ensure stale data gets refreshed
+    // Polling fallback: runs ONLY when Realtime is not fully subscribed (disconnected / error / closed)
     const pollInterval = setInterval(() => {
-      console.log(`[Realtime Polling Fallback] Sync checking for channel '${channelName}'...`);
-      triggerRefresh();
+      if (statusRef.current !== 'SUBSCRIBED') {
+        console.log(`[Realtime Polling Fallback] Realtime channel '${channelName}' is not subscribed (status: ${statusRef.current}). Checking for updates...`);
+        triggerRefresh();
+      }
     }, pollingIntervalMs);
 
     return () => {
