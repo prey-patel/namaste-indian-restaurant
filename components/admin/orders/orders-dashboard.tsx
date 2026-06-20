@@ -26,7 +26,10 @@ import {
   CompleteOrderModal,
   UpdateEtaModal
 } from './order-modals';
-import { Search, RefreshCw, Eye, Calendar, Clock, ShoppingBag, ArrowRight, X, MapPin } from 'lucide-react';
+import { Search, RefreshCw, Eye, Calendar, Clock, ShoppingBag, ArrowRight, X, MapPin, Wifi, WifiOff } from 'lucide-react';
+import { useAdminOrderAlerts } from '@/hooks/use-admin-order-alerts';
+import NotificationPermissionCard from '@/components/admin/alerts/notification-permission-card';
+import OrderAlertBanner from '@/components/admin/alerts/order-alert-banner';
 
 type Order = {
   id: string;
@@ -79,6 +82,10 @@ type Props = {
 export default function OrdersDashboard({ initialOrders, metrics, filters }: Props) {
   const router = useRouter();
   
+  const [isConnected, setIsConnected] = useState(false);
+  const pendingCount = initialOrders.filter(o => o.status === 'pending').length;
+  const { soundEnabled, toggleSound, unlockAudio } = useAdminOrderAlerts(pendingCount);
+  
   useEffect(() => {
     const supabase = createClient();
     const channel = supabase
@@ -90,10 +97,22 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
           router.refresh();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setIsConnected(true);
+        } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+          setIsConnected(false);
+        }
+      });
+
+    // 30 seconds polling fallback
+    const pollInterval = setInterval(() => {
+      router.refresh();
+    }, 30000);
 
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(pollInterval);
     };
   }, [router]);
 
@@ -239,7 +258,17 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
           <h1 className="text-3xl font-serif font-bold text-primary">{t('title')}</h1>
           <p className="text-xs text-muted-foreground mt-1">Manage, confirm, and update customer order workflows</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {/* Connection Status Badge */}
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+            isConnected
+              ? 'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400'
+              : 'border-yellow-500/30 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400'
+          }`}>
+            {isConnected ? <Wifi className="w-3 h-3 animate-pulse" /> : <WifiOff className="w-3 h-3" />}
+            {isConnected ? 'Live' : 'Reconnecting'}
+          </div>
+
           <Link href="/admin/orders/new" passHref legacyBehavior>
             <Button className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold p-2.5 flex items-center gap-1.5">
               <ShoppingBag className="w-3.5 h-3.5" />
@@ -267,6 +296,21 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
           {successMessage}
         </div>
       )}
+
+      {/* PWA Alerts & Sound Controls (Phase 13C) */}
+      <div className="space-y-4">
+        <NotificationPermissionCard
+          soundEnabled={soundEnabled}
+          onToggleSound={toggleSound}
+          onUnlockAudio={unlockAudio}
+          alertType="admin"
+        />
+        <OrderAlertBanner
+          pendingCount={pendingCount}
+          soundEnabled={soundEnabled}
+          onToggleSound={toggleSound}
+        />
+      </div>
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -419,7 +463,14 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                   const isTakeaway = order.order_type === 'takeaway';
                   
                   return (
-                    <tr key={order.id} className="hover:bg-muted/50 transition-colors">
+                    <tr 
+                      key={order.id} 
+                      className={`transition-colors ${
+                        order.status === 'pending'
+                          ? 'bg-yellow-500/5 hover:bg-yellow-500/10 border-l-4 border-l-yellow-500'
+                          : 'hover:bg-muted/50'
+                      }`}
+                    >
                       {/* Customer Info */}
                       <td className="p-4 space-y-0.5">
                         <div className="font-semibold text-foreground text-sm flex items-center gap-1.5">
@@ -599,7 +650,14 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
               const isTakeaway = order.order_type === 'takeaway';
               
               return (
-                <div key={order.id} className="p-4 space-y-3.5 text-left bg-card">
+                <div 
+                  key={order.id} 
+                  className={`p-4 space-y-3.5 text-left transition-colors ${
+                    order.status === 'pending'
+                      ? 'bg-yellow-500/5 border-l-4 border-l-yellow-500'
+                      : 'bg-card'
+                  }`}
+                >
                   {/* Top info */}
                   <div className="flex justify-between items-start gap-2">
                     <div>

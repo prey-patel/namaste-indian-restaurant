@@ -318,6 +318,18 @@ export async function createManualOrderAction(rawData: any) {
       await sendOrderApprovedCustomerEmail(newOrder.id);
     }
 
+    // Trigger PWA push notifications (non-blocking, isolated)
+    try {
+      const { dispatchOrderPush } = await import('@/lib/push/dispatch-order-push');
+      if (data.status === 'approved') {
+        await dispatchOrderPush(newOrder.id, 'approved-kds');
+      } else if (data.status === 'pending') {
+        await dispatchOrderPush(newOrder.id, 'pending-admin');
+      }
+    } catch (pushErr) {
+      console.error("Failed to dispatch manual order push alert:", pushErr);
+    }
+
     // 9. Revalidate paths
     revalidatePath("/admin/orders", "layout");
     revalidatePath("/admin/kds", "layout");

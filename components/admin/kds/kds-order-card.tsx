@@ -47,6 +47,7 @@ type Props = {
   onMarkReady: (id: string) => void;
   isPending: boolean;
   isNew?: boolean;
+  isUnseen?: boolean;
   theme?: 'dark' | 'light';
 };
 
@@ -102,19 +103,24 @@ function useEtaCountdown(estimatedTime: string | null) {
 
     const update = () => {
       const diff = new Date(estimatedTime).getTime() - Date.now();
-      const mins = Math.round(diff / 60000);
-      const timeStr = new Date(estimatedTime).toLocaleTimeString('en-GB', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-        timeZone: 'Europe/Warsaw',
-      });
+      const minsLeft = Math.round(diff / 60000);
+      const isOverdue = minsLeft < 0;
+      const absMins = Math.abs(minsLeft);
+      const hrs = Math.floor(absMins / 60);
+      const remainMins = absMins % 60;
 
-      if (mins <= 0) {
-        setEta({ text: timeStr, isOverdue: true, minsLeft: mins });
+      let text = '';
+      if (hrs > 0) {
+        text = `${hrs}h ${remainMins}m`;
       } else {
-        setEta({ text: `${timeStr} (${mins}m)`, isOverdue: false, minsLeft: mins });
+        text = `${remainMins}m`;
       }
+
+      setEta({
+        text: isOverdue ? `${text} overdue` : text,
+        isOverdue,
+        minsLeft,
+      });
     };
 
     update();
@@ -131,6 +137,7 @@ export default function KdsOrderCard({
   onMarkReady,
   isPending,
   isNew,
+  isUnseen,
   theme = 'dark',
 }: Props) {
   const t = useTranslations('kds');
@@ -171,7 +178,7 @@ export default function KdsOrderCard({
       className={`
         ${bgClass} overflow-hidden
         border-l-4 ${getUrgencyClass()}
-        ${isNew ? 'ring-2 ring-amber-400/50 animate-pulse-once' : ''}
+        ${isUnseen ? 'ring-2 ring-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.45)] border-amber-500/50' : isNew ? 'ring-2 ring-amber-400/50 animate-pulse-once' : ''}
         transition-all duration-300
       `}
       role="article"

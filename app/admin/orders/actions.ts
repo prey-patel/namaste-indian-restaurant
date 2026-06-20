@@ -107,6 +107,14 @@ export async function confirmOrderAction(id: string, etaMinutes: number) {
     // Trigger customer email notification
     await sendOrderApprovedCustomerEmail(id);
 
+    // Trigger PWA push notifications (non-blocking, isolated)
+    try {
+      const { dispatchOrderPush } = await import('@/lib/push/dispatch-order-push');
+      await dispatchOrderPush(id, 'approved-kds');
+    } catch (pushErr) {
+      console.error('Failed to dispatch approved order push alert:', pushErr);
+    }
+
     revalidatePath('/[locale]/order/status', 'layout');
     revalidatePath('/admin/orders', 'layout');
     return { success: true };

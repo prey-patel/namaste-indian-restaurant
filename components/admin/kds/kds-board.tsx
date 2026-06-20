@@ -6,6 +6,9 @@ import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import KdsOrderCard, { type KdsOrder } from './kds-order-card';
 import { kdsStartPreparingAction, kdsMarkReadyAction } from '@/app/admin/kds/actions';
+import { useKdsAlerts } from '@/hooks/use-kds-alerts';
+import NotificationPermissionCard from '@/components/admin/alerts/notification-permission-card';
+import KdsAlertBanner from '@/components/admin/alerts/kds-alert-banner';
 import {
   Wifi,
   WifiOff,
@@ -29,33 +32,6 @@ type Props = {
 const KITCHEN_STATUSES = ['approved', 'preparing', 'ready_for_pickup', 'out_for_delivery'];
 const POLL_INTERVAL = 30000; // 30 seconds fallback
 
-/**
- * Generate a short beep using Web Audio API.
- * No external audio file needed.
- */
-function playAlertSound() {
-  try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    // Two-tone alert: high then low
-    [800, 600].forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = freq;
-      osc.type = 'sine';
-      gain.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.15);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.15 + 0.14);
-      osc.start(ctx.currentTime + i * 0.15);
-      osc.stop(ctx.currentTime + i * 0.15 + 0.15);
-    });
-    // Clean up context after sound
-    setTimeout(() => ctx.close(), 500);
-  } catch {
-    // Silently fail if AudioContext not available
-  }
-}
-
 export default function KdsBoard({ initialOrders, userRole }: Props) {
   const router = useRouter();
   const t = useTranslations('kds');
@@ -65,23 +41,23 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
   const [isConnected, setIsConnected] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(false);
+  const {
+    soundEnabled,
+    toggleSound,
+    unlockAudio
+  } = useKdsAlerts(orders);
+
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [newOrderIds, setNewOrderIds] = useState<Set<string>>(new Set());
+  const [unseenOrderIds, setUnseenOrderIds] = useState<Set<string>>(new Set());
 
   // Track known order IDs to detect new arrivals
   const knownOrderIdsRef = useRef<Set<string>>(new Set(initialOrders.map(o => o.id)));
-  const soundEnabledRef = useRef(soundEnabled);
-  soundEnabledRef.current = soundEnabled;
 
   // Load preferences from localStorage
   useEffect(() => {
     setLastUpdated(new Date());
-    const storedSound = localStorage.getItem('kds_sound_enabled');
-    if (storedSound === 'true') {
-      setSoundEnabled(true);
-    }
     const storedTheme = localStorage.getItem('kds_theme') as 'dark' | 'light';
     if (storedTheme) {
       setTheme(storedTheme);
@@ -93,17 +69,6 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
       const next = prev === 'dark' ? 'light' : 'dark';
       localStorage.setItem('kds_theme', next);
       window.dispatchEvent(new CustomEvent('kds-theme-change', { detail: next }));
-      return next;
-    });
-  }, []);
-
-  // Toggle sound preference
-  const toggleSound = useCallback(() => {
-    setSoundEnabled(prev => {
-      const next = !prev;
-      localStorage.setItem('kds_sound_enabled', String(next));
-      // Play test sound when enabling
-      if (next) playAlertSound();
       return next;
     });
   }, []);
@@ -160,20 +125,23 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
         items: itemsMap[o.id] || [],
       }));
 
-      // Detect new approved orders for sound alert
-      const newIds = new Set<string>();
+      // Detect new approved orders for sound alert & visual highlight
+      const newIds: string[] = [];
       assembled.forEach(o => {
         if (o.status === 'approved' && !knownOrderIdsRef.current.has(o.id)) {
-          newIds.add(o.id);
+          newIds.push(o.id);
         }
       });
 
-      if (newIds.size > 0 && soundEnabledRef.current) {
-        playAlertSound();
-      }
+      if (newIds.length > 0) {
+        setUnseenOrderIds(prev => {
+          const next = new Set(prev);
+          newIds.forEach(id => next.add(id));
+          return next;
+        });
 
-      if (newIds.size > 0) {
-        setNewOrderIds(newIds);
+        const newIdsSet = new Set(newIds);
+        setNewOrderIds(newIdsSet);
         // Clear "new" indicator after 5 seconds
         setTimeout(() => setNewOrderIds(new Set()), 5000);
       }
@@ -232,6 +200,11 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
     startTransition(async () => {
       const res = await kdsStartPreparingAction(orderId);
       if (res.success) {
+        setUnseenOrderIds(prev => {
+          const next = new Set(prev);
+          next.delete(orderId);
+          return next;
+        });
         fetchOrders();
       } else {
         setErrorMessage(res.error || t('errorGeneric'));
@@ -244,6 +217,11 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
     startTransition(async () => {
       const res = await kdsMarkReadyAction(orderId);
       if (res.success) {
+        setUnseenOrderIds(prev => {
+          const next = new Set(prev);
+          next.delete(orderId);
+          return next;
+        });
         fetchOrders();
       } else {
         setErrorMessage(res.error || t('errorGeneric'));
@@ -269,6 +247,7 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
 
   return (
     <div 
+      onClick={unlockAudio}
       className={`notranslate ${
         isFullscreen 
           ? `fixed inset-0 z-50 overflow-auto p-6 transition-colors duration-300 ${
@@ -360,6 +339,21 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
         </div>
       )}
 
+      {/* Notifications / Alert Banners */}
+      <div className={`mx-${isFullscreen ? '6' : '0'} mb-6 space-y-4`}>
+        <NotificationPermissionCard
+          soundEnabled={soundEnabled}
+          onToggleSound={toggleSound}
+          onUnlockAudio={unlockAudio}
+          alertType="kds"
+        />
+        
+        <KdsAlertBanner 
+          unseenCount={unseenOrderIds.size}
+          onMarkSeen={() => setUnseenOrderIds(new Set())}
+        />
+      </div>
+
       {/* Three Column KDS Grid */}
       <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 ${
         isFullscreen ? 'px-6 pb-6' : ''
@@ -390,6 +384,7 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
                 onMarkReady={handleMarkReady}
                 isPending={isPending}
                 isNew={newOrderIds.has(order.id)}
+                isUnseen={unseenOrderIds.has(order.id)}
                 theme={theme}
               />
             ))
@@ -421,6 +416,7 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
                 onStartPreparing={handleStartPreparing}
                 onMarkReady={handleMarkReady}
                 isPending={isPending}
+                isUnseen={unseenOrderIds.has(order.id)}
                 theme={theme}
               />
             ))
@@ -452,6 +448,7 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
                 onStartPreparing={handleStartPreparing}
                 onMarkReady={handleMarkReady}
                 isPending={isPending}
+                isUnseen={unseenOrderIds.has(order.id)}
                 theme={theme}
               />
             ))

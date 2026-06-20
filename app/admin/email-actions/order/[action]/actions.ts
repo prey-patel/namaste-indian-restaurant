@@ -87,6 +87,14 @@ export async function submitOrderEmailAction(
     // 5. Trigger customer notifications
     if (action === "approve") {
       await sendOrderApprovedCustomerEmail(order.id);
+      
+      // Trigger PWA push notifications for kitchen (non-blocking, isolated)
+      try {
+        const { dispatchOrderPush } = await import('@/lib/push/dispatch-order-push');
+        await dispatchOrderPush(order.id, 'approved-kds');
+      } catch (pushErr) {
+        console.error('Failed to dispatch approved order push alert from email action:', pushErr);
+      }
     } else {
       await sendOrderRejectedCustomerEmail(order.id);
     }

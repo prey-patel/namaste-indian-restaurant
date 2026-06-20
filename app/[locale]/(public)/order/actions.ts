@@ -316,6 +316,14 @@ export async function createOrderRequestAction(rawData: any) {
     await sendOrderRequestReceivedCustomerEmail(newOrder.id);
     await sendOrderNewAdminEmail(newOrder.id);
 
+    // Trigger PWA push notifications (non-blocking, isolated)
+    try {
+      const { dispatchOrderPush } = await import('@/lib/push/dispatch-order-push');
+      await dispatchOrderPush(newOrder.id, 'pending-admin');
+    } catch (pushErr) {
+      console.error('Failed to dispatch order push alert:', pushErr);
+    }
+
     return {
       success: true,
       id: newOrder.id,

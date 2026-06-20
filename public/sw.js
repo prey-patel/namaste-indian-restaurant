@@ -80,3 +80,65 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// PWA WEB PUSH EVENTS (Phase 13C)
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  try {
+    const payload = event.data.json();
+    const { title, body, data } = payload;
+
+    const options = {
+      body: body || '',
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      vibrate: [200, 100, 200],
+      data: data || {},
+      actions: [
+        { action: 'open', title: 'Open Panel' }
+      ]
+    };
+
+    event.waitUntil(
+      self.registration.showNotification(title || 'Namaste Alert', options)
+    );
+  } catch (err) {
+    console.error('Failed to process push payload:', err);
+    event.waitUntil(
+      self.registration.showNotification('Namaste Indian Restaurant', {
+        body: event.data.text(),
+        icon: '/icon-192.png',
+        badge: '/icon-192.png'
+      })
+    );
+  }
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const clickPath = event.notification.data?.clickPath || '/admin/orders';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Find matching client if already open
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin)) {
+          if ('focus' in client) {
+            client.focus();
+          }
+          if ('navigate' in client) {
+            client.navigate(clickPath);
+          }
+          return;
+        }
+      }
+      // Otherwise open a new window
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(clickPath);
+      }
+    })
+  );
+});
+
