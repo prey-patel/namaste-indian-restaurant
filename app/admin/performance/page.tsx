@@ -3,13 +3,18 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getPerformanceDataAction } from "./actions";
 import PerformanceDashboard from "@/components/admin/performance/performance-dashboard";
+import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Wydajność Operacyjna / Performance — Namaste Admin",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata() {
+  const cookieStore = await cookies();
+  const locale = cookieStore.get("NEXT_LOCALE")?.value || "pl";
+  return {
+    title: locale === "en" ? "Operational Performance — Namaste Admin" : "Wydajność Operacyjna — Namaste Admin",
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function AdminPerformancePage() {
   const supabase = await createClient();
@@ -36,6 +41,10 @@ export default async function AdminPerformancePage() {
     redirect("/admin");
   }
 
+  // Resolve current locale
+  const cookieStore = await cookies();
+  const locale = cookieStore.get("NEXT_LOCALE")?.value || "pl";
+
   // 3. Define default date range (last 30 days) in Europe/Warsaw timezone
   const now = new Date();
   const endDateStr = now.toLocaleDateString("en-CA", { timeZone: "Europe/Warsaw" });
@@ -56,10 +65,12 @@ export default async function AdminPerformancePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-serif font-bold text-foreground">
-          Wydajność Operacyjna / Performance
+          {locale === "en" ? "Operational Performance" : "Wydajność Operacyjna"}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Monitoruj czas przygotowania dań, terminowość dostaw oraz wskaźniki rezerwacji. / Monitor kitchen preparation speeds, delivery fulfillment rates, and booking response times.
+          {locale === "en" 
+            ? "Monitor kitchen preparation speeds, delivery fulfillment rates, and booking response times."
+            : "Monitoruj czas przygotowania dań, terminowość dostaw oraz wskaźniki rezerwacji."}
         </p>
       </div>
 
@@ -71,7 +82,9 @@ export default async function AdminPerformancePage() {
         />
       ) : (
         <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-6 text-center text-red-600 [.admin-theme_&]:text-red-800">
-          Nie udało się załadować raportów wydajności. Spróbuj odświeżyć stronę. / Failed to load performance reports. Please refresh the page.
+          {locale === "en"
+            ? "Failed to load performance reports. Please refresh the page."
+            : "Nie udało się załadować raportów wydajności. Spróbuj odświeżyć stronę."}
         </div>
       )}
     </div>

@@ -426,9 +426,9 @@ export default function PerformanceDashboard({
                 <div className="flex flex-col items-center justify-center h-[180px] bg-muted/10 rounded-lg border border-dashed border-border/60 p-4">
                   <TrendingUp className="w-8 h-8 text-muted-foreground/60 mb-2" />
                   <p className="text-xs text-muted-foreground italic text-center">
-                    Brak wystarczającej ilości danych do wygenerowania wykresu trendów (wymagane min. 2 dni ze średnim czasem).
-                    <br />
-                    <span>Insufficient daily data points to plot prep times trend.</span>
+                    {locale === 'en'
+                      ? 'Insufficient daily data points to plot prep times trend.'
+                      : 'Brak wystarczającej ilości danych do wygenerowania wykresu trendów (wymagane min. 2 dni ze średnim czasem).'}
                   </p>
                 </div>
               ) : (
