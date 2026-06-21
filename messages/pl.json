@@ -515,7 +515,9 @@
     "orderTitle": "Zamów Online | Namaste Indian Restaurant",
     "orderDesc": "Zamów jedzenie z dostawą lub na wynos w Ciechanowie. Wyśmienita kuchnia indyjska przygotowywana na świeżo.",
     "orderStatusTitle": "Śledź status zamówienia | Namaste Indian Restaurant",
-    "orderStatusDesc": "Śledź status swojego zamówienia na wynos lub z dostawą w restauracji Namaste Indian Restaurant."
+    "orderStatusDesc": "Śledź status swojego zamówienia na wynos lub z dostawą w restauracji Namaste Indian Restaurant.",
+    "galleryTitle": "Galeria Zdjęć | Namaste Indian Restaurant",
+    "galleryDesc": "Przeglądaj galerię zdjęć Namaste w Ciechanowie. Zobacz nasze autentyczne dania indyjskie, eleganckie wnętrza oraz kunszt kucharzy."
   },
   "kds": {
     "title": "Wyświetlacz Kuchenny",
@@ -614,5 +616,17 @@
       "kds": "Monitor Kuchenny",
       "menu": "Zarządzanie Menu CMS"
     }
+  },
+  "gallery": {
+    "title": "Wizualna Podróż",
+    "subtitle": "Spojrzenie na smaki, atmosferę i kunszt restauracji Namaste.",
+    "filters": {
+      "all": "Wszystkie Zdjęcia",
+      "dishes": "Nasze Dania",
+      "ambience": "Wnętrze i Klimat",
+      "kitchen": "Kuchnia i Rzemiosło"
+    },
+    "empty": "Brak zdjęć w tej kategorii.",
+    "backToHome": "Powrót do Strony Głównej"
   }
 }

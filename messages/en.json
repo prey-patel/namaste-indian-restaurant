@@ -515,7 +515,9 @@
     "orderTitle": "Order Online | Namaste Indian Restaurant",
     "orderDesc": "Request takeaway or delivery from Namaste in Ciechanów. Premium Indian cuisine prepared to order.",
     "orderStatusTitle": "Track Order Request | Namaste Indian Restaurant",
-    "orderStatusDesc": "Track the status of your takeaway or delivery order request from Namaste Indian Restaurant."
+    "orderStatusDesc": "Track the status of your takeaway or delivery order request from Namaste Indian Restaurant.",
+    "galleryTitle": "Photo Gallery | Namaste Indian Restaurant",
+    "galleryDesc": "Browse photos of Namaste in Ciechanów. See our authentic Indian dishes, elegant interior, and kitchen craft."
   },
   "kds": {
     "title": "Kitchen Display",
@@ -614,5 +616,17 @@
       "kds": "Kitchen Display System",
       "menu": "Menu & Categories CMS"
     }
+  },
+  "gallery": {
+    "title": "Visual Journey",
+    "subtitle": "A glimpse of the sights, flavors, and craft of Namaste.",
+    "filters": {
+      "all": "All Photos",
+      "dishes": "Our Dishes",
+      "ambience": "Restaurant Ambience",
+      "kitchen": "Kitchen & Craft"
+    },
+    "empty": "No images available in this category.",
+    "backToHome": "Back to Home"
   }
 }

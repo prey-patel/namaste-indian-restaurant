@@ -9,6 +9,7 @@ export const ROUTES = {
   reservations: '/reservations',
   story: '/our-story',
   contact: '/contact',
+  gallery: '/gallery',
   status: '/my-status',
   order: '/order',
   privacy: '/privacy-policy',

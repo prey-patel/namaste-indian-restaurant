@@ -159,10 +159,18 @@ export default function Header() {
             )}
           </Link>
           <Link 
-            href="#" 
-            className="text-xs uppercase tracking-widest font-sans font-bold transition-all duration-300 text-foreground/90 hover:text-primary py-2"
+            href={ROUTES.gallery} 
+            className={`text-xs uppercase tracking-widest font-sans font-bold transition-all duration-300 relative py-2 ${
+              isActive(ROUTES.gallery) ? 'text-primary' : 'text-foreground/90 hover:text-primary'
+            }`}
           >
             {t('gallery')}
+            {isActive(ROUTES.gallery) && (
+              <motion.span 
+                layoutId="activeNavLine" 
+                className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-primary rounded-full" 
+              />
+            )}
           </Link>
           <Link 
             href={ROUTES.contact} 
@@ -310,9 +318,11 @@ export default function Header() {
                   {t('story')}
                 </Link>
                 <Link
-                  href="#"
+                  href={ROUTES.gallery}
                   onClick={() => setIsDrawerOpen(false)}
-                  className="text-sm uppercase tracking-widest font-sans font-bold py-2 hover:text-primary transition-colors border-b border-primary/5"
+                  className={`text-sm uppercase tracking-widest font-sans font-bold py-2 transition-colors border-b border-primary/5 ${
+                    isActive(ROUTES.gallery) ? 'text-primary' : 'hover:text-primary'
+                  }`}
                 >
                   {t('gallery')}
                 </Link>
