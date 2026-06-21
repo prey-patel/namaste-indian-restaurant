@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createClient } from './server';
+import { createAdminClient } from './admin';
 
 export type PublicSettings = {
   restaurant_address?: string;
@@ -57,7 +57,7 @@ export async function getPublicSystemSettings(): Promise<PublicSettings> {
   };
 
   try {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const { data, error } = await supabase.rpc('get_public_system_settings');
 
     if (error || !data || !Array.isArray(data)) {
