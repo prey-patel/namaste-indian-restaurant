@@ -17,7 +17,9 @@ import {
   XCircle,
   Plus,
   Trash2,
-  ExternalLink
+  ExternalLink,
+  Image as ImageIcon,
+  Loader2
 } from 'lucide-react';
 import { 
   updateRestaurantProfileAction, 
@@ -28,10 +30,12 @@ import {
   updateFeeSettingsAction,
   createHolidayClosureAction,
   updateHolidayClosureAction,
-  deleteHolidayClosureAction
+  deleteHolidayClosureAction,
+  uploadGalleryImagesAction,
+  deleteGalleryImageAction
 } from './actions';
 
-type TabType = 'profile' | 'hours' | 'status' | 'reservations' | 'delivery' | 'fees' | 'holidays' | 'region' | 'security';
+type TabType = 'profile' | 'hours' | 'status' | 'reservations' | 'delivery' | 'fees' | 'holidays' | 'region' | 'security' | 'gallery';
 
 type SettingsClientProps = {
   profile: { role: string; is_active: boolean };
@@ -42,6 +46,14 @@ type SettingsClientProps = {
   deliveryRules: any[];
   packagingFees: any[];
   holidayClosures: any[];
+  galleryImages: {
+    id: string;
+    file_path: string;
+    url: string;
+    alt_text_pl: string | null;
+    alt_text_en: string | null;
+    created_at: string;
+  }[];
 };
 
 export default function SettingsClient({
@@ -52,11 +64,17 @@ export default function SettingsClient({
   deliveryZones: initialZones,
   deliveryRules: initialRules,
   packagingFees: initialFees,
-  holidayClosures: initialClosures
+  holidayClosures: initialClosures,
+  galleryImages
 }: SettingsClientProps) {
   const [activeTab, setActiveTab] = useState<TabType>('profile');
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Gallery Management States
+  const [galleryState, setGalleryState] = useState(galleryImages);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [galleryUploadError, setGalleryUploadError] = useState<string | null>(null);
 
   // Profile Form State
   const [profileForm, setProfileForm] = useState({
@@ -279,6 +297,63 @@ export default function SettingsClient({
     }
   };
 
+  const handleUploadGalleryImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingGallery(true);
+    setGalleryUploadError(null);
+
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append('files', files[i]);
+    }
+
+    try {
+      const res = await uploadGalleryImagesAction(formData);
+      if (res.success && res.results) {
+        showFeedback('success', res.message || 'Images uploaded successfully.');
+        const newlyUploaded = (res.results.filter((r: any) => r.success) as any[]).map(r => ({
+          id: r.id as string,
+          file_path: r.file_path as string,
+          url: r.url as string,
+          alt_text_pl: r.alt_text_pl || null,
+          alt_text_en: r.alt_text_en || null,
+          created_at: r.created_at as string
+        }));
+        setGalleryState((prev) => [...newlyUploaded, ...prev]);
+      } else {
+        setGalleryUploadError(res.error || 'Failed to upload images.');
+        showFeedback('error', res.error || 'Failed to upload images.');
+      }
+    } catch (err: any) {
+      setGalleryUploadError(err.message || 'An error occurred during upload.');
+      showFeedback('error', err.message || 'An error occurred during upload.');
+    } finally {
+      setUploadingGallery(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleDeleteGalleryImage = async (id: string, filePath: string) => {
+    if (!confirm('Are you sure you want to delete this gallery photo? This will remove it from the public website instantly.')) return;
+    
+    setIsSaving(true);
+    try {
+      const res = await deleteGalleryImageAction(id, filePath);
+      if (res.success) {
+        showFeedback('success', 'Photo deleted successfully.');
+        setGalleryState((prev) => prev.filter(img => img.id !== id));
+      } else {
+        showFeedback('error', res.error || 'Failed to delete photo.');
+      }
+    } catch (err: any) {
+      showFeedback('error', err.message || 'Error occurred.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const getDayName = (dayIdx: number) => {
     const days = [
       { pl: 'Niedziela', en: 'Sunday' },
@@ -302,6 +377,7 @@ export default function SettingsClient({
     { type: 'fees' as TabType, label: 'Charges & Fees', icon: Coins },
     { type: 'holidays' as TabType, label: 'Holiday Closures', icon: CalendarOff },
     { type: 'region' as TabType, label: 'Language & Region', icon: Globe },
+    { type: 'gallery' as TabType, label: 'Photo Gallery', icon: ImageIcon },
     { type: 'security' as TabType, label: 'Security & Access', icon: Lock }
   ];
 
@@ -1292,6 +1368,98 @@ export default function SettingsClient({
                     Modifications to configuration settings write to database triggers logging the administrator account ID, modification timestamp, and target table context.
                   </p>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 10: PHOTO GALLERY MANAGEMENT */}
+          {activeTab === 'gallery' && (
+            <div className="bg-card border border-border rounded-xl shadow-sm p-6 space-y-6">
+              <div>
+                <h2 className="text-xl font-serif font-bold text-primary">Photo Gallery Management</h2>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Upload multiple restaurant photos (dishes, interior ambience, kitchen craft). These will appear dynamically in the public website&apos;s gallery page.
+                </p>
+              </div>
+
+              {/* Uploader Section */}
+              <div className="border border-dashed border-border rounded-lg p-8 text-center bg-muted/20 hover:border-primary transition-colors duration-300 relative">
+                {uploadingGallery ? (
+                  <div className="flex flex-col items-center justify-center space-y-3 py-4">
+                    <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                    <span className="text-xs font-bold text-primary uppercase tracking-wider animate-pulse">Uploading photos...</span>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex justify-center">
+                      <ImageIcon className="w-12 h-12 text-primary/40" />
+                    </div>
+                    <div className="text-xs space-y-1">
+                      <p className="font-semibold text-foreground">Select multiple photos to upload</p>
+                      <p className="text-muted-foreground/60">Max 5MB per file (PNG, JPEG, WEBP)</p>
+                    </div>
+                    <div className="flex justify-center">
+                      <label className="cursor-pointer bg-primary/10 hover:bg-primary/20 border border-primary/30 px-5 py-2.5 rounded-lg text-xs font-bold text-primary transition-colors tracking-wide uppercase">
+                        Choose Files
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleUploadGalleryImages}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {galleryUploadError && (
+                <p className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 p-3 rounded-lg text-center">
+                  {galleryUploadError}
+                </p>
+              )}
+
+              {/* Current Gallery List Grid */}
+              <div className="space-y-4 pt-4 border-t border-border">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">
+                  Current Gallery Images ({galleryState.length})
+                </h3>
+
+                {galleryState.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic py-4">
+                    No custom gallery photos uploaded yet. The public page is currently showing default static assets.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {galleryState.map((img) => (
+                      <div
+                        key={img.id}
+                        className="relative group border border-border rounded-lg overflow-hidden bg-muted/10 p-1 hover:border-primary/40 transition-all duration-300"
+                      >
+                        <div className="relative aspect-square w-full overflow-hidden rounded-md bg-black/40">
+                          <img
+                            src={img.url}
+                            alt={img.alt_text_en || 'Gallery Image'}
+                            className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                          />
+                        </div>
+                        {/* Delete action overlay */}
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteGalleryImage(img.id, img.file_path)}
+                            disabled={isSaving}
+                            className="p-1.5 bg-red-600 text-white rounded hover:bg-red-700 transition-colors focus:outline-none shadow-md shadow-red-950/30"
+                            title="Delete Image"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

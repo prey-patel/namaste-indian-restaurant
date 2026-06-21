@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { geocodeRestaurantAddress } from '@/lib/delivery/distance';
@@ -43,6 +44,8 @@ function revalidateAllPaths() {
     '/en/reservations',
     '/pl/order',
     '/en/order',
+    '/pl/gallery',
+    '/en/gallery',
     '/admin',
     '/admin/settings'
   ];
@@ -522,3 +525,150 @@ export async function deleteHolidayClosureAction(id: string) {
     return { success: false, error: err.message || 'Failed to delete closure' };
   }
 }
+
+// ==========================================
+// PHOTO GALLERY MANAGEMENT ACTIONS
+// ==========================================
+
+export async function uploadGalleryImagesAction(formData: FormData) {
+  try {
+    const { supabase, userId } = await verifyAuth();
+    
+    const files = formData.getAll('files') as File[];
+    if (!files || files.length === 0) {
+      return { success: false, error: 'No files uploaded' };
+    }
+
+    const adminClient = createAdminClient();
+    const results = [];
+
+    for (const file of files) {
+      // 1. Image validation
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        results.push({ name: file.name, success: false, error: 'Invalid file type. Only PNG, JPEG, JPG, and WEBP allowed.' });
+        continue;
+      }
+
+      const maxSize = 5 * 1024 * 1024; // 5 MB
+      if (file.size > maxSize) {
+        results.push({ name: file.name, success: false, error: 'File size exceeds the 5MB limit.' });
+        continue;
+      }
+
+      // 2. Convert to buffer for Supabase Storage
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+
+      // 3. Generate secure safe path
+      const fileExt = file.name.split('.').pop();
+      const safeUuid = crypto.randomUUID();
+      const safePath = `gallery/${safeUuid}/${Date.now()}.${fileExt}`;
+
+      // 4. Upload to storage using server client (inherits auth role permissions)
+      const { error: uploadError } = await supabase.storage
+        .from('gallery-images')
+        .upload(safePath, buffer, {
+          contentType: file.type,
+          duplex: 'half',
+        });
+
+      if (uploadError) {
+        console.error(`Storage upload error for "${file.name}":`, uploadError);
+        results.push({ name: file.name, success: false, error: 'Failed to upload to storage' });
+        continue;
+      }
+
+      // 5. Log in media_assets table
+      const altText = file.name.split('.')[0]?.replace(/[-_]+/g, ' ') || 'Gallery Image';
+      const { data: assetRecord, error: assetError } = await supabase
+        .from('media_assets')
+        .insert({
+          bucket: 'gallery-images',
+          file_path: safePath,
+          file_type: file.type,
+          file_size: file.size,
+          is_public: true,
+          is_approved: true,
+          uploaded_by: userId,
+          alt_text_en: altText,
+          alt_text_pl: altText,
+        })
+        .select('id, file_path, alt_text_pl, alt_text_en, created_at')
+        .single();
+
+      if (assetError) {
+        console.error(`Metadata insert error for "${file.name}":`, assetError);
+        await supabase.storage.from('gallery-images').remove([safePath]);
+        results.push({ name: file.name, success: false, error: 'Failed to log metadata' });
+        continue;
+      }
+
+      // 6. Generate signed URL for immediate client feedback
+      const { data: signData, error: signError } = await adminClient.storage
+        .from('gallery-images')
+        .createSignedUrl(safePath, 3600); // 1 hour
+
+      results.push({
+        id: assetRecord.id,
+        file_path: assetRecord.file_path,
+        url: signData?.signedUrl || '',
+        alt_text_pl: assetRecord.alt_text_pl,
+        alt_text_en: assetRecord.alt_text_en,
+        created_at: assetRecord.created_at,
+        name: file.name,
+        success: true
+      });
+    }
+
+    revalidateAllPaths();
+
+    const succeeded = results.filter(r => r.success).length;
+    const failed = results.filter(r => !r.success).length;
+
+    return {
+      success: true,
+      message: `Uploaded ${succeeded} images successfully.${failed > 0 ? ` Failed to upload ${failed} images.` : ''}`,
+      results
+    };
+  } catch (err: any) {
+    console.error('uploadGalleryImagesAction error:', err);
+    return { success: false, error: err.message || 'Server error' };
+  }
+}
+
+export async function deleteGalleryImageAction(id: string, filePath: string) {
+  try {
+    const { supabase } = await verifyAuth();
+    z.string().uuid().parse(id);
+    z.string().min(1).parse(filePath);
+
+    // 1. Delete DB metadata
+    const { error: dbError } = await supabase
+      .from('media_assets')
+      .delete()
+      .eq('id', id);
+
+    if (dbError) {
+      console.error(`Database deletion error for media id ${id}:`, dbError);
+      return { success: false, error: 'Failed to remove database record' };
+    }
+
+    // 2. Delete storage file
+    const { error: storageError } = await supabase.storage
+      .from('gallery-images')
+      .remove([filePath]);
+
+    if (storageError) {
+      console.error(`Storage deletion error for path ${filePath}:`, storageError);
+      // We don't fail the whole action if the file is already gone, but we log it
+    }
+
+    revalidateAllPaths();
+    return { success: true };
+  } catch (err: any) {
+    console.error('deleteGalleryImageAction error:', err);
+    return { success: false, error: err.message || 'Server error' };
+  }
+}
+
