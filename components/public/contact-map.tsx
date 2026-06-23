@@ -160,10 +160,6 @@ export default function ContactMap({ address, phone, coordinates, locale }: Cont
           <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">
             {locale === 'pl' ? 'Otwórz w Google Maps' : 'Open in Google Maps'}
           </a>
-          <span>|</span>
-          <a href={openStreetMapUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">
-            {locale === 'pl' ? 'Otwórz w OpenStreetMap' : 'Open in OpenStreetMap'}
-          </a>
         </div>
       </div>
     </div>
