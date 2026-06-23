@@ -41,7 +41,7 @@ const createWorkerBlobUrl = () => {
  * - Blinking tab title when new orders are pending and tab is hidden.
  */
 export function useAdminOrderAlerts(pendingCount: number) {
-  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const [isLeader, setIsLeader] = useState(true);
   const [isVisible, setIsVisible] = useState(true);
 
@@ -57,13 +57,35 @@ export function useAdminOrderAlerts(pendingCount: number) {
   const originalTitleRef = useRef<string>('');
   const blinkIntervalRef = useRef<any>(null);
 
-  // 1. Load sound preference
+  // 1. Load sound preference (defaults to true if not set)
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const stored = localStorage.getItem('admin_sound_enabled');
-    if (stored === 'true') {
+    if (stored === 'false') {
+      setSoundEnabled(false);
+    } else {
       setSoundEnabled(true);
+      localStorage.setItem('admin_sound_enabled', 'true');
     }
+  }, []);
+
+  // Unlock AudioContext on the first interaction anywhere on the page
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleGlobalInteraction = () => {
+      unlockAudio();
+      document.removeEventListener('click', handleGlobalInteraction);
+      document.removeEventListener('touchstart', handleGlobalInteraction);
+    };
+
+    document.addEventListener('click', handleGlobalInteraction);
+    document.addEventListener('touchstart', handleGlobalInteraction);
+
+    return () => {
+      document.removeEventListener('click', handleGlobalInteraction);
+      document.removeEventListener('touchstart', handleGlobalInteraction);
+    };
   }, []);
 
   // 2. Web Worker Initialization
