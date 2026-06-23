@@ -472,10 +472,13 @@ export default function DashboardOverview({ initialData }: DashboardOverviewProp
                 </span>
               </div>
             </div>
-            <LineChart data={data.salesTrend.map(pt => ({
-              label: pt.date.slice(5), // MM-DD
-              value: pt.revenue
-            }))} />
+            <LineChart 
+              data={data.salesTrend.map(pt => ({
+                label: pt.date.slice(5), // MM-DD
+                value: pt.revenue
+              }))} 
+              height={300}
+            />
             <div className="text-[10px] text-muted-foreground/70 flex justify-between items-center pt-2 border-t border-primary/5">
               <span>* Dzienna wartość sprzedaży (PLN)</span>
               {bestTrendDay.date && (
