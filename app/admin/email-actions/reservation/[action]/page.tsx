@@ -2,6 +2,7 @@ import React from "react";
 import { verifyActionTokenForPreview } from "@/lib/email/action-tokens";
 import { createAdminClient } from "@/lib/supabase/admin";
 import ReservationConfirmForm from "./confirm-form";
+import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
@@ -18,11 +19,17 @@ export default async function ReservationEmailActionPage({ params, searchParams 
   const { action } = await params;
   const { token } = await searchParams;
 
+  const cookieStore = await cookies();
+  const locale = cookieStore.get("NEXT_LOCALE")?.value || "pl";
+  const isPl = locale === "pl";
+
   if (action !== "approve" && action !== "reject") {
     return (
       <div className="min-h-screen bg-[#FAF9F5] flex items-center justify-center p-6 text-foreground font-sans">
         <div className="max-w-md w-full bg-white border border-[#EAE3D2] rounded-xl p-8 shadow-sm text-center">
-          <p className="text-red-700 font-bold">Błędna akcja. / Invalid action.</p>
+          <p className="text-red-700 font-bold">
+            {isPl ? "Błędna akcja." : "Invalid action."}
+          </p>
         </div>
       </div>
     );
@@ -33,7 +40,7 @@ export default async function ReservationEmailActionPage({ params, searchParams 
       <div className="min-h-screen bg-[#FAF9F5] flex items-center justify-center p-6 text-foreground font-sans">
         <div className="max-w-md w-full bg-white border border-[#EAE3D2] rounded-xl p-8 shadow-sm text-center">
           <p className="text-red-700 font-bold">
-            Brak tokenu zabezpieczającego. / Missing security token.
+            {isPl ? "Brak tokenu zabezpieczającego." : "Missing security token."}
           </p>
         </div>
       </div>
@@ -48,7 +55,9 @@ export default async function ReservationEmailActionPage({ params, searchParams 
       <div className="min-h-screen bg-[#FAF9F5] flex items-center justify-center p-6 text-foreground font-sans">
         <div className="max-w-md w-full bg-white border border-[#EAE3D2] rounded-xl p-8 shadow-sm text-center">
           <p className="text-red-700 font-bold">
-            Ta akcja została już wykonana lub link wygasł. / This action link was already used or expired.
+            {isPl
+              ? "Ta akcja została już wykonana lub link wygasł."
+              : "This action link was already used or expired."}
           </p>
         </div>
       </div>
@@ -67,7 +76,7 @@ export default async function ReservationEmailActionPage({ params, searchParams 
       <div className="min-h-screen bg-[#FAF9F5] flex items-center justify-center p-6 text-foreground font-sans">
         <div className="max-w-md w-full bg-white border border-[#EAE3D2] rounded-xl p-8 shadow-sm text-center">
           <p className="text-red-700 font-bold">
-            Rezerwacja nie została znaleziona. / Reservation not found.
+            {isPl ? "Rezerwacja nie została znaleziona." : "Reservation not found."}
           </p>
         </div>
       </div>
@@ -80,10 +89,13 @@ export default async function ReservationEmailActionPage({ params, searchParams 
       <div className="min-h-screen bg-[#FAF9F5] flex items-center justify-center p-6 text-foreground font-sans">
         <div className="max-w-md w-full bg-white border border-[#EAE3D2] rounded-xl p-8 shadow-sm text-center">
           <p className="text-amber-800 font-bold">
-            To żądanie zostało już przetworzone. / This request has already been processed.
+            {isPl
+              ? "To żądanie zostało już przetworzone."
+              : "This request has already been processed."}
           </p>
           <p className="text-xs text-muted-foreground mt-2">
-            Aktualny status rezerwacji / Current status: <span className="font-bold uppercase">{res.status}</span>
+            {isPl ? "Aktualny status rezerwacji" : "Current status"}:{" "}
+            <span className="font-bold uppercase">{res.status}</span>
           </p>
         </div>
       </div>
@@ -112,28 +124,40 @@ export default async function ReservationEmailActionPage({ params, searchParams 
           </h2>
           <h1 className="text-xl font-serif font-black">
             {action === "approve"
-              ? "Potwierdź Akceptację / Confirm Approval"
-              : "Potwierdź Odrzucenie / Confirm Rejection"}
+              ? isPl
+                ? "Potwierdź Akceptację"
+                : "Confirm Approval"
+              : isPl
+              ? "Potwierdź Odrzucenie"
+              : "Confirm Rejection"}
           </h1>
         </div>
 
         <div className="bg-[#FAF9F5] border border-[#EAE3D2] rounded-lg p-5 space-y-3 text-sm">
           <p className="border-b border-[#EAE3D2] pb-2 font-medium">
-            <span className="text-muted-foreground uppercase text-[10px] block font-bold">Klient / Customer</span>
+            <span className="text-muted-foreground uppercase text-[10px] block font-bold">
+              {isPl ? "Klient" : "Customer"}
+            </span>
             <span className="text-base font-bold">{safeName}</span>
           </p>
           <p className="border-b border-[#EAE3D2] pb-2 font-medium">
-            <span className="text-muted-foreground uppercase text-[10px] block font-bold">Liczba osób / Guests</span>
+            <span className="text-muted-foreground uppercase text-[10px] block font-bold">
+              {isPl ? "Liczba osób" : "Guests"}
+            </span>
             <span className="text-base font-bold">{res.guests_count}</span>
           </p>
           <p className="pb-1 font-medium">
-            <span className="text-muted-foreground uppercase text-[10px] block font-bold">Termin / Date & Time</span>
+            <span className="text-muted-foreground uppercase text-[10px] block font-bold">
+              {isPl ? "Termin" : "Date & Time"}
+            </span>
             <span className="text-base font-bold">{localDateTime}</span>
           </p>
         </div>
 
         <p className="text-xs text-muted-foreground leading-relaxed text-center">
-          Kliknięcie przycisku poniżej spowoduje natychmiastową zmianę statusu w bazie danych i wyśle powiadomienie e-mail do klienta. / Confirming this action will update the database status and notify the customer.
+          {isPl
+            ? "Kliknięcie przycisku poniżej spowoduje natychmiastową zmianę statusu w bazie danych i wyśle powiadomienie e-mail do klienta."
+            : "Confirming this action will update the database status and notify the customer."}
         </p>
 
         <ReservationConfirmForm token={token} action={action as "approve" | "reject"} />

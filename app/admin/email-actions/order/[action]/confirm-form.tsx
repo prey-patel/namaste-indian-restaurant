@@ -2,6 +2,7 @@
 
 import React, { useState, useTransition } from "react";
 import { submitOrderEmailAction } from "./actions";
+import { useLocale } from "next-intl";
 
 interface OrderConfirmFormProps {
   token: string;
@@ -19,6 +20,8 @@ const COMMON_REASONS = [
 export default function OrderConfirmForm({ token, action }: OrderConfirmFormProps) {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<{ success: boolean; error?: string } | null>(null);
+  const locale = useLocale();
+  const isPl = locale === "pl";
   
   // States for Approve
   const [etaMinutes, setEtaMinutes] = useState<number>(35);
@@ -33,10 +36,10 @@ export default function OrderConfirmForm({ token, action }: OrderConfirmFormProp
       let finalReason = "";
       if (action === "reject") {
         if (selectedReason === "other") {
-          finalReason = customReason.trim() || "Rejected by administrator";
+          finalReason = customReason.trim() || (isPl ? "Odrzucone przez administratora" : "Rejected by administrator");
         } else {
           const reasonObj = COMMON_REASONS.find(r => r.value === selectedReason);
-          finalReason = reasonObj ? reasonObj.labelPl : "Rejected by administrator";
+          finalReason = reasonObj ? (isPl ? reasonObj.labelPl : reasonObj.labelEn) : (isPl ? "Odrzucone przez administratora" : "Rejected by administrator");
         }
       }
 
@@ -55,12 +58,16 @@ export default function OrderConfirmForm({ token, action }: OrderConfirmFormProp
       return (
         <div className="text-center p-6 bg-emerald-50 border border-emerald-200 rounded-lg space-y-2">
           <p className="text-emerald-800 font-bold font-sans">
-            Akcja wykonana pomyślnie! / Action completed successfully!
+            {isPl ? "Akcja wykonana pomyślnie!" : "Action completed successfully!"}
           </p>
           <p className="text-xs text-emerald-700 font-sans">
             {action === "approve"
-              ? `Zamówienie zostało zaakceptowane z czasem przygotowania ${etaMinutes} min. Klient został powiadomiony. / Order approved with ${etaMinutes} min prep time. Customer notified.`
-              : "Zamówienie zostało odrzucone. Klient został powiadomiony. / Order rejected. Customer notified."}
+              ? isPl
+                ? `Zamówienie zostało zaakceptowane z czasem przygotowania ${etaMinutes} min. Klient został powiadomiony.`
+                : `Order approved with ${etaMinutes} min prep time. Customer notified.`
+              : isPl
+              ? "Zamówienie zostało odrzucone. Klient został powiadomiony."
+              : "Order rejected. Customer notified."}
           </p>
         </div>
       );
@@ -68,14 +75,14 @@ export default function OrderConfirmForm({ token, action }: OrderConfirmFormProp
       return (
         <div className="text-center p-6 bg-rose-50 border border-rose-200 rounded-lg space-y-2">
           <p className="text-rose-800 font-bold font-sans">
-            Wystąpił błąd / An error occurred
+            {isPl ? "Wystąpił błąd" : "An error occurred"}
           </p>
           <p className="text-xs text-rose-700 font-sans">{result.error}</p>
           <button
             onClick={() => setResult(null)}
             className="mt-3 text-xs text-rose-800 underline hover:text-rose-900 font-medium font-sans"
           >
-            Spróbuj ponownie / Try again
+            {isPl ? "Spróbuj ponownie" : "Try again"}
           </button>
         </div>
       );
@@ -87,7 +94,7 @@ export default function OrderConfirmForm({ token, action }: OrderConfirmFormProp
       {action === "approve" ? (
         <div className="space-y-2.5">
           <label className="block text-xs uppercase tracking-wider text-muted-foreground font-bold font-sans">
-            Czas przygotowania (ETA) / Prep Duration (Minutes)
+            {isPl ? "Czas przygotowania (ETA)" : "Prep Duration (Minutes)"}
           </label>
           <div className="grid grid-cols-3 gap-2">
             {[15, 25, 35, 45, 60, 90].map((mins) => (
@@ -107,7 +114,11 @@ export default function OrderConfirmForm({ token, action }: OrderConfirmFormProp
           </div>
           <div className="pt-2">
             <span className="text-[11px] text-muted-foreground font-sans">
-              Wybrany czas: <strong className="text-foreground">{etaMinutes} minut</strong> od teraz. / Estimated completion time: {etaMinutes} minutes from now.
+              {isPl ? (
+                <>Wybrany czas: <strong className="text-foreground">{etaMinutes} minut</strong> od teraz.</>
+              ) : (
+                <>Estimated completion time: <strong className="text-foreground">{etaMinutes} minutes</strong> from now.</>
+              )}
             </span>
           </div>
         </div>
@@ -115,7 +126,7 @@ export default function OrderConfirmForm({ token, action }: OrderConfirmFormProp
         <div className="space-y-4 text-left">
           <div className="space-y-2">
             <label className="block text-xs uppercase tracking-wider text-muted-foreground font-bold font-sans">
-              Powód odrzucenia / Rejection Reason
+              {isPl ? "Powód odrzucenia" : "Rejection Reason"}
             </label>
             <select
               value={selectedReason}
@@ -124,7 +135,7 @@ export default function OrderConfirmForm({ token, action }: OrderConfirmFormProp
             >
               {COMMON_REASONS.map((r) => (
                 <option key={r.value} value={r.value}>
-                  {r.labelPl}
+                  {isPl ? r.labelPl : r.labelEn}
                 </option>
               ))}
             </select>
@@ -133,12 +144,12 @@ export default function OrderConfirmForm({ token, action }: OrderConfirmFormProp
           {selectedReason === "other" && (
             <div className="space-y-1.5 animate-fadeIn">
               <label className="block text-[11px] font-medium text-muted-foreground font-sans">
-                Wpisz własny powód / Specify custom reason
+                {isPl ? "Wpisz własny powód" : "Specify custom reason"}
               </label>
               <textarea
                 value={customReason}
                 onChange={(e) => setCustomReason(e.target.value)}
-                placeholder="np. Brak prądu, zamknięte z przyczyn technicznych..."
+                placeholder={isPl ? "np. Brak prądu, zamknięte z przyczyn technicznych..." : "e.g., Power outage, closed for maintenance..."}
                 className="w-full bg-white border border-[#EAE3D2] rounded-lg px-3 py-2 text-xs text-[#121826] focus:outline-none focus:ring-1 focus:ring-[#9E690A] h-20 resize-none font-sans"
                 required
               />
@@ -178,13 +189,17 @@ export default function OrderConfirmForm({ token, action }: OrderConfirmFormProp
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            <span>Przetwarzanie... / Processing...</span>
+            <span>{isPl ? "Przetwarzanie..." : "Processing..."}</span>
           </>
         ) : (
           <span>
             {action === "approve"
-              ? "Zatwierdź i Wyślij / Approve & Notify Client"
-              : "Odrzuć i Wyślij / Reject & Notify Client"}
+              ? isPl
+                ? "Zatwierdź i Wyślij"
+                : "Approve & Notify Client"
+              : isPl
+              ? "Odrzuć i Wyślij"
+              : "Reject & Notify Client"}
           </span>
         )}
       </button>

@@ -2,6 +2,7 @@
 
 import React, { useState, useTransition } from "react";
 import { submitReservationEmailAction } from "./actions";
+import { useLocale } from "next-intl";
 
 interface ReservationConfirmFormProps {
   token: string;
@@ -11,6 +12,8 @@ interface ReservationConfirmFormProps {
 export default function ReservationConfirmForm({ token, action }: ReservationConfirmFormProps) {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<{ success: boolean; error?: string } | null>(null);
+  const locale = useLocale();
+  const isPl = locale === "pl";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,12 +28,16 @@ export default function ReservationConfirmForm({ token, action }: ReservationCon
       return (
         <div className="text-center p-6 bg-emerald-50 border border-emerald-200 rounded-lg space-y-2">
           <p className="text-emerald-800 font-bold font-sans">
-            Akcja wykonana pomyślnie! / Action completed successfully!
+            {isPl ? "Akcja wykonana pomyślnie!" : "Action completed successfully!"}
           </p>
           <p className="text-xs text-emerald-700 font-sans">
             {action === "approve"
-              ? "Rezerwacja została potwierdzona, a klient został powiadomiony. / Reservation has been confirmed and the customer has been notified."
-              : "Rezerwacja została odrzucona, a klient został powiadomiony. / Reservation has been rejected and the customer has been notified."}
+              ? isPl
+                ? "Rezerwacja została potwierdzona, a klient został powiadomiony."
+                : "Reservation has been confirmed and the customer has been notified."
+              : isPl
+              ? "Rezerwacja została odrzucona, a klient został powiadomiony."
+              : "Reservation has been rejected and the customer has been notified."}
           </p>
         </div>
       );
@@ -38,14 +45,14 @@ export default function ReservationConfirmForm({ token, action }: ReservationCon
       return (
         <div className="text-center p-6 bg-rose-50 border border-rose-200 rounded-lg space-y-2">
           <p className="text-rose-800 font-bold font-sans">
-            Wystąpił błąd / An error occurred
+            {isPl ? "Wystąpił błąd" : "An error occurred"}
           </p>
           <p className="text-xs text-rose-700 font-sans">{result.error}</p>
           <button
             onClick={() => setResult(null)}
             className="mt-3 text-xs text-rose-800 underline hover:text-rose-900 font-medium"
           >
-            Spróbuj ponownie / Try again
+            {isPl ? "Spróbuj ponownie" : "Try again"}
           </button>
         </div>
       );
@@ -85,13 +92,17 @@ export default function ReservationConfirmForm({ token, action }: ReservationCon
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            <span>Przetwarzanie... / Processing...</span>
+            <span>{isPl ? "Przetwarzanie..." : "Processing..."}</span>
           </>
         ) : (
           <span>
             {action === "approve"
-              ? "Potwierdź rezerwację / Confirm Reservation"
-              : "Potwierdź odrzucenie / Confirm Rejection"}
+              ? isPl
+                ? "Potwierdź rezerwację"
+                : "Confirm Reservation"
+              : isPl
+              ? "Potwierdź odrzucenie"
+              : "Confirm Rejection"}
           </span>
         )}
       </button>
