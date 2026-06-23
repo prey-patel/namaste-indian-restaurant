@@ -230,7 +230,7 @@ export async function fetchDashboardData(locale: string = 'pl'): Promise<Dashboa
     // 9. Upcoming reservations
     adminClient
       .from('reservations')
-      .select('id, reservation_start_at, customer_name, guests_count, customer_phone, table_number')
+      .select('id, reservation_start_at, customer_name, guests_count, customer_phone, table_id, dining_tables (table_number)')
       .gte('reservation_start_at', todayBounds.start)
       .lte('reservation_start_at', todayBounds.end)
       .in('status', ['pending', 'confirmed'])
@@ -567,7 +567,7 @@ export async function fetchDashboardData(locale: string = 'pl'): Promise<Dashboa
       customerName: res.customer_name,
       guestsCount: res.guests_count || 0,
       customerPhone: res.customer_phone,
-      tableNumber: res.table_number
+      tableNumber: res.dining_tables?.table_number ?? null
     };
   });
 
