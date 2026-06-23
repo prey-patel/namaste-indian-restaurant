@@ -597,24 +597,96 @@
     "logoutButton": "Wyloguj"
   },
   "adminDashboard": {
-    "title": "Panel Administratora",
-    "subtitle": "Namaste Restaurant Management Control",
+    "title": "Przegląd Dashboard",
+    "subtitle": "Przegląd dzisiejszych operacji restauracji w czasie rzeczywistym.",
     "cards": {
-      "pendingReservations": "Rezerwacje oczekujące",
-      "pendingReservationsSub": "Oczekujące na zatwierdzenie",
-      "todayReservations": "Dzisiejsze Rezerwacje",
-      "todayReservationsSub": "Dzisiejsze rezerwacje (Aktywne)",
-      "activeOrders": "Aktywne Zamówienia",
-      "activeOrdersSub": "Aktywne zamówienia (W toku)",
-      "kitchenOrders": "Zlecenia w Kuchni (KDS)",
-      "kitchenOrdersSub": "Kolejka kuchenna (W przygotowaniu)"
+      "pendingReservations": "Oczekujące rezerwacje",
+      "pendingReservationsSub": "Wymagają potwierdzenia",
+      "todayReservations": "Dzisiejsze rezerwacje",
+      "todayReservationsSub": "Na dzisiaj",
+      "activeOrders": "Aktywne zamówienia",
+      "activeOrdersSub": "W realizacji",
+      "kitchenOrders": "Kolejka KDS",
+      "kitchenOrdersSub": "Zamówień w kolejce"
     },
-    "shortcuts": {
-      "title": "Szybkie skróty",
-      "orders": "Akceptacja Zamówień",
-      "reservations": "Terminarz Rezerwacji",
-      "kds": "Monitor Kuchenny",
-      "menu": "Zarządzanie Menu CMS"
+    "viewAll": "Zobacz wszystkie",
+    "viewKds": "Zobacz KDS",
+    "revenue": {
+      "title": "Dzisiejszy przychód",
+      "vsYesterday": "vs wczoraj"
+    },
+    "channels": {
+      "title": "Dostawa vs Odbiór",
+      "delivery": "Dostawa",
+      "takeaway": "Odbiór własny",
+      "totalOrders": "Razem zamówień"
+    },
+    "popularItem": {
+      "title": "Najpopularniejsze danie",
+      "ordersToday": "zamówień dzisiaj",
+      "noData": "Brak zamówień dzisiaj"
+    },
+    "openingStatus": {
+      "title": "Aktualny status",
+      "open": "OTWARTE",
+      "closed": "ZAMKNIĘTE",
+      "hours": "Godziny otwarcia",
+      "openSince": "Otwarty od",
+      "closedToday": "Zamknięte dzisiaj"
+    },
+    "salesTrend": {
+      "title": "Trend sprzedaży (PLN)",
+      "last7Days": "Ostatnie 7 dni",
+      "avgDaily": "Średnia dzienna sprzedaż",
+      "bestDay": "Najlepszy dzień"
+    },
+    "channelDistribution": {
+      "title": "Rozkład kanałów zamówień",
+      "orders": "Zamówień",
+      "avgOrderValue": "Średnia wartość zamówienia",
+      "avgPrepTime": "Czas realizacji (śr.)"
+    },
+    "recentActivity": {
+      "title": "Ostatnia aktywność",
+      "viewAll": "Zobacz wszystkie aktywności",
+      "noActivity": "Brak ostatniej aktywności",
+      "justNow": "właśnie teraz",
+      "minutesAgo": "min temu",
+      "hoursAgo": "godz. temu",
+      "daysAgo": "dni temu",
+      "orderPending": "Nowe zamówienie otrzymane",
+      "orderApproved": "Zamówienie potwierdzone",
+      "orderPreparing": "Zamówienie w przygotowaniu",
+      "orderReady": "Zamówienie gotowe do odbioru",
+      "orderDelivery": "Zamówienie w drodze",
+      "orderCompleted": "Zamówienie zakończone",
+      "orderRejected": "Zamówienie odrzucone",
+      "orderCancelled": "Zamówienie anulowane",
+      "resPending": "Nowa rezerwacja otrzymana",
+      "resConfirmed": "Rezerwacja potwierdzona",
+      "resRejected": "Rezerwacja odrzucona",
+      "resCancelled": "Rezerwacja anulowana",
+      "resCompleted": "Rezerwacja zakończona",
+      "resNoShow": "Rezerwacja — nieobecność"
+    },
+    "quickActions": {
+      "title": "Szybkie akcje",
+      "orders": "Zatwierdzanie zamówień",
+      "reservations": "Rezerwacje",
+      "kds": "Otwórz KDS",
+      "menu": "Zarządzanie menu",
+      "settings": "Ustawienia",
+      "analytics": "Analityka"
+    },
+    "upcomingReservations": {
+      "title": "Nadchodzące rezerwacje",
+      "viewAll": "Zobacz wszystkie",
+      "time": "Godzina",
+      "name": "Imię",
+      "guests": "Osoby",
+      "phone": "Telefon",
+      "table": "Stolik",
+      "noReservations": "Brak nadchodzących rezerwacji dzisiaj"
     }
   },
   "gallery": {

@@ -597,24 +597,96 @@
     "logoutButton": "Logout"
   },
   "adminDashboard": {
-    "title": "Admin Dashboard",
-    "subtitle": "Namaste Restaurant Management Control",
+    "title": "Dashboard Overview",
+    "subtitle": "Real-time overview of today's restaurant operations.",
     "cards": {
       "pendingReservations": "Pending Reservations",
-      "pendingReservationsSub": "Pending Reservations",
+      "pendingReservationsSub": "Require confirmation",
       "todayReservations": "Today's Reservations",
-      "todayReservationsSub": "Today's Bookings (Active)",
+      "todayReservationsSub": "For today",
       "activeOrders": "Active Orders",
-      "activeOrdersSub": "Active Orders (In Progress)",
-      "kitchenOrders": "Kitchen Queue (KDS)",
-      "kitchenOrdersSub": "Kitchen Queue (Preparing)"
+      "activeOrdersSub": "In progress",
+      "kitchenOrders": "KDS Queue",
+      "kitchenOrdersSub": "Orders in queue"
     },
-    "shortcuts": {
-      "title": "Operations Shortcuts",
-      "orders": "Orders Approval",
-      "reservations": "Reservations Grid",
-      "kds": "Kitchen Display System",
-      "menu": "Menu & Categories CMS"
+    "viewAll": "View all",
+    "viewKds": "View KDS",
+    "revenue": {
+      "title": "Today's Revenue",
+      "vsYesterday": "vs yesterday"
+    },
+    "channels": {
+      "title": "Delivery vs Takeaway",
+      "delivery": "Delivery",
+      "takeaway": "Pickup",
+      "totalOrders": "Total orders"
+    },
+    "popularItem": {
+      "title": "Most Popular Item",
+      "ordersToday": "orders today",
+      "noData": "No orders yet today"
+    },
+    "openingStatus": {
+      "title": "Current Opening Status",
+      "open": "OPEN",
+      "closed": "CLOSED",
+      "hours": "Opening hours",
+      "openSince": "Open for",
+      "closedToday": "Closed today"
+    },
+    "salesTrend": {
+      "title": "Sales Trend (PLN)",
+      "last7Days": "Last 7 days",
+      "avgDaily": "Avg. daily sales",
+      "bestDay": "Best day"
+    },
+    "channelDistribution": {
+      "title": "Order Channel Distribution",
+      "orders": "Orders",
+      "avgOrderValue": "Avg. order value",
+      "avgPrepTime": "Avg. prep time"
+    },
+    "recentActivity": {
+      "title": "Recent Activity",
+      "viewAll": "View all activity",
+      "noActivity": "No recent activity",
+      "justNow": "just now",
+      "minutesAgo": "min ago",
+      "hoursAgo": "h ago",
+      "daysAgo": "d ago",
+      "orderPending": "New order received",
+      "orderApproved": "Order confirmed",
+      "orderPreparing": "Order being prepared",
+      "orderReady": "Order ready for pickup",
+      "orderDelivery": "Order out for delivery",
+      "orderCompleted": "Order completed",
+      "orderRejected": "Order rejected",
+      "orderCancelled": "Order cancelled",
+      "resPending": "New reservation received",
+      "resConfirmed": "Reservation confirmed",
+      "resRejected": "Reservation rejected",
+      "resCancelled": "Reservation cancelled",
+      "resCompleted": "Reservation completed",
+      "resNoShow": "Reservation no-show"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "orders": "Order Approval",
+      "reservations": "Reservations",
+      "kds": "Open KDS",
+      "menu": "Menu Management",
+      "settings": "Settings",
+      "analytics": "Analytics"
+    },
+    "upcomingReservations": {
+      "title": "Upcoming Reservations",
+      "viewAll": "View all",
+      "time": "Time",
+      "name": "Name",
+      "guests": "Guests",
+      "phone": "Phone",
+      "table": "Table",
+      "noReservations": "No upcoming reservations today"
     }
   },
   "gallery": {
