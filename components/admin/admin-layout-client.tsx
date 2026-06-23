@@ -5,8 +5,10 @@ import { usePathname } from 'next/navigation';
 import AdminSidebar from './admin-sidebar';
 import AdminTopbar from './admin-topbar';
 import RealtimeTableListener from '@/components/common/realtime-table-listener';
+import { useScreenWakeLock } from '@/hooks/use-screen-wake-lock';
 
 export default function AdminLayoutClient({ children }: { children: ReactNode }) {
+  useScreenWakeLock();
   const pathname = usePathname();
   const isLoginPage = pathname === '/admin/login';
   const isKdsPage = pathname === '/admin/kds';
