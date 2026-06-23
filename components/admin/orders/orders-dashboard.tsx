@@ -27,7 +27,7 @@ import {
   UpdateEtaModal
 } from './order-modals';
 import { Search, RefreshCw, Eye, Calendar, Clock, ShoppingBag, ArrowRight, X, MapPin, Wifi, WifiOff } from 'lucide-react';
-import { useAdminOrderAlerts } from '@/hooks/use-admin-order-alerts';
+import { useAdminAlerts } from '@/components/admin/alerts/admin-alerts-context';
 import NotificationPermissionCard from '@/components/admin/alerts/notification-permission-card';
 import OrderAlertBanner from '@/components/admin/alerts/order-alert-banner';
 
@@ -110,7 +110,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
 
   const [isConnected, setIsConnected] = useState(false);
   const pendingCount = orders.filter(o => o.status === 'pending').length;
-  const { soundEnabled, toggleSound, unlockAudio } = useAdminOrderAlerts(pendingCount);
+  const { soundEnabled, toggleSound, unlockAudio } = useAdminAlerts();
   
   useEffect(() => {
     const supabase = createClient();

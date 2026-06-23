@@ -6,6 +6,7 @@ import AdminSidebar from './admin-sidebar';
 import AdminTopbar from './admin-topbar';
 import RealtimeTableListener from '@/components/common/realtime-table-listener';
 import { useScreenWakeLock } from '@/hooks/use-screen-wake-lock';
+import { AdminAlertsProvider } from '@/components/admin/alerts/admin-alerts-context';
 
 export default function AdminLayoutClient({ children }: { children: ReactNode }) {
   useScreenWakeLock();
@@ -82,45 +83,47 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
   }
 
   return (
-    <div 
-      className="flex w-full min-h-screen admin-theme bg-background text-foreground notranslate relative"
-      translate="no"
-    >
-      <RealtimeTableListener
-        channelName="admin-global-realtime"
-        tables={[
-          'system_settings',
-          'operational_status',
-          'service_hours',
-          'holiday_closures',
-          'categories',
-          'menu_items',
-          'delivery_fee_rules',
-          'packaging_fee_rules',
-          'site_content',
-          'dining_tables',
-          'orders',
-          'order_items',
-          'reservations'
-        ]}
-      />
-      {/* Sidebar Backdrop Drawer Overlay */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-25 lg:hidden transition-all duration-300"
-          onClick={() => setIsSidebarOpen(false)}
+    <AdminAlertsProvider>
+      <div 
+        className="flex w-full min-h-screen admin-theme bg-background text-foreground notranslate relative"
+        translate="no"
+      >
+        <RealtimeTableListener
+          channelName="admin-global-realtime"
+          tables={[
+            'system_settings',
+            'operational_status',
+            'service_hours',
+            'holiday_closures',
+            'categories',
+            'menu_items',
+            'delivery_fee_rules',
+            'packaging_fee_rules',
+            'site_content',
+            'dining_tables',
+            'orders',
+            'order_items',
+            'reservations'
+          ]}
         />
-      )}
+        {/* Sidebar Backdrop Drawer Overlay */}
+        {isSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-25 lg:hidden transition-all duration-300"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
 
-      <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-      
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <AdminTopbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-        <main className="flex-1 p-4 sm:p-8 overflow-y-auto bg-background">
-          {children}
-        </main>
+        <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+        
+        <div className="flex-1 flex flex-col h-screen overflow-hidden">
+          <AdminTopbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+          <main className="flex-1 p-4 sm:p-8 overflow-y-auto bg-background">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </AdminAlertsProvider>
   );
 }
 
