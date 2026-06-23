@@ -15,12 +15,26 @@ export interface ReservationEmailData {
   rejectUrl?: string;
   viewUrl?: string;
   lang?: "pl" | "en";
+  restaurantContact?: {
+    name: string;
+    address: string;
+    phone: string;
+    email: string;
+  };
 }
 
 /**
  * Reusable HTML wrapper with Namaste premium light branding.
  */
-function getEmailLayout(title: string, bodyContentHtml: string): string {
+function getEmailLayout(
+  title: string,
+  bodyContentHtml: string,
+  contact?: { name: string; address: string; phone: string; email: string }
+): string {
+  const name = contact?.name || "Namaste Indian Restaurant";
+  const address = contact?.address || "Warszawska 1/3, 06-400 Ciechanów, Poland";
+  const phone = contact?.phone || "+48 511 984 331";
+  const email = contact?.email || "info@namaste.pl";
   return `
 <!DOCTYPE html>
 <html>
@@ -157,9 +171,9 @@ function getEmailLayout(title: string, bodyContentHtml: string): string {
       ${bodyContentHtml}
     </div>
     <div class="footer">
-      <p><strong>Namaste Indian Restaurant</strong></p>
-      <p>Warszawska 1/3, 06-400 Ciechanów, Poland</p>
-      <p>Phone: +48 511 984 331 | Email: info@namaste.pl</p>
+      <p><strong>${name}</strong></p>
+      <p>${address}</p>
+      <p>Phone: ${phone} | Email: ${email}</p>
     </div>
   </div>
 </body>
@@ -213,7 +227,7 @@ export function getReservationRequestReceivedCustomerTemplate(data: ReservationE
     </p>
   `;
 
-  return { subject, html: getEmailLayout(subject, body) };
+  return { subject, html: getEmailLayout(subject, body, data.restaurantContact) };
 }
 
 /**
@@ -256,7 +270,7 @@ export function getReservationConfirmedCustomerTemplate(data: ReservationEmailDa
     <p>${isPl ? "Czekamy na Ciebie w naszej restauracji!" : "We look forward to welcoming you to our restaurant!"}</p>
   `;
 
-  return { subject, html: getEmailLayout(subject, body) };
+  return { subject, html: getEmailLayout(subject, body, data.restaurantContact) };
 }
 
 /**
@@ -291,7 +305,7 @@ export function getReservationRejectedCustomerTemplate(data: ReservationEmailDat
     }</p>
   `;
 
-  return { subject, html: getEmailLayout(subject, body) };
+  return { subject, html: getEmailLayout(subject, body, data.restaurantContact) };
 }
 
 /**
@@ -326,7 +340,7 @@ export function getReservationCancelledCustomerTemplate(data: ReservationEmailDa
     }</p>
   `;
 
-  return { subject, html: getEmailLayout(subject, body) };
+  return { subject, html: getEmailLayout(subject, body, data.restaurantContact) };
 }
 
 /**
@@ -390,5 +404,5 @@ export function getReservationNewAdminTemplate(data: ReservationEmailData): { su
     </div>
   `;
 
-  return { subject, html: getEmailLayout(subject, body) };
+  return { subject, html: getEmailLayout(subject, body, data.restaurantContact) };
 }

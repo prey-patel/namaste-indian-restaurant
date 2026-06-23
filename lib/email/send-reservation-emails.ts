@@ -33,6 +33,74 @@ async function getBaseUrl(): Promise<string> {
 
 const EMAIL_ENABLED = process.env.EMAIL_ENABLED === "true";
 
+interface RestaurantContactDetails {
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+}
+
+async function getRestaurantContactDetails(adminClient: any): Promise<RestaurantContactDetails> {
+  const defaultDetails = {
+    name: "Namaste Indian Restaurant",
+    address: "Warszawska 1/3, 06-400 Ciechanów, Poland",
+    phone: "+48 511 984 331",
+    email: "info@namaste.pl"
+  };
+
+  try {
+    const { data, error } = await adminClient
+      .from("system_settings")
+      .select("key, value")
+      .in("key", [
+        "restaurant_name",
+        "restaurant_address",
+        "restaurant_postal_code",
+        "restaurant_city",
+        "restaurant_country",
+        "restaurant_phone",
+        "restaurant_email"
+      ]);
+
+    if (error || !data) return defaultDetails;
+
+    const settings: Record<string, string> = {};
+    data.forEach((item: any) => {
+      settings[item.key] = String(item.value);
+    });
+
+    const name = settings.restaurant_name || defaultDetails.name;
+    
+    // Format address
+    let address = defaultDetails.address;
+    if (settings.restaurant_address) {
+      const parts = [
+        settings.restaurant_address,
+        [settings.restaurant_postal_code, settings.restaurant_city].filter(Boolean).join(" "),
+        settings.restaurant_country
+      ].filter(Boolean);
+      if (parts.length > 0) {
+        address = parts.join(", ");
+      }
+    }
+
+    // Format phone
+    let phone = defaultDetails.phone;
+    if (settings.restaurant_phone) {
+      phone = settings.restaurant_phone.startsWith("+") 
+        ? settings.restaurant_phone 
+        : `+48 ${settings.restaurant_phone.replace(/\s+/g, '')}`;
+    }
+
+    const email = settings.restaurant_email || defaultDetails.email;
+
+    return { name, address, phone, email };
+  } catch (err) {
+    console.error("Error fetching restaurant contact details for email templates:", err);
+    return defaultDetails;
+  }
+}
+
 
 function getLanguageFromNotes(notes: string | null): "pl" | "en" {
   if (!notes) return "pl";
@@ -142,6 +210,7 @@ export async function sendReservationRequestReceivedCustomerEmail(reservationId:
     }
 
     const lang = getLanguageFromNotes(res.admin_notes);
+    const restaurantContact = await getRestaurantContactDetails(adminClient);
     const { subject, html } = getReservationRequestReceivedCustomerTemplate({
       customerName: res.customer_name,
       customerPhone: res.customer_phone,
@@ -154,7 +223,8 @@ export async function sendReservationRequestReceivedCustomerEmail(reservationId:
       }),
       guestsCount: res.guests_count,
       specialRequests: res.customer_notes,
-      lang
+      lang,
+      restaurantContact
     });
 
     const initialStatus = EMAIL_ENABLED ? "queued" : "skipped";
@@ -214,6 +284,7 @@ export async function sendReservationNewAdminEmail(reservationId: string) {
     const rejectUrl = `${baseUrl}/admin/email-actions/reservation/reject?token=${rejectToken}`;
     const viewUrl = `${baseUrl}/admin/reservations`;
 
+    const restaurantContact = await getRestaurantContactDetails(adminClient);
     const { subject, html } = getReservationNewAdminTemplate({
       customerName: res.customer_name,
       customerPhone: res.customer_phone,
@@ -228,7 +299,8 @@ export async function sendReservationNewAdminEmail(reservationId: string) {
       specialRequests: res.customer_notes,
       approveUrl,
       rejectUrl,
-      viewUrl
+      viewUrl,
+      restaurantContact
     });
 
     const initialStatus = EMAIL_ENABLED ? "queued" : "skipped";
@@ -275,6 +347,7 @@ export async function sendReservationConfirmedCustomerEmail(reservationId: strin
 
     const tableNum = res.dining_tables ? String(res.dining_tables.table_number) : null;
     const lang = getLanguageFromNotes(res.admin_notes);
+    const restaurantContact = await getRestaurantContactDetails(adminClient);
     const { subject, html } = getReservationConfirmedCustomerTemplate({
       customerName: res.customer_name,
       customerPhone: res.customer_phone,
@@ -287,7 +360,8 @@ export async function sendReservationConfirmedCustomerEmail(reservationId: strin
       }),
       guestsCount: res.guests_count,
       tableNumber: tableNum,
-      lang
+      lang,
+      restaurantContact
     });
 
     const initialStatus = EMAIL_ENABLED ? "queued" : "skipped";
@@ -333,6 +407,7 @@ export async function sendReservationRejectedCustomerEmail(reservationId: string
     }
 
     const lang = getLanguageFromNotes(res.admin_notes);
+    const restaurantContact = await getRestaurantContactDetails(adminClient);
     const { subject, html } = getReservationRejectedCustomerTemplate({
       customerName: res.customer_name,
       customerPhone: res.customer_phone,
@@ -345,7 +420,8 @@ export async function sendReservationRejectedCustomerEmail(reservationId: string
       }),
       guestsCount: res.guests_count,
       rejectionReason: res.rejection_reason,
-      lang
+      lang,
+      restaurantContact
     });
 
     const initialStatus = EMAIL_ENABLED ? "queued" : "skipped";
@@ -391,6 +467,7 @@ export async function sendReservationCancelledCustomerEmail(reservationId: strin
     }
 
     const lang = getLanguageFromNotes(res.admin_notes);
+    const restaurantContact = await getRestaurantContactDetails(adminClient);
     const { subject, html } = getReservationCancelledCustomerTemplate({
       customerName: res.customer_name,
       customerPhone: res.customer_phone,
@@ -403,7 +480,8 @@ export async function sendReservationCancelledCustomerEmail(reservationId: strin
       }),
       guestsCount: res.guests_count,
       cancellationReason: res.cancellation_reason,
-      lang
+      lang,
+      restaurantContact
     });
 
     const initialStatus = EMAIL_ENABLED ? "queued" : "skipped";

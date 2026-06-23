@@ -26,12 +26,26 @@ export interface OrderEmailData {
   rejectUrl?: string;
   viewUrl?: string;
   lang?: "pl" | "en";
+  restaurantContact?: {
+    name: string;
+    address: string;
+    phone: string;
+    email: string;
+  };
 }
 
 /**
  * Reusable HTML wrapper with Namaste premium light branding.
  */
-function getEmailLayout(title: string, bodyContentHtml: string): string {
+function getEmailLayout(
+  title: string,
+  bodyContentHtml: string,
+  contact?: { name: string; address: string; phone: string; email: string }
+): string {
+  const name = contact?.name || "Namaste Indian Restaurant";
+  const address = contact?.address || "Warszawska 1/3, 06-400 Ciechanów, Poland";
+  const phone = contact?.phone || "+48 511 984 331";
+  const email = contact?.email || "info@namaste.pl";
   return `
 <!DOCTYPE html>
 <html>
@@ -198,9 +212,9 @@ function getEmailLayout(title: string, bodyContentHtml: string): string {
       ${bodyContentHtml}
     </div>
     <div class="footer">
-      <p><strong>Namaste Indian Restaurant</strong></p>
-      <p>Warszawska 1/3, 06-400 Ciechanów, Poland</p>
-      <p>Phone: +48 511 984 331 | Email: info@namaste.pl</p>
+      <p><strong>${name}</strong></p>
+      <p>${address}</p>
+      <p>Phone: ${phone} | Email: ${email}</p>
     </div>
   </div>
 </body>
@@ -328,7 +342,7 @@ export function getOrderRequestReceivedCustomerTemplate(data: OrderEmailData): {
     ${renderPricingSummary(data, data.lang || "pl")}
   `;
 
-  return { subject, html: getEmailLayout(subject, body) };
+  return { subject, html: getEmailLayout(subject, body, data.restaurantContact) };
 }
 
 /**
@@ -371,7 +385,7 @@ export function getOrderApprovedCustomerTemplate(data: OrderEmailData): { subjec
     ${renderPricingSummary(data, data.lang || "pl")}
   `;
 
-  return { subject, html: getEmailLayout(subject, body) };
+  return { subject, html: getEmailLayout(subject, body, data.restaurantContact) };
 }
 
 /**
@@ -407,7 +421,7 @@ export function getOrderRejectedCustomerTemplate(data: OrderEmailData): { subjec
     }</p>
   `;
 
-  return { subject, html: getEmailLayout(subject, body) };
+  return { subject, html: getEmailLayout(subject, body, data.restaurantContact) };
 }
 
 /**
@@ -444,7 +458,7 @@ export function getOrderReadyForPickupCustomerTemplate(data: OrderEmailData): { 
     </p>
   `;
 
-  return { subject, html: getEmailLayout(subject, body) };
+  return { subject, html: getEmailLayout(subject, body, data.restaurantContact) };
 }
 
 /**
@@ -480,7 +494,7 @@ export function getOrderDeliveredCustomerTemplate(data: OrderEmailData): { subje
     </p>
   `;
 
-  return { subject, html: getEmailLayout(subject, body) };
+  return { subject, html: getEmailLayout(subject, body, data.restaurantContact) };
 }
 
 /**
@@ -555,5 +569,5 @@ export function getOrderNewAdminTemplate(data: OrderEmailData): { subject: strin
     </div>
   `;
 
-  return { subject, html: getEmailLayout(subject, body) };
+  return { subject, html: getEmailLayout(subject, body, data.restaurantContact) };
 }
