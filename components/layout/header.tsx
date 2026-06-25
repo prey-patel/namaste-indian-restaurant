@@ -35,14 +35,29 @@ export default function Header() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isDrawerOpen]);
 
-  // Lock body scroll when drawer is open
+  // Lock body scroll and prevent touch-move on mobile when drawer is open
   useEffect(() => {
     if (isDrawerOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
       document.body.style.overflow = 'hidden';
+      document.body.dataset.scrollY = scrollY.toString();
     } else {
+      const scrollY = parseInt(document.body.dataset.scrollY || '0', 10);
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
       document.body.style.overflow = '';
+      if (scrollY > 0) {
+        window.scrollTo(0, scrollY);
+      }
     }
     return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
       document.body.style.overflow = '';
     };
   }, [isDrawerOpen]);
@@ -83,7 +98,7 @@ export default function Header() {
   }, [isDrawerOpen]);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-primary/20 bg-[#040815]/90 backdrop-blur-md">
+    <header className="sticky top-0 z-[1000] w-full border-b border-primary/20 bg-[#040815]/90 backdrop-blur-md">
       <div className="container mx-auto px-4 h-20 flex items-center justify-between">
         
         {/* Brand Logo - Centered alignment inside the block */}
@@ -249,7 +264,7 @@ export default function Header() {
               exit={{ opacity: 0 }}
               transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
               onClick={() => setIsDrawerOpen(false)}
-              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+              className="fixed inset-0 z-[9998] bg-black/80 backdrop-blur-md md:hidden"
               aria-hidden="true"
             />
 
@@ -265,7 +280,8 @@ export default function Header() {
                 stiffness: 200,
                 duration: shouldReduceMotion ? 0 : 0.4
               }}
-              className="fixed top-0 right-0 bottom-0 z-50 w-80 max-w-[85vw] bg-[#070B1E] border-l border-primary/20 p-6 flex flex-col shadow-2xl md:hidden"
+              style={{ backfaceVisibility: 'hidden', willChange: 'transform' }}
+              className="fixed top-0 right-0 bottom-0 z-[9999] w-80 max-w-[85vw] bg-[#070B1E] border-l border-primary/20 p-6 flex flex-col shadow-2xl md:hidden"
               role="dialog"
               aria-modal="true"
               aria-label="Mobile Navigation"

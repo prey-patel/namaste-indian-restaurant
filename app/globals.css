@@ -67,6 +67,11 @@
 }
 
 @layer base {
+  html,
+  body {
+    overflow-x: hidden;
+    width: 100%;
+  }
   * {
     @apply border-border;
   }
