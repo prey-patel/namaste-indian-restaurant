@@ -71,6 +71,38 @@ export default function HeroSection({
   const dineInHoursText = dineInStatus?.hoursText || '12:00 - 22:00';
   const deliveryHoursText = deliveryStatus?.hoursText || '12:00 - 21:30';
 
+  const highlightKeywords = (text: string) => {
+    if (!text) return '';
+    const keywords = [
+      'Punjab and Kerala',
+      'Pendżabu i Kerali',
+      'freshly ground spices',
+      'świeżo mielonych przypraw',
+      'tandoori bread',
+      'chleba tandoor'
+    ];
+    
+    const regex = new RegExp(`(${keywords.join('|')})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => {
+      const isKeyword = keywords.some(
+        (kw) => kw.toLowerCase() === part.toLowerCase()
+      );
+      if (isKeyword) {
+        return (
+          <span 
+            key={index} 
+            className="text-primary font-semibold bg-gradient-to-r from-[#F0C965] to-[#D4AF37] bg-clip-text text-transparent font-sans"
+          >
+            {part}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
   return (
     <section
       onMouseMove={handleMouseMove}
@@ -146,28 +178,28 @@ export default function HeroSection({
         </motion.div>
 
         {/* Serif Headline Reveal */}
-        <h1 className="text-4xl sm:text-6xl md:text-[70px] lg:text-[76px] font-serif font-medium tracking-normal text-foreground leading-[1.12] max-w-3xl mx-auto">
+        <h1 className="text-4xl sm:text-6xl md:text-[70px] lg:text-[76px] font-serif font-medium tracking-normal leading-[1.15] max-w-3xl mx-auto">
           <motion.span
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.15 }}
-            className="block"
+            className="block bg-gradient-to-b from-white via-white to-zinc-400 bg-clip-text text-transparent pb-1"
           >
-            {tHome('heroTitle')}
+            {heroTitle}
           </motion.span>
           <motion.span
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="text-primary italic block mt-1 font-light"
+            className="block mt-1 font-light italic bg-gradient-to-r from-[#F0C965] via-[#D4AF37] to-[#F2D785] bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(212,175,55,0.35)] pb-1"
           >
-            {tHome('heroTitleAccent')}
+            {heroTitleAccent}
           </motion.span>
           <motion.span
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.45 }}
-            className="block"
+            className="block bg-gradient-to-b from-white via-white to-zinc-400 bg-clip-text text-transparent pb-1"
           >
             {tHome('heroTitleEnd')}
           </motion.span>
@@ -205,7 +237,7 @@ export default function HeroSection({
           transition={{ duration: 0.8, delay: 0.7 }}
           className="text-muted-foreground/90 max-w-2xl mx-auto text-sm sm:text-base md:text-lg leading-relaxed font-light font-sans"
         >
-          {tHome('heroSubhead')}
+          {highlightKeywords(heroSubhead)}
         </motion.p>
 
         {/* Action Buttons Row */}
