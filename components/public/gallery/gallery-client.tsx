@@ -109,6 +109,23 @@ export default function GalleryClient({ locale, dbImages }: GalleryClientProps) 
   // Merge static defaults with dynamic database images
   const allItems = [...mappedDbItems, ...DEFAULT_ITEMS];
 
+  React.useEffect(() => {
+    if (selectedIdx === null) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        setSelectedIdx((prev) => (prev !== null && prev > 0 ? prev - 1 : allItems.length - 1));
+      } else if (e.key === 'ArrowRight') {
+        setSelectedIdx((prev) => (prev !== null && prev < allItems.length - 1 ? prev + 1 : 0));
+      } else if (e.key === 'Escape') {
+        setSelectedIdx(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedIdx, allItems.length]);
+
   const openLightbox = (item: GalleryItem) => {
     const idx = allItems.findIndex((i) => i.id === item.id);
     if (idx !== -1) {
