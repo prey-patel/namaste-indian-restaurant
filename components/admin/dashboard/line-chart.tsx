@@ -35,7 +35,31 @@ export default function LineChart({
   const graphHeight = height - paddingTop - paddingBottom;
 
   const maxVal = Math.max(...data.map(d => d.value), 0);
-  const yMax = maxVal === 0 ? 100 : maxVal * 1.15; // 15% padding on top
+
+  // ── Nice round Y-axis ticks ──────────────────────────────────────────────
+  // Produces clean values like 0, 50, 100, 150, 200, 250 instead of ugly
+  // fractional numbers like 171, 259.
+  const niceStep = (rawMax: number, desiredTicks: number): number => {
+    if (rawMax <= 0) return 25;
+    const rough = rawMax / desiredTicks;
+    const magnitude = Math.pow(10, Math.floor(Math.log10(rough)));
+    const residual = rough / magnitude;
+    let nice: number;
+    if (residual <= 1) nice = 1;
+    else if (residual <= 2) nice = 2;
+    else if (residual <= 5) nice = 5;
+    else nice = 10;
+    return nice * magnitude;
+  };
+
+  const step = niceStep(maxVal, 4);
+  const niceMax = step * Math.ceil((maxVal || 1) / step);
+  const yMax = niceMax * 1.05; // tiny breathing room at top
+
+  const yTicks: number[] = [];
+  for (let v = 0; v <= niceMax; v += step) {
+    yTicks.push(v);
+  }
 
   const getX = (index: number) => {
     if (data.length <= 1) return paddingLeft + graphWidth / 2;
@@ -68,8 +92,6 @@ export default function LineChart({
     ? `${linePath} L ${points[points.length - 1].x} ${paddingTop + graphHeight} L ${points[0].x} ${paddingTop + graphHeight} Z`
     : '';
 
-  // Y-axis grid values (4 lines)
-  const yTicks = [0, yMax * 0.33, yMax * 0.66, yMax];
 
   return (
     <div className="w-full relative select-none">
@@ -112,12 +134,12 @@ export default function LineChart({
               />
               <text
                 x={paddingLeft - 8}
-                y={y + 3}
+                y={y + 4}
                 textAnchor="end"
-                fontSize={9}
+                fontSize={10}
                 className="fill-muted-foreground font-semibold font-mono"
               >
-                {formatValue(val)}
+                {Math.round(val).toLocaleString()}
               </text>
             </g>
           );
@@ -142,9 +164,9 @@ export default function LineChart({
           <text
             key={`x-label-${idx}`}
             x={p.x}
-            y={height - 8}
+            y={height - 6}
             textAnchor="middle"
-            fontSize={9}
+            fontSize={10}
             className="fill-muted-foreground font-semibold"
           >
             {p.label}
