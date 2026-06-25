@@ -116,19 +116,6 @@ export default async function OurStoryPage({ params }: Props) {
           </div>
         </div>
       </section>
-
-      {/* Guest Reviews Section */}
-      <SectionContainer className="text-center">
-        <div className="max-w-2xl mx-auto space-y-6">
-          <h2 className="text-2xl sm:text-3xl font-serif font-bold text-primary tracking-wide">
-            {t('reviewsTitle')}
-          </h2>
-          <div className="h-[1px] w-24 bg-primary/40 mx-auto" />
-          <p className="text-muted-foreground text-sm italic font-light">
-            &ldquo;{t('reviewsPlaceholder')}&rdquo;
-          </p>
-        </div>
-      </SectionContainer>
     </PageTransition>
   );
 }
