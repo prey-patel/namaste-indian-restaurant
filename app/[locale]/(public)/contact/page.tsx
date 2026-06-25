@@ -9,6 +9,9 @@ import ContactMap from '@/components/public/contact-map';
 import ContactForm from './contact-form';
 import { getPublicOpeningHours } from '@/lib/public/opening-hours';
 import WeeklyHoursTable from '@/components/public/opening-hours/weekly-hours-table';
+import { MapPin, Phone, Mail, Clock } from 'lucide-react';
+import ThreeDTiltCard from '@/components/ui/three-d-tilt';
+import GoldFrame from '@/components/ui/gold-frame';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -45,95 +48,133 @@ export default async function ContactPage({ params }: Props) {
   const email = settings.restaurant_email || 'contact@namaste-ciechanow.pl';
   const dineInHours = settings.public_service_hours?.dine_in || '12:00 - 22:00';
   const deliveryHours = settings.public_service_hours?.delivery || '12:00 - 21:30';
-
   return (
     <PageTransition>
       {/* Contact Hero */}
-      <section className="relative overflow-hidden bg-[#070B1E] py-16 md:py-24 text-center border-b border-primary/15">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-primary/5 rounded-full blur-[80px] pointer-events-none" />
-        <MandalaWatermark className="w-[300px] h-[300px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03]" />
+      <section className="relative overflow-hidden bg-[#070B1E] py-20 md:py-28 text-center border-b border-primary/15">
+        {/* Glow Effects */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[600px] h-[350px] sm:h-[600px] bg-[radial-gradient(circle,rgba(212,175,55,0.06)_0%,rgba(7,11,30,0.2)_50%,transparent_100%)] rounded-full blur-[80px] pointer-events-none" />
+        <MandalaWatermark className="w-[300px] h-[300px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] animate-pulse" />
 
         <div className="max-w-3xl mx-auto px-4 relative z-10 space-y-4">
           <div className="flex justify-center items-center space-x-2 text-primary">
             <div className="h-[1px] w-6 bg-primary/30" />
-            <span className="text-[10px] tracking-[0.25em] font-extrabold uppercase">{tNav('contact')}</span>
+            <span className="text-[10px] tracking-[0.25em] font-extrabold uppercase text-primary/80">
+              {locale === 'pl' ? 'Kontakt z Namaste' : 'Namaste Contact'}
+            </span>
             <div className="h-[1px] w-6 bg-primary/30" />
           </div>
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-serif font-black tracking-wide text-foreground">
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-serif font-black tracking-wide bg-gradient-to-b from-white via-white to-zinc-400 bg-clip-text text-transparent pb-1">
             {tNav('contact')}
           </h1>
+          <p className="text-muted-foreground text-xs sm:text-sm font-sans uppercase tracking-widest text-primary/65 font-bold">
+            {locale === 'pl' ? 'Tradycyjna Gościnność • Rezerwacje • Catering' : 'Traditional Hospitality • Reservations • Catering'}
+          </p>
         </div>
       </section>
 
-      <SectionContainer className="space-y-12">
-        {/* Phase 4B Notice Banner */}
-        <div className="max-w-3xl mx-auto">
-          <LuxuryAlert type="info" title={locale === 'pl' ? 'Wdrożenie Formularza' : 'Form Integration'}>
-            <p className="text-xs sm:text-sm leading-relaxed">
-              {locale === 'pl'
-                ? 'Formularz kontaktowy został zintegrowany z bezpieczną obsługą po stronie serwera i zapisuje zgłoszenia bezpośrednio w systemie.'
-                : 'The contact form is integrated with secure server-side processing and writes inquiries directly to our system database.'}
-            </p>
-          </LuxuryAlert>
+      <SectionContainer className="space-y-16">
+        {/* SSL Secured Notice Badge */}
+        <div className="max-w-4xl mx-auto text-center">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-primary text-[10px] font-extrabold uppercase tracking-widest">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            {locale === 'pl' ? 'Zabezpieczone Szyfrowaniem SSL' : 'SSL Secured Connection'}
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-          {/* Contact Details & Map */}
-          <div className="space-y-8">
-            <PremiumCard hoverable={false} className="space-y-6">
-              <h2 className="text-xl font-serif font-bold text-primary border-b border-primary/20 pb-2">
-                {locale === 'pl' ? 'Informacje Kontaktowe' : 'Contact Information'}
-              </h2>
-
-              <div className="space-y-4 text-xs sm:text-sm font-sans font-light text-muted-foreground">
-                <div>
-                  <h3 className="font-bold text-foreground uppercase tracking-widest text-[10px] mb-1">Adres / Address</h3>
-                  <p>{address}</p>
+        {/* 3D Contact Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {/* Phone Card */}
+          <ThreeDTiltCard maxTilt={10} glareOpacity={0.1}>
+            <div className="relative rounded-2xl border border-primary/20 bg-[#050b1e]/60 p-6 backdrop-blur-md h-full text-center group hover:border-primary/50 transition-all duration-300">
+              <div className="absolute inset-1.5 rounded-[12px] border border-primary/5 pointer-events-none" />
+              <div className="relative z-10 space-y-4">
+                <div className="w-12 h-12 rounded-full border border-primary/30 flex items-center justify-center text-primary bg-primary/5 mx-auto group-hover:scale-110 transition-transform duration-300">
+                  <Phone className="w-5 h-5 text-primary animate-pulse" />
                 </div>
-                <div>
-                  <h3 className="font-bold text-foreground uppercase tracking-widest text-[10px] mb-1">Telefon / Phone</h3>
-                  <p className="font-bold text-primary">{phone}</p>
-                </div>
-                <div>
-                  <h3 className="font-bold text-foreground uppercase tracking-widest text-[10px] mb-1">Email</h3>
-                  <p>{email}</p>
-                </div>
-
+                <h3 className="font-bold text-foreground uppercase tracking-widest text-xs">{locale === 'pl' ? 'Zadzwoń do nas' : 'Call Us'}</h3>
+                <p className="text-primary font-extrabold text-sm tracking-wide">{phone}</p>
+                <p className="text-[10px] text-muted-foreground/60 font-light font-sans">{locale === 'pl' ? 'Rezerwacje i zamówienia' : 'Reservations & orders'}</p>
               </div>
-            </PremiumCard>
+            </div>
+          </ThreeDTiltCard>
 
-            {/* Leaflet/OSM map component */}
-            <ContactMap 
-              address={address} 
-              phone={phone} 
-              coordinates={settings.coordinates} 
-              locale={locale} 
-            />
+          {/* Address Card */}
+          <ThreeDTiltCard maxTilt={10} glareOpacity={0.1}>
+            <div className="relative rounded-2xl border border-primary/20 bg-[#050b1e]/60 p-6 backdrop-blur-md h-full text-center group hover:border-primary/50 transition-all duration-300">
+              <div className="absolute inset-1.5 rounded-[12px] border border-primary/5 pointer-events-none" />
+              <div className="relative z-10 space-y-4">
+                <div className="w-12 h-12 rounded-full border border-primary/30 flex items-center justify-center text-primary bg-primary/5 mx-auto group-hover:scale-110 transition-transform duration-300">
+                  <MapPin className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="font-bold text-foreground uppercase tracking-widest text-xs">{locale === 'pl' ? 'Odwiedź nas' : 'Visit Us'}</h3>
+                <p className="text-muted-foreground text-xs leading-relaxed font-light">{address}</p>
+              </div>
+            </div>
+          </ThreeDTiltCard>
+
+          {/* Email Card */}
+          <ThreeDTiltCard maxTilt={10} glareOpacity={0.1}>
+            <div className="relative rounded-2xl border border-primary/20 bg-[#050b1e]/60 p-6 backdrop-blur-md h-full text-center group hover:border-primary/50 transition-all duration-300">
+              <div className="absolute inset-1.5 rounded-[12px] border border-primary/5 pointer-events-none" />
+              <div className="relative z-10 space-y-4">
+                <div className="w-12 h-12 rounded-full border border-primary/30 flex items-center justify-center text-primary bg-primary/5 mx-auto group-hover:scale-110 transition-transform duration-300">
+                  <Mail className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="font-bold text-foreground uppercase tracking-widest text-xs">{locale === 'pl' ? 'Napisz do nas' : 'Email Us'}</h3>
+                <p className="text-muted-foreground text-xs leading-relaxed font-light break-all">{email}</p>
+              </div>
+            </div>
+          </ThreeDTiltCard>
+        </div>
+
+        {/* 2-Column Split: Map & Contact Form */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start max-w-5xl mx-auto w-full">
+          {/* Map Column */}
+          <div className="lg:col-span-5 h-full flex flex-col space-y-4 min-h-[400px]">
+            <GoldFrame className="w-full h-full flex-1 overflow-hidden rounded-2xl">
+              <div className="w-full h-full min-h-[350px] relative">
+                <ContactMap 
+                  address={address} 
+                  phone={phone} 
+                  coordinates={settings.coordinates} 
+                  locale={locale} 
+                />
+              </div>
+            </GoldFrame>
           </div>
 
-          {/* Contact Form client component */}
-          <ContactForm locale={locale} />
+          {/* Form Column */}
+          <div className="lg:col-span-7">
+            <ContactForm locale={locale} />
+          </div>
         </div>
 
         {/* Weekly Opening Hours Section */}
-        <div className="border-t border-primary/10 pt-12 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          <div className="lg:col-span-1 space-y-4">
-            <h2 className="text-2xl sm:text-3xl font-serif font-black tracking-wide text-foreground">
-              {locale === 'pl' ? 'Godziny Otwarcia' : 'Opening Hours'}
-            </h2>
-            <p className="text-muted-foreground text-xs sm:text-sm font-light leading-relaxed">
+        <div className="border-t border-primary/10 pt-16 grid grid-cols-1 lg:grid-cols-3 gap-12 items-center max-w-5xl mx-auto w-full">
+          <div className="lg:col-span-1 space-y-6">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/5 border border-primary/30 text-primary">
+              <Clock className="w-6 h-6 animate-pulse" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-3xl font-serif font-black tracking-wide text-foreground">
+                {locale === 'pl' ? 'Godziny Otwarcia' : 'Opening Hours'}
+              </h2>
+              <div className="h-[1px] w-16 bg-primary/40" />
+            </div>
+            <p className="text-muted-foreground text-sm font-light leading-relaxed">
               {locale === 'pl' 
-                ? 'Jesteśmy otwarci każdego dnia, aby serwować Państwu najlepsze dania kuchni indyjskiej.'
-                : 'We are open every day to serve you the best of Indian cuisine.'}
+                ? 'Zapraszamy do skosztowania autentycznych indyjskich dań na miejscu w naszej restauracji lub zamówienia z dostawą bezpośrednio pod Twoje drzwi.'
+                : 'We invite you to taste authentic Indian curries dine-in at our restaurant or order delivery directly to your doorstep.'}
             </p>
-            <div className="space-y-3 pt-2 text-xs text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                <span>{locale === 'pl' ? 'Obsługa na miejscu' : 'Restaurant Dine-in Service'}</span>
+            <div className="space-y-3.5 pt-2 text-xs text-muted-foreground/80">
+              <div className="flex items-center gap-3">
+                <span className="w-2 h-2 rounded-full bg-primary" />
+                <span>{locale === 'pl' ? 'Obsługa na miejscu (Dine-in)' : 'Dine-in Service'}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                <span>{locale === 'pl' ? 'Dostawa do domu' : 'Delivery Service to your doorstep'}</span>
+              <div className="flex items-center gap-3">
+                <span className="w-2 h-2 rounded-full bg-primary" />
+                <span>{locale === 'pl' ? 'Bezpieczna dostawa (Delivery)' : 'Contactless Delivery'}</span>
               </div>
             </div>
           </div>

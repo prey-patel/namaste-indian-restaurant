@@ -68,34 +68,36 @@ export default function ContactForm({ locale }: ContactFormProps) {
 
   if (success) {
     return (
-      <PremiumCard className="text-center p-8 sm:p-12 space-y-6">
-        <div className="w-16 h-16 rounded-full border border-primary/30 flex items-center justify-center text-primary bg-primary/5 mx-auto">
-          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
+      <GoldFrame className="w-full">
+        <div className="text-center p-8 sm:p-12 space-y-6 bg-[#040815]/80 backdrop-blur-md rounded-xl">
+          <div className="w-16 h-16 rounded-full border border-primary/30 flex items-center justify-center text-primary bg-primary/5 mx-auto animate-pulse">
+            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h3 className="text-2xl font-serif font-medium text-primary">{t('successTitle')}</h3>
+          <p className="text-muted-foreground text-sm leading-relaxed max-w-md mx-auto">
+            {t('successMessage')}
+          </p>
+          <div className="pt-4">
+            <PremiumButton
+              variant="outline"
+              size="md"
+              onClick={() => setSuccess(false)}
+            >
+              {locale === 'pl' ? 'Wyślij nową wiadomość' : 'Send another message'}
+            </PremiumButton>
+          </div>
         </div>
-        <h3 className="text-2xl font-serif font-bold text-primary">{t('successTitle')}</h3>
-        <p className="text-muted-foreground text-sm leading-relaxed max-w-md mx-auto">
-          {t('successMessage')}
-        </p>
-        <div className="pt-4">
-          <PremiumButton
-            variant="outline"
-            size="md"
-            onClick={() => setSuccess(false)}
-          >
-            {locale === 'pl' ? 'Wyślij nową wiadomość' : 'Send another message'}
-          </PremiumButton>
-        </div>
-      </PremiumCard>
+      </GoldFrame>
     );
   }
 
   return (
     <GoldFrame className="w-full">
-      <div className="p-4 space-y-6">
-        <h3 className="font-serif font-bold text-center text-foreground text-lg uppercase tracking-wider border-b border-primary/20 pb-2">
-          {locale === 'pl' ? 'Wyślij Wiadomość' : 'Send a Message'}
+      <div className="p-6 md:p-8 space-y-6 bg-[#040815]/90 backdrop-blur-md rounded-xl">
+        <h3 className="font-serif font-medium text-center text-primary text-xl uppercase tracking-widest border-b border-primary/10 pb-4">
+          {locale === 'pl' ? 'Napisz do nas' : 'Send a Message'}
         </h3>
 
         {/* Global Error Banner */}
@@ -121,10 +123,10 @@ export default function ContactForm({ locale }: ContactFormProps) {
           </LuxuryAlert>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
           {/* Name */}
           <div>
-            <label htmlFor="name" className="block text-[10px] uppercase tracking-wider font-bold text-primary mb-1">
+            <label htmlFor="name" className="block text-[10px] uppercase tracking-widest font-bold text-primary mb-1.5">
               {t('nameLabel')} <span className="text-red-500">*</span>
             </label>
             <input
@@ -135,8 +137,8 @@ export default function ContactForm({ locale }: ContactFormProps) {
               placeholder={t('namePlaceholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className={`w-full px-4 py-2.5 bg-[#070B1E]/60 border rounded text-xs text-foreground focus:outline-none focus:border-primary/60 transition-colors ${
-                validationErrors.name ? 'border-red-500/50 focus:border-red-500' : 'border-primary/20'
+              className={`w-full px-4 py-3 bg-[#050b1e]/80 border rounded-xl text-xs text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 focus:shadow-[0_0_15px_rgba(212,175,55,0.15)] transition-all duration-300 ${
+                validationErrors.name ? 'border-red-500/50 focus:border-red-500' : 'border-primary/25'
               }`}
             />
             {validationErrors.name && (
@@ -146,7 +148,7 @@ export default function ContactForm({ locale }: ContactFormProps) {
 
           {/* Email */}
           <div>
-            <label htmlFor="email" className="block text-[10px] uppercase tracking-wider font-bold text-primary mb-1">
+            <label htmlFor="email" className="block text-[10px] uppercase tracking-widest font-bold text-primary mb-1.5">
               {t('emailLabel')} <span className="text-red-500">*</span>
             </label>
             <input
@@ -157,8 +159,8 @@ export default function ContactForm({ locale }: ContactFormProps) {
               placeholder={t('emailPlaceholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={`w-full px-4 py-2.5 bg-[#070B1E]/60 border rounded text-xs text-foreground focus:outline-none focus:border-primary/60 transition-colors ${
-                validationErrors.email ? 'border-red-500/50 focus:border-red-500' : 'border-primary/20'
+              className={`w-full px-4 py-3 bg-[#050b1e]/80 border rounded-xl text-xs text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 focus:shadow-[0_0_15px_rgba(212,175,55,0.15)] transition-all duration-300 ${
+                validationErrors.email ? 'border-red-500/50 focus:border-red-500' : 'border-primary/25'
               }`}
             />
             {validationErrors.email && (
@@ -168,7 +170,7 @@ export default function ContactForm({ locale }: ContactFormProps) {
 
           {/* Phone */}
           <div>
-            <label htmlFor="phone" className="block text-[10px] uppercase tracking-wider font-bold text-primary mb-1">
+            <label htmlFor="phone" className="block text-[10px] uppercase tracking-widest font-bold text-primary mb-1.5">
               {t('phoneLabel')}
             </label>
             <input
@@ -178,13 +180,13 @@ export default function ContactForm({ locale }: ContactFormProps) {
               placeholder={t('phonePlaceholder')}
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className={`w-full px-4 py-2.5 bg-[#070B1E]/60 border border-primary/20 rounded text-xs text-foreground focus:outline-none focus:border-primary/60 transition-colors`}
+              className={`w-full px-4 py-3 bg-[#050b1e]/80 border border-primary/25 rounded-xl text-xs text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 focus:shadow-[0_0_15px_rgba(212,175,55,0.15)] transition-all duration-300`}
             />
           </div>
 
           {/* Subject */}
           <div>
-            <label htmlFor="subject" className="block text-[10px] uppercase tracking-wider font-bold text-primary mb-1">
+            <label htmlFor="subject" className="block text-[10px] uppercase tracking-widest font-bold text-primary mb-1.5">
               {t('subjectLabel')} <span className="text-red-500">*</span>
             </label>
             <input
@@ -195,8 +197,8 @@ export default function ContactForm({ locale }: ContactFormProps) {
               placeholder={t('subjectPlaceholder')}
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              className={`w-full px-4 py-2.5 bg-[#070B1E]/60 border rounded text-xs text-foreground focus:outline-none focus:border-primary/60 transition-colors ${
-                validationErrors.subject ? 'border-red-500/50 focus:border-red-500' : 'border-primary/20'
+              className={`w-full px-4 py-3 bg-[#050b1e]/80 border rounded-xl text-xs text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 focus:shadow-[0_0_15px_rgba(212,175,55,0.15)] transition-all duration-300 ${
+                validationErrors.subject ? 'border-red-500/50 focus:border-red-500' : 'border-primary/25'
               }`}
             />
             {validationErrors.subject && (
@@ -206,7 +208,7 @@ export default function ContactForm({ locale }: ContactFormProps) {
 
           {/* Message */}
           <div>
-            <label htmlFor="message" className="block text-[10px] uppercase tracking-wider font-bold text-primary mb-1">
+            <label htmlFor="message" className="block text-[10px] uppercase tracking-widest font-bold text-primary mb-1.5">
               {t('messageLabel')} <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -217,8 +219,8 @@ export default function ContactForm({ locale }: ContactFormProps) {
               placeholder={t('messagePlaceholder')}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className={`w-full px-4 py-2.5 bg-[#070B1E]/60 border rounded text-xs text-foreground focus:outline-none focus:border-primary/60 transition-colors resize-none ${
-                validationErrors.message ? 'border-red-500/50 focus:border-red-500' : 'border-primary/20'
+              className={`w-full px-4 py-3 bg-[#050b1e]/80 border rounded-xl text-xs text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 focus:shadow-[0_0_15px_rgba(212,175,55,0.15)] transition-all duration-300 resize-none ${
+                validationErrors.message ? 'border-red-500/50 focus:border-red-500' : 'border-primary/25'
               }`}
             />
             {validationErrors.message && (
@@ -235,7 +237,7 @@ export default function ContactForm({ locale }: ContactFormProps) {
                 disabled={isPending}
                 checked={consent}
                 onChange={(e) => setConsent(e.target.checked)}
-                className={`mt-1 focus:ring-primary h-4 w-4 text-primary border-primary/30 bg-[#070B1E] rounded cursor-pointer ${
+                className={`mt-1 focus:ring-primary h-4 w-4 text-[#070b1e] accent-primary border-primary/30 bg-[#040815] rounded cursor-pointer ${
                   validationErrors.consent ? 'border-red-400 focus:border-red-400' : ''
                 }`}
               />
@@ -256,7 +258,7 @@ export default function ContactForm({ locale }: ContactFormProps) {
           </div>
 
           {/* Turnstile Verification Placeholder */}
-          <div className="border border-dashed border-primary/20 bg-[#070B1E]/40 p-3 rounded text-center">
+          <div className="border border-primary/10 bg-[#040815]/60 p-3 rounded-xl text-center">
             <div className="inline-flex items-center space-x-2 text-[10px] uppercase tracking-wider text-muted-foreground/60 font-mono">
               <svg className="w-4 h-4 animate-spin text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeDasharray="4, 4" />
@@ -274,7 +276,7 @@ export default function ContactForm({ locale }: ContactFormProps) {
               type="submit"
               variant="primary"
               size="md"
-              className="w-full"
+              className="w-full bg-gradient-to-r from-primary to-amber-600 border-none text-[#040815] font-extrabold uppercase tracking-widest text-[11px] py-4"
               disabled={isPending}
             >
               {isPending ? t('submittingButton') : t('submitButton')}
@@ -283,15 +285,5 @@ export default function ContactForm({ locale }: ContactFormProps) {
         </form>
       </div>
     </GoldFrame>
-  );
-}
-
-// Simple internal helper component for Success state card styling
-function PremiumCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={`relative rounded-xl border border-primary/20 bg-[#0A1128]/85 p-6 shadow-2xl ${className}`}>
-      <div className="absolute inset-1.5 rounded-[8px] border border-primary/5 pointer-events-none" />
-      <div className="relative z-10">{children}</div>
-    </div>
   );
 }
