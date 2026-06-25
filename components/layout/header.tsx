@@ -256,15 +256,15 @@ export default function Header() {
       {/* Mobile Menu Slide-out Drawer */}
       <AnimatePresence>
         {isDrawerOpen && (
-          <>
+          <div className="fixed inset-0 z-[9998] overflow-hidden md:hidden">
             {/* Dark blur backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: shouldReduceMotion ? 0 : 0.3 }}
               onClick={() => setIsDrawerOpen(false)}
-              className="fixed inset-0 z-[9998] bg-black/80 backdrop-blur-md md:hidden"
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
               aria-hidden="true"
             />
 
@@ -281,7 +281,7 @@ export default function Header() {
                 duration: shouldReduceMotion ? 0 : 0.4
               }}
               style={{ backfaceVisibility: 'hidden', willChange: 'transform' }}
-              className="fixed top-0 right-0 bottom-0 z-[9999] w-80 max-w-[85vw] bg-[#070B1E] border-l border-primary/20 p-6 flex flex-col shadow-2xl md:hidden"
+              className="absolute top-0 right-0 bottom-0 z-[1] w-80 max-w-[85vw] bg-[#070B1E] border-l border-primary/20 p-6 flex flex-col shadow-2xl"
               role="dialog"
               aria-modal="true"
               aria-label="Mobile Navigation"
@@ -373,7 +373,7 @@ export default function Header() {
                 </Link>
               </div>
             </motion.div>
-          </>
+          </div>
         )}
       </AnimatePresence>
     </header>
