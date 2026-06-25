@@ -22,16 +22,16 @@ export default function WeeklyHoursTable({ weeklyHours, todayDayOfWeek }: Props)
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-primary/15 text-primary bg-primary/5">
-              <th className="py-4.5 px-6 text-[10px] font-extrabold uppercase tracking-widest text-primary/80">
+              <th className="py-4 px-6 text-[10px] font-extrabold uppercase tracking-widest text-primary/80">
                 {isPl ? 'Dzień' : 'Day'}
               </th>
-              <th className="py-4.5 px-6 text-[10px] font-extrabold uppercase tracking-widest text-primary/80">
+              <th className="py-4 px-6 text-[10px] font-extrabold uppercase tracking-widest text-primary/80">
                 <div className="flex items-center gap-2">
                   <Utensils className="w-3.5 h-3.5 text-primary" />
                   <span>{t('dineIn')}</span>
                 </div>
               </th>
-              <th className="py-4.5 px-6 text-[10px] font-extrabold uppercase tracking-widest text-primary/80">
+              <th className="py-4 px-6 text-[10px] font-extrabold uppercase tracking-widest text-primary/80">
                 <div className="flex items-center gap-2">
                   <Truck className="w-3.5 h-3.5 text-primary" />
                   <span>{t('delivery')}</span>

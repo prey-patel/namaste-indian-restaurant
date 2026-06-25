@@ -252,7 +252,7 @@ export default function HeroSection({
             <motion.button
               whileHover={{ scale: 1.04, backgroundColor: '#c89243' }}
               whileTap={{ scale: 0.98 }}
-              className="w-full sm:w-auto px-8 py-4.5 rounded-full bg-primary text-black font-extrabold text-xs uppercase tracking-widest transition-all duration-300 shadow-lg hover:shadow-primary/20 font-sans"
+              className="w-full sm:w-auto px-8 py-4 rounded-full bg-primary text-black font-extrabold text-xs uppercase tracking-widest transition-all duration-300 shadow-lg hover:shadow-primary/20 font-sans"
             >
               {tHome('heroOrderOnline')}
             </motion.button>
@@ -263,7 +263,7 @@ export default function HeroSection({
             <motion.button
               whileHover={{ scale: 1.04, backgroundColor: 'rgba(212,175,55,0.06)', borderColor: 'rgba(212,175,55,0.8)' }}
               whileTap={{ scale: 0.98 }}
-              className="w-full sm:w-auto px-8 py-4.5 rounded-full border border-primary/30 text-primary font-bold text-xs uppercase tracking-widest transition-all duration-300 font-sans"
+              className="w-full sm:w-auto px-8 py-4 rounded-full border border-primary/30 text-primary font-bold text-xs uppercase tracking-widest transition-all duration-300 font-sans"
             >
               {tHome('heroReserveTable')}
             </motion.button>
