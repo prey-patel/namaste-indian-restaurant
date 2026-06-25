@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { createOrderRequestAction } from '@/app/[locale]/(public)/order/actions';
 import { orderRequestSchema } from '@/lib/validation/orders';
+import { saveOfflineOrder } from '@/lib/pwa/indexed-db';
 import { Button } from '@/components/ui/button';
 import PremiumCard from '@/components/ui/premium-card';
 import GoldSpinner from '@/components/ui/gold-spinner';
@@ -137,6 +138,7 @@ export default function OrderingWorkflowClient({
     deliveryPostalCode?: string | null;
     deliveryCity?: string | null;
     items?: { name_pl: string; name_en: string; quantity: number; price: number }[];
+    isOffline?: boolean;
   } | null>(null);
 
   // Real-time delivery fee state
@@ -348,6 +350,46 @@ export default function OrderingWorkflowClient({
       return;
     }
 
+    const handleOfflineFallback = async () => {
+      try {
+        const basketDetails = basket.map(b => ({
+          name_pl: b.menuItem.name_pl,
+          name_en: b.menuItem.name_en,
+          quantity: b.quantity,
+          price: b.menuItem.price
+        }));
+
+        await saveOfflineOrder(payload, basketDetails, locale);
+
+        setSuccessData({
+          id: 'offline',
+          token: 'offline',
+          itemsSubtotal: itemsSubtotal,
+          packagingTotal: packagingTotal,
+          deliveryFee: liveDeliveryFee,
+          totalAmount: estimatedTotal,
+          orderType: orderType,
+          deliveryZoneAction: deliveryFeeInfo?.action as any,
+          customerName: payload.customer_name,
+          customerPhone: payload.customer_phone,
+          deliveryAddress: payload.delivery_address,
+          deliveryPostalCode: payload.delivery_postal_code,
+          deliveryCity: payload.delivery_city,
+          items: basketDetails,
+          isOffline: true
+        });
+        setBasket([]);
+      } catch (dbErr: any) {
+        setError(locale === 'pl' ? 'Wystąpił błąd podczas zapisu zamówienia offline.' : 'Failed to save offline order locally.');
+      }
+    };
+
+    if (typeof window !== 'undefined' && !navigator.onLine) {
+      await handleOfflineFallback();
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await createOrderRequestAction(payload);
       if (res.success && res.id && res.token) {
@@ -377,7 +419,17 @@ export default function OrderingWorkflowClient({
         setError(res.error || (locale === 'pl' ? 'Nie udało się zapisać zamówienia.' : 'Failed to submit order request.'));
       }
     } catch (err: any) {
-      setError(err.message || 'Server error');
+      const isNetworkError = !navigator.onLine || 
+        err.message?.includes('fetch') || 
+        err.message?.includes('NetworkError') || 
+        err.message?.includes('connection') ||
+        err instanceof TypeError;
+
+      if (isNetworkError) {
+        await handleOfflineFallback();
+      } else {
+        setError(err.message || 'Server error');
+      }
     } finally {
       setLoading(false);
     }
@@ -412,19 +464,33 @@ export default function OrderingWorkflowClient({
         <div className="absolute -bottom-12 -left-12 w-28 h-28 bg-primary/5 rounded-full blur-2xl pointer-events-none" />
 
         {/* Success Icon */}
-        <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-green-500/10 to-emerald-500/15 border border-green-500/30 text-green-400 mx-auto animate-pulse shadow-[0_0_15px_rgba(34,197,94,0.1)]">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-8 h-8">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-          </svg>
-        </div>
+        {successData.isOffline ? (
+          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-500/10 to-yellow-500/15 border border-amber-500/30 text-amber-400 mx-auto animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.1)]">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-7 h-7">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.284 16.284A3 3 0 0 0 12 15a3 3 0 0 0 3.716 1.284M6.168 14.168A6 6 0 0 1 12 12a6 6 0 0 1 5.832 2.168m-9.9-9.9A10.5 10.5 0 0 1 12 9c2.333 0 4.49.756 6.232 2.032M3.75 20.25L20.25 3.75" />
+            </svg>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-green-500/10 to-emerald-500/15 border border-green-500/30 text-green-400 mx-auto animate-pulse shadow-[0_0_15px_rgba(34,197,94,0.1)]">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-8 h-8">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+          </div>
+        )}
 
         {/* Title & Description */}
         <div className="space-y-2">
           <h3 className="text-2xl font-serif font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-yellow-100 uppercase">
-            {t('successTitle')}
+            {successData.isOffline 
+              ? (locale === 'pl' ? 'Zamówienie w Kolejce' : 'Order Queued')
+              : t('successTitle')}
           </h3>
           <p className="text-xs text-muted-foreground/80 leading-relaxed max-w-md mx-auto">
-            {t('successDesc')}
+            {successData.isOffline 
+              ? (locale === 'pl' 
+                  ? 'Brak połączenia. Twoje zamówienie zostało zapisane na tym urządzeniu i wyśle się automatycznie, gdy tylko odzyskasz Internet.' 
+                  : 'No connection. Your order has been saved on this device and will automatically send once your Internet is restored.')
+              : t('successDesc')}
           </p>
         </div>
 
@@ -528,25 +594,47 @@ export default function OrderingWorkflowClient({
           </div>
         )}
 
-        {/* Tracking Information Box */}
-        <div className="p-4 bg-[#0a0f26] border border-primary/20 rounded-xl space-y-3 max-w-md mx-auto">
-          <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 block font-semibold">
-            {t('trackingRef')}
-          </span>
-          <code className="text-xs text-amber-400 font-mono select-all block break-all py-1.5 px-3 bg-amber-500/5 border border-amber-500/10 rounded-lg">
-            {successData.token}
-          </code>
-          <p className="text-[10px] text-muted-foreground/60 leading-relaxed font-light">
-            {t('trackingText')}
-          </p>
-          <div className="pt-2">
-            <Link href={trackingUrl} className="block">
-              <Button className="w-full bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-[#070B1E] font-bold text-xs uppercase tracking-wider py-3 shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:shadow-[0_0_25px_rgba(245,158,11,0.3)] transition-all duration-300 rounded-lg">
-                {t('trackLinkText')}
-              </Button>
-            </Link>
+        {/* Tracking Information Box / Offline Box */}
+        {successData.isOffline ? (
+          <div className="p-4 bg-[#0a0f26] border border-amber-500/20 rounded-xl space-y-2.5 max-w-md mx-auto text-left">
+            <span className="text-[10px] uppercase tracking-widest text-amber-400/70 block font-bold border-b border-primary/5 pb-1.5">
+              {locale === 'pl' ? 'Status Kolejkowania' : 'Sync Status'}
+            </span>
+            <div className="flex items-center gap-2 text-xs text-amber-200">
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+              </span>
+              <span className="font-semibold select-none">
+                {locale === 'pl' ? 'Oczekiwanie na połączenie...' : 'Waiting for network...'}
+              </span>
+            </div>
+            <p className="text-[10px] text-muted-foreground/80 leading-relaxed font-light">
+              {locale === 'pl'
+                ? 'Możesz bezpiecznie opuścić tę stronę lub wyłączyć przeglądarkę. Nasz system automatycznie prześle zamówienie w tle gdy tylko połączysz się z siecią.'
+                : 'You can safely close this page. The system will automatically process and submit this order in the background once you regain internet.'}
+            </p>
           </div>
-        </div>
+        ) : (
+          <div className="p-4 bg-[#0a0f26] border border-primary/20 rounded-xl space-y-3 max-w-md mx-auto">
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 block font-semibold">
+              {t('trackingRef')}
+            </span>
+            <code className="text-xs text-amber-400 font-mono select-all block break-all py-1.5 px-3 bg-amber-500/5 border border-amber-500/10 rounded-lg">
+              {successData.token}
+            </code>
+            <p className="text-[10px] text-muted-foreground/60 leading-relaxed font-light">
+              {t('trackingText')}
+            </p>
+            <div className="pt-2">
+              <Link href={trackingUrl} className="block">
+                <Button className="w-full bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-[#070B1E] font-bold text-xs uppercase tracking-wider py-3 shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:shadow-[0_0_25px_rgba(245,158,11,0.3)] transition-all duration-300 rounded-lg">
+                  {t('trackLinkText')}
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
 
         <p className="text-[10px] text-muted-foreground/50 pt-2 border-t border-primary/5 max-w-md mx-auto">
           {t('contactNote')}

@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
 import RealtimeTableListener from '@/components/common/realtime-table-listener';
+import OfflineSyncManager from '@/components/public/order/offline-sync-manager';
 
 type Props = {
   children: ReactNode;
@@ -10,6 +11,7 @@ type Props = {
 export default function PublicLayout({ children }: Props) {
   return (
     <div className="flex flex-col min-h-screen">
+      <OfflineSyncManager />
       <RealtimeTableListener
         channelName="public-global-realtime"
         tables={[
