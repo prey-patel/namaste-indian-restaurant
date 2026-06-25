@@ -577,6 +577,7 @@
     "links": {
       "dashboard": "Dashboard Overview",
       "orders": "Orders Approval",
+      "orderSummary": "Order Summary",
       "reservations": "Reservations Grid",
       "kds": "Kitchen Display (KDS)",
       "menu": "Menu & Category CMS",

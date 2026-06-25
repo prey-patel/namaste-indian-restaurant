@@ -577,6 +577,7 @@
     "links": {
       "dashboard": "Dashboard Overview",
       "orders": "Zatwierdzanie Zamówień",
+      "orderSummary": "Podsumowanie Zamówień",
       "reservations": "Siatka Rezerwacji",
       "kds": "Ekran Kuchenny (KDS)",
       "menu": "CMS Menu i Kategorii",
