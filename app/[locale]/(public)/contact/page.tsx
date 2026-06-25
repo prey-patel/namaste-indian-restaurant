@@ -108,7 +108,14 @@ export default async function ContactPage({ params }: Props) {
                   <MapPin className="w-5 h-5 text-primary" />
                 </div>
                 <h3 className="font-bold text-foreground uppercase tracking-widest text-xs">{locale === 'pl' ? 'Odwiedź nas' : 'Visit Us'}</h3>
-                <p className="text-muted-foreground text-xs leading-relaxed font-light">{address}</p>
+                <a
+                  href={settings.google_maps_link && settings.google_maps_link.trim().startsWith('http') ? settings.google_maps_link.trim() : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-muted-foreground text-xs leading-relaxed font-light hover:text-primary hover:underline transition-colors cursor-pointer"
+                >
+                  {address}
+                </a>
               </div>
             </div>
           </ThreeDTiltCard>

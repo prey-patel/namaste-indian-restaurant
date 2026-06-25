@@ -98,7 +98,14 @@ export default async function ReservationsPage({ params }: Props) {
 
             <div className="border-t border-primary/10 pt-6 space-y-2 text-xs">
               <p className="text-muted-foreground">
-                <strong className="text-primary">{address}</strong>
+                <a
+                  href={settings.google_maps_link && settings.google_maps_link.trim().startsWith('http') ? settings.google_maps_link.trim() : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline transition-colors hover:text-primary"
+                >
+                  <strong className="text-primary">{address}</strong>
+                </a>
               </p>
               <p className="text-muted-foreground">
                 {locale === 'pl' ? 'Telefon:' : 'Phone:'} <strong className="text-foreground">{phone}</strong>

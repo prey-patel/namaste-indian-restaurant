@@ -17,6 +17,7 @@ export default async function Footer() {
   const address = settings.restaurant_full_address || settings.restaurant_address || 'Warszawska 1/3, 06-400 Ciechanów, Poland';
   const phone = settings.restaurant_phone || '511984331';
   const email = settings.restaurant_email || 'contact@namaste-ciechanow.pl';
+  const googleMapsLink = settings.google_maps_link;
 
   const formatPhone = (phoneStr: string) => {
     const digits = phoneStr.replace(/\D/g, '');
@@ -26,6 +27,10 @@ export default async function Footer() {
     return phoneStr.startsWith('+') ? phoneStr : `+48 ${phoneStr}`;
   };
 
+  const mapsUrl = googleMapsLink && googleMapsLink.trim().startsWith('http')
+    ? googleMapsLink.trim()
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+
   return (
     <footer className="w-full border-t border-primary/20 bg-[#050B1E] py-12 text-muted-foreground mt-auto font-sans" aria-label="Footer">
       <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -33,7 +38,14 @@ export default async function Footer() {
         {/* Restaurant Contact Section */}
         <div className="flex flex-col space-y-3 text-left">
           <h3 className="font-serif text-lg font-bold text-primary tracking-wide">{displayName}</h3>
-          <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground/80">{address}</p>
+          <a 
+            href={mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs sm:text-sm leading-relaxed text-muted-foreground/80 hover:text-primary transition-colors focus-visible:ring-1 focus-visible:ring-primary rounded hover:underline"
+          >
+            {address}
+          </a>
           <p className="text-xs sm:text-sm text-muted-foreground/80">Tel: <span className="font-semibold text-primary font-mono">{formatPhone(phone)}</span></p>
           <p className="text-xs sm:text-sm text-muted-foreground/80">Email: {email}</p>
         </div>

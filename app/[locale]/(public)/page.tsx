@@ -147,6 +147,7 @@ export default async function HomePage({ params }: Props) {
         phone={phone}
         email={email}
         coordinates={settings.coordinates}
+        googleMapsLink={settings.google_maps_link}
       />
     </PageTransition>
   );
