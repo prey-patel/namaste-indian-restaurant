@@ -98,160 +98,162 @@ export default function Header() {
   }, [isDrawerOpen]);
 
   return (
-    <header className="sticky top-0 z-[1000] w-full border-b border-primary/20 bg-[#040815]/90 backdrop-blur-md">
-      <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-        
-        {/* Brand Logo - Centered alignment inside the block */}
-        <Link href={ROUTES.home} className="flex flex-col items-center group focus-visible:ring-2 focus-visible:ring-primary rounded p-1">
-          <svg className="w-5 h-5 text-primary mb-1 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M12 2l2.4 4.8 5.3.8-3.8 3.7.9 5.3-4.8-2.5-4.8 2.5.9-5.3-3.8-3.7 5.3-.8z" fill="currentColor" fillOpacity="0.2" />
-            <circle cx="12" cy="12" r="2" fill="currentColor" />
-          </svg>
-          <span className="text-xl font-serif font-black tracking-[0.2em] text-primary leading-none group-hover:brightness-110 transition-all">
-            NAMASTE
-          </span>
-          <span className="text-[7px] tracking-[0.2em] text-muted-foreground/80 font-sans font-bold uppercase mt-1">
-            INDIAN RESTAURANT
-          </span>
-        </Link>
-
-        {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center space-x-8 h-full" aria-label="Główne menu / Main Menu">
-          <Link 
-            href={ROUTES.home} 
-            className={`text-xs uppercase tracking-widest font-sans font-bold transition-all duration-300 relative py-2 ${
-              isActive(ROUTES.home) ? 'text-primary' : 'text-foreground/90 hover:text-primary'
-            }`}
-          >
-            {t('home')}
-            {isActive(ROUTES.home) && (
-              <motion.span 
-                layoutId="activeNavLine" 
-                className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-primary rounded-full" 
-              />
-            )}
-          </Link>
-          <Link 
-            href={ROUTES.menu} 
-            className={`text-xs uppercase tracking-widest font-sans font-bold transition-all duration-300 relative py-2 ${
-              isActive(ROUTES.menu) ? 'text-primary' : 'text-foreground/90 hover:text-primary'
-            }`}
-          >
-            {t('menu')}
-            {isActive(ROUTES.menu) && (
-              <motion.span 
-                layoutId="activeNavLine" 
-                className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-primary rounded-full" 
-              />
-            )}
-          </Link>
-          <Link 
-            href={ROUTES.reservations} 
-            className={`text-xs uppercase tracking-widest font-sans font-bold transition-all duration-300 relative py-2 ${
-              isActive(ROUTES.reservations) ? 'text-primary' : 'text-foreground/90 hover:text-primary'
-            }`}
-          >
-            {t('reservations')}
-            {isActive(ROUTES.reservations) && (
-              <motion.span 
-                layoutId="activeNavLine" 
-                className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-primary rounded-full" 
-              />
-            )}
-          </Link>
-          <Link 
-            href={ROUTES.story} 
-            className={`text-xs uppercase tracking-widest font-sans font-bold transition-all duration-300 relative py-2 ${
-              isActive(ROUTES.story) ? 'text-primary' : 'text-foreground/90 hover:text-primary'
-            }`}
-          >
-            {t('story')}
-            {isActive(ROUTES.story) && (
-              <motion.span 
-                layoutId="activeNavLine" 
-                className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-primary rounded-full" 
-              />
-            )}
-          </Link>
-          <Link 
-            href={ROUTES.gallery} 
-            className={`text-xs uppercase tracking-widest font-sans font-bold transition-all duration-300 relative py-2 ${
-              isActive(ROUTES.gallery) ? 'text-primary' : 'text-foreground/90 hover:text-primary'
-            }`}
-          >
-            {t('gallery')}
-            {isActive(ROUTES.gallery) && (
-              <motion.span 
-                layoutId="activeNavLine" 
-                className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-primary rounded-full" 
-              />
-            )}
-          </Link>
-          <Link 
-            href={ROUTES.contact} 
-            className={`text-xs uppercase tracking-widest font-sans font-bold transition-all duration-300 relative py-2 ${
-              isActive(ROUTES.contact) ? 'text-primary' : 'text-foreground/90 hover:text-primary'
-            }`}
-          >
-            {t('contact')}
-            {isActive(ROUTES.contact) && (
-              <motion.span 
-                layoutId="activeNavLine" 
-                className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-primary rounded-full" 
-              />
-            )}
-          </Link>
-        </nav>
-
-        {/* Desktop Utility elements */}
-        <div className="hidden md:flex items-center space-x-4">
-          <LanguageSwitcher />
+    <>
+      <header className="sticky top-0 z-[1000] w-full border-b border-primary/20 bg-[#040815]/90 backdrop-blur-md">
+        <div className="container mx-auto px-4 h-20 flex items-center justify-between">
           
-          {/* Vertical Separator Line */}
-          <div className="w-[1px] h-6 bg-primary/20" />
-
-          {/* Track Order Icon Button */}
-          <Link
-            href={ROUTES.status}
-            title={t('status')}
-            aria-label={t('status')}
-            className={`flex items-center gap-1.5 text-[10px] font-sans font-bold uppercase tracking-widest transition-all duration-300 px-3 py-2 rounded border ${
-              isActive(ROUTES.status)
-                ? 'border-primary/40 text-primary bg-primary/5'
-                : 'border-transparent text-foreground/70 hover:text-primary hover:border-primary/20 hover:bg-primary/5'
-            }`}
-          >
-            <Search className="w-3.5 h-3.5" />
-            {t('status')}
-          </Link>
-
-          {/* Vertical Separator Line */}
-          <div className="w-[1px] h-6 bg-primary/20" />
-          
-          <Link
-            href={ROUTES.order}
-            className="text-[10px] font-sans font-extrabold uppercase tracking-widest border border-primary/30 hover:border-primary/80 hover:bg-primary/5 text-primary px-5 py-2.5 rounded transition-all duration-300 flex items-center gap-2"
-          >
-            {t('orderOnline')}
-            <svg className="w-3 h-3 text-primary animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5Z" fill="currentColor" />
+          {/* Brand Logo - Centered alignment inside the block */}
+          <Link href={ROUTES.home} className="flex flex-col items-center group focus-visible:ring-2 focus-visible:ring-primary rounded p-1">
+            <svg className="w-5 h-5 text-primary mb-1 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M12 2l2.4 4.8 5.3.8-3.8 3.7.9 5.3-4.8-2.5-4.8 2.5.9-5.3-3.8-3.7 5.3-.8z" fill="currentColor" fillOpacity="0.2" />
+              <circle cx="12" cy="12" r="2" fill="currentColor" />
             </svg>
+            <span className="text-xl font-serif font-black tracking-[0.2em] text-primary leading-none group-hover:brightness-110 transition-all">
+              NAMASTE
+            </span>
+            <span className="text-[7px] tracking-[0.2em] text-muted-foreground/80 font-sans font-bold uppercase mt-1">
+              INDIAN RESTAURANT
+            </span>
           </Link>
-        </div>
 
-        {/* Mobile Hamburger Menu Toggle Button */}
-        <button
-          ref={toggleButtonRef}
-          onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-          className="md:hidden flex flex-col justify-center items-center w-10 h-10 border border-primary/20 rounded-lg bg-[#0A1128]/50 text-primary hover:bg-[#0A1128]/85 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition-all duration-300"
-          aria-label={isDrawerOpen ? 'Zamknij menu / Close menu' : 'Otwórz menu / Open menu'}
-          aria-expanded={isDrawerOpen}
-        >
-          <span className={`block w-5 h-0.5 bg-current transition-all duration-300 ${isDrawerOpen ? 'transform rotate-45 translate-y-1.5' : ''}`} />
-          <span className={`block w-5 h-0.5 bg-current my-1 transition-all duration-300 ${isDrawerOpen ? 'opacity-0' : ''}`} />
-          <span className={`block w-5 h-0.5 bg-current transition-all duration-300 ${isDrawerOpen ? 'transform -rotate-45 -translate-y-1.5' : ''}`} />
-        </button>
-      </div>
+          {/* Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center space-x-8 h-full" aria-label="Główne menu / Main Menu">
+            <Link 
+              href={ROUTES.home} 
+              className={`text-xs uppercase tracking-widest font-sans font-bold transition-all duration-300 relative py-2 ${
+                isActive(ROUTES.home) ? 'text-primary' : 'text-foreground/90 hover:text-primary'
+              }`}
+            >
+              {t('home')}
+              {isActive(ROUTES.home) && (
+                <motion.span 
+                  layoutId="activeNavLine" 
+                  className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-primary rounded-full" 
+                />
+              )}
+            </Link>
+            <Link 
+              href={ROUTES.menu} 
+              className={`text-xs uppercase tracking-widest font-sans font-bold transition-all duration-300 relative py-2 ${
+                isActive(ROUTES.menu) ? 'text-primary' : 'text-foreground/90 hover:text-primary'
+              }`}
+            >
+              {t('menu')}
+              {isActive(ROUTES.menu) && (
+                <motion.span 
+                  layoutId="activeNavLine" 
+                  className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-primary rounded-full" 
+                />
+              )}
+            </Link>
+            <Link 
+              href={ROUTES.reservations} 
+              className={`text-xs uppercase tracking-widest font-sans font-bold transition-all duration-300 relative py-2 ${
+                isActive(ROUTES.reservations) ? 'text-primary' : 'text-foreground/90 hover:text-primary'
+              }`}
+            >
+              {t('reservations')}
+              {isActive(ROUTES.reservations) && (
+                <motion.span 
+                  layoutId="activeNavLine" 
+                  className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-primary rounded-full" 
+                />
+              )}
+            </Link>
+            <Link 
+              href={ROUTES.story} 
+              className={`text-xs uppercase tracking-widest font-sans font-bold transition-all duration-300 relative py-2 ${
+                isActive(ROUTES.story) ? 'text-primary' : 'text-foreground/90 hover:text-primary'
+              }`}
+            >
+              {t('story')}
+              {isActive(ROUTES.story) && (
+                <motion.span 
+                  layoutId="activeNavLine" 
+                  className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-primary rounded-full" 
+                />
+              )}
+            </Link>
+            <Link 
+              href={ROUTES.gallery} 
+              className={`text-xs uppercase tracking-widest font-sans font-bold transition-all duration-300 relative py-2 ${
+                isActive(ROUTES.gallery) ? 'text-primary' : 'text-foreground/90 hover:text-primary'
+              }`}
+            >
+              {t('gallery')}
+              {isActive(ROUTES.gallery) && (
+                <motion.span 
+                  layoutId="activeNavLine" 
+                  className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-primary rounded-full" 
+                />
+              )}
+            </Link>
+            <Link 
+              href={ROUTES.contact} 
+              className={`text-xs uppercase tracking-widest font-sans font-bold transition-all duration-300 relative py-2 ${
+                isActive(ROUTES.contact) ? 'text-primary' : 'text-foreground/90 hover:text-primary'
+              }`}
+            >
+              {t('contact')}
+              {isActive(ROUTES.contact) && (
+                <motion.span 
+                  layoutId="activeNavLine" 
+                  className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-primary rounded-full" 
+                />
+              )}
+            </Link>
+          </nav>
+
+          {/* Desktop Utility elements */}
+          <div className="hidden md:flex items-center space-x-4">
+            <LanguageSwitcher />
+            
+            {/* Vertical Separator Line */}
+            <div className="w-[1px] h-6 bg-primary/20" />
+
+            {/* Track Order Icon Button */}
+            <Link
+              href={ROUTES.status}
+              title={t('status')}
+              aria-label={t('status')}
+              className={`flex items-center gap-1.5 text-[10px] font-sans font-bold uppercase tracking-widest transition-all duration-300 px-3 py-2 rounded border ${
+                isActive(ROUTES.status)
+                  ? 'border-primary/40 text-primary bg-primary/5'
+                  : 'border-transparent text-foreground/70 hover:text-primary hover:border-primary/20 hover:bg-primary/5'
+              }`}
+            >
+              <Search className="w-3.5 h-3.5" />
+              {t('status')}
+            </Link>
+
+            {/* Vertical Separator Line */}
+            <div className="w-[1px] h-6 bg-primary/20" />
+            
+            <Link
+              href={ROUTES.order}
+              className="text-[10px] font-sans font-extrabold uppercase tracking-widest border border-primary/30 hover:border-primary/80 hover:bg-primary/5 text-primary px-5 py-2.5 rounded transition-all duration-300 flex items-center gap-2"
+            >
+              {t('orderOnline')}
+              <svg className="w-3 h-3 text-primary animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5Z" fill="currentColor" />
+              </svg>
+            </Link>
+          </div>
+
+          {/* Mobile Hamburger Menu Toggle Button */}
+          <button
+            ref={toggleButtonRef}
+            onClick={() => setIsDrawerOpen(!isDrawerOpen)}
+            className="md:hidden flex flex-col justify-center items-center w-10 h-10 border border-primary/20 rounded-lg bg-[#0A1128]/50 text-primary hover:bg-[#0A1128]/85 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition-all duration-300"
+            aria-label={isDrawerOpen ? 'Zamknij menu / Close menu' : 'Otwórz menu / Open menu'}
+            aria-expanded={isDrawerOpen}
+          >
+            <span className={`block w-5 h-0.5 bg-current transition-all duration-300 ${isDrawerOpen ? 'transform rotate-45 translate-y-1.5' : ''}`} />
+            <span className={`block w-5 h-0.5 bg-current my-1 transition-all duration-300 ${isDrawerOpen ? 'opacity-0' : ''}`} />
+            <span className={`block w-5 h-0.5 bg-current transition-all duration-300 ${isDrawerOpen ? 'transform -rotate-45 -translate-y-1.5' : ''}`} />
+          </button>
+        </div>
+      </header>
 
       {/* Mobile Menu Slide-out Drawer */}
       <AnimatePresence>
@@ -376,6 +378,6 @@ export default function Header() {
           </div>
         )}
       </AnimatePresence>
-    </header>
+    </>
   );
 }
