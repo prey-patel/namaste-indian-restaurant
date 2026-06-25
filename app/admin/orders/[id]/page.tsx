@@ -64,11 +64,78 @@ export default async function AdminOrderDetailPage({ params }: Props) {
     .eq('order_id', id)
     .order('created_at', { ascending: true });
 
+  // 6. Gather customer CRM stats
+  let crmStats = {
+    totalOrders: 0,
+    ltv: 0,
+    aov: 0
+  };
+  let pastOrders: any[] = [];
+  let favoriteDishes: any[] = [];
+
+  if (order.customer_email) {
+    const { data: statsData } = await supabase
+      .from('orders')
+      .select('total_amount')
+      .eq('customer_email', order.customer_email)
+      .eq('status', 'completed');
+
+    if (statsData && statsData.length > 0) {
+      const totalAmountList = statsData.map(o => Number(o.total_amount));
+      const totalOrdersCount = totalAmountList.length;
+      const ltvVal = totalAmountList.reduce((acc, curr) => acc + curr, 0);
+      const aovVal = ltvVal / totalOrdersCount;
+      crmStats = {
+        totalOrders: totalOrdersCount,
+        ltv: ltvVal,
+        aov: aovVal
+      };
+    }
+
+    const { data: pastOrdersData } = await supabase
+      .from('orders')
+      .select('id, created_at, order_type, total_amount, status, delivery_fee, payment_method, payment_status')
+      .eq('customer_email', order.customer_email)
+      .neq('id', id)
+      .order('created_at', { ascending: false });
+
+    if (pastOrdersData) {
+      pastOrders = pastOrdersData;
+    }
+
+    const { data: customerOrderItems } = await supabase
+      .from('order_items')
+      .select('item_name_pl, item_name_en, quantity, orders!inner(customer_email)')
+      .eq('orders.customer_email', order.customer_email);
+
+    if (customerOrderItems) {
+      const dishCounts: Record<string, { nameEn: string; namePl: string; count: number }> = {};
+      customerOrderItems.forEach(item => {
+        const key = item.item_name_en || item.item_name_pl || 'Unknown';
+        if (!dishCounts[key]) {
+          dishCounts[key] = {
+            nameEn: item.item_name_en || '',
+            namePl: item.item_name_pl || '',
+            count: 0
+          };
+        }
+        dishCounts[key].count += item.quantity || 0;
+      });
+
+      favoriteDishes = Object.values(dishCounts)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3);
+    }
+  }
+
   return (
     <OrderDetailsClient
       order={order}
       items={items || []}
       timeline={timeline || []}
+      crmStats={crmStats}
+      pastOrders={pastOrders}
+      favoriteDishes={favoriteDishes}
     />
   );
 }

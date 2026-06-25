@@ -2,7 +2,7 @@
 
 import { useLocale } from 'next-intl';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import StatusPill from '@/components/ui/status-pill';
 import PremiumCard from '@/components/ui/premium-card';
 import GoldSpinner from '@/components/ui/gold-spinner';
+import { createClient } from '@/lib/supabase/client';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   confirmOrderAction,
   rejectOrderAction,
@@ -43,6 +45,8 @@ import {
   AlertTriangle,
   Timer,
   ShieldCheck,
+  Download,
+  X
 } from 'lucide-react';
 
 type Order = {
@@ -115,13 +119,84 @@ type Props = {
   order: Order;
   items: OrderItem[];
   timeline: TimelineEvent[];
+  crmStats?: {
+    totalOrders: number;
+    ltv: number;
+    aov: number;
+  };
+  pastOrders?: {
+    id: string;
+    created_at: string;
+    order_type: 'delivery' | 'takeaway';
+    total_amount: number;
+    status: string;
+    delivery_fee: number;
+    payment_method: string;
+    payment_status: string;
+  }[];
+  favoriteDishes?: {
+    nameEn: string;
+    namePl: string;
+    count: number;
+  }[];
 };
 
-export default function OrderDetailsClient({ order, items, timeline }: Props) {
+export default function OrderDetailsClient({
+  order,
+  items,
+  timeline,
+  crmStats,
+  pastOrders,
+  favoriteDishes
+}: Props) {
   const locale = useLocale();
   const router = useRouter();
   const t = useTranslations('adminOrders');
   const [isPending, startTransition] = useTransition();
+
+  // Past order details drawer states
+  const [activePastOrderId, setActivePastOrderId] = useState<string | null>(null);
+  const [pastOrderLoading, setPastOrderLoading] = useState(false);
+  const [pastOrderDetail, setPastOrderDetail] = useState<any | null>(null);
+  const [pastOrderItems, setPastOrderItems] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!activePastOrderId) {
+      setPastOrderDetail(null);
+      setPastOrderItems([]);
+      return;
+    }
+
+    const fetchPastOrderDetails = async () => {
+      setPastOrderLoading(true);
+      try {
+        const supabase = createClient();
+        const { data: orderData, error: orderErr } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('id', activePastOrderId)
+          .single();
+
+        if (orderErr) throw orderErr;
+
+        const { data: itemsData, error: itemsErr } = await supabase
+          .from('order_items')
+          .select('*')
+          .eq('order_id', activePastOrderId);
+
+        if (itemsErr) throw itemsErr;
+
+        setPastOrderDetail(orderData);
+        setPastOrderItems(itemsData || []);
+      } catch (err) {
+        console.error('Error fetching past order details:', err);
+      } finally {
+        setPastOrderLoading(false);
+      }
+    };
+
+    fetchPastOrderDetails();
+  }, [activePastOrderId]);
 
   // Modal states
   const [modalType, setModalType] = useState<
@@ -185,6 +260,85 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
   const mappedStatus = mapDbStatusToKey(order.status);
   const isDeliveryUnresolved =
     order.order_type === 'delivery' && Number(order.delivery_fee) === 0;
+
+  const getLoyaltyTier = (orderCount: number) => {
+    if (orderCount >= 50) {
+      return {
+        label: 'VIP / Gold',
+        badgeClass: 'border-yellow-500 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 font-bold uppercase tracking-wider'
+      };
+    }
+    if (orderCount >= 20) {
+      return {
+        label: 'Silver',
+        badgeClass: 'border-slate-300 bg-slate-300/10 text-slate-700 dark:text-slate-300 font-bold uppercase tracking-wider'
+      };
+    }
+    if (orderCount >= 5) {
+      return {
+        label: 'Bronze',
+        badgeClass: 'border-amber-700 bg-amber-700/10 text-amber-800 dark:text-amber-600 font-bold uppercase tracking-wider'
+      };
+    }
+    return {
+      label: 'Regular',
+      badgeClass: 'border-border bg-muted/40 text-muted-foreground font-semibold uppercase tracking-wider'
+    };
+  };
+
+  const handleExportCSV = () => {
+    if (!pastOrders || pastOrders.length === 0) return;
+
+    const headers = [
+      'Order ID',
+      'Date & Time (Europe/Warsaw)',
+      'Order Type',
+      'Total Amount (PLN)',
+      'Delivery Fee (PLN)',
+      'Payment Method',
+      'Payment Status',
+      'Status'
+    ];
+
+    const rows = pastOrders.map(o => {
+      const orderIdShort = o.id.substring(0, 8).toUpperCase();
+      const dateFormatted = formatDateTime(o.created_at);
+      const orderType = o.order_type === 'delivery' ? 'Delivery' : 'Takeaway';
+      const totalAmount = Number(o.total_amount).toFixed(2);
+      const deliveryFee = Number(o.delivery_fee).toFixed(2);
+      const paymentMethod = o.payment_method ? o.payment_method.replace(/_/g, ' ').toUpperCase() : 'N/A';
+      const paymentStatus = o.payment_status ? o.payment_status.toUpperCase() : 'PENDING';
+      const status = o.status ? o.status.toUpperCase() : 'PENDING';
+
+      return [
+        orderIdShort,
+        dateFormatted,
+        orderType,
+        totalAmount,
+        deliveryFee,
+        paymentMethod,
+        paymentStatus,
+        status
+      ];
+    });
+
+    const csvContent = [
+      headers.map(h => `"${h.replace(/"/g, '""')}"`).join(','),
+      ...rows.map(row => row.map(val => `"${val.replace(/"/g, '""')}"`).join(','))
+    ].join('\r\n');
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    const customerNameSlug = order.customer_name.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    link.setAttribute('download', `order_history_${customerNameSlug}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Action handlers
   const handleStartPreparing = () => {
@@ -902,6 +1056,54 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
             </div>
           </PremiumCard>
 
+          {crmStats && (
+            <PremiumCard hoverable={false} className="border-primary/25 bg-card p-6 space-y-5">
+              <div className="flex justify-between items-center border-b border-border pb-2">
+                <h3 className="text-lg font-serif font-bold text-primary tracking-wide">
+                  Customer Lifetime Metrics (CRM)
+                </h3>
+                <span className={`text-[10px] uppercase font-bold tracking-widest px-2.5 py-1 rounded border ${getLoyaltyTier(crmStats.totalOrders).badgeClass}`}>
+                  {getLoyaltyTier(crmStats.totalOrders).label} Tier
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Total Orders */}
+                <div className="p-3.5 bg-background border border-border rounded-lg space-y-1">
+                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block font-semibold">Total Completed Orders</span>
+                  <span className="text-xl font-bold text-foreground font-mono">{crmStats.totalOrders}</span>
+                </div>
+
+                {/* Lifetime Value */}
+                <div className="p-3.5 bg-background border border-border rounded-lg space-y-1">
+                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block font-semibold">Lifetime Value (LTV)</span>
+                  <span className="text-xl font-bold text-primary font-mono">{crmStats.ltv.toFixed(2)} PLN</span>
+                </div>
+
+                {/* Average Order Value */}
+                <div className="p-3.5 bg-background border border-border rounded-lg space-y-1">
+                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block font-semibold">Average Order Value (AOV)</span>
+                  <span className="text-xl font-bold text-foreground font-mono">{crmStats.aov.toFixed(2)} PLN</span>
+                </div>
+              </div>
+
+              {/* Favorite Dishes */}
+              {favoriteDishes && favoriteDishes.length > 0 && (
+                <div className="space-y-2 pt-2">
+                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block font-semibold">Favorite Dishes</span>
+                  <div className="grid grid-cols-1 gap-2">
+                    {favoriteDishes.map((dish, i) => (
+                      <div key={i} className="flex justify-between items-center px-3 py-2 bg-background border border-border rounded text-xs">
+                        <span className="font-semibold text-foreground/90">{dish.nameEn} <span className="text-muted-foreground/50 text-[10px] font-normal">{dish.namePl && `(${dish.namePl})`}</span></span>
+                        <span className="font-mono text-primary font-bold text-[10px] px-2 py-0.5 rounded bg-primary/10 border border-primary/10">{dish.count} ordered</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </PremiumCard>
+          )}
+
           {/* Order Items */}
           <PremiumCard hoverable={false} className="border-border bg-card p-6 space-y-5">
             <h3 className="text-lg font-serif font-bold text-primary tracking-wide border-b border-border pb-2">
@@ -1150,6 +1352,280 @@ export default function OrderDetailsClient({ order, items, timeline }: Props) {
           </PremiumCard>
         </div>
       </div>
+
+      {/* Historical Order Table */}
+      {pastOrders && pastOrders.length > 0 && (
+        <PremiumCard hoverable={false} className="border-border bg-card p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-border pb-3 gap-3">
+            <div>
+              <h3 className="text-lg font-serif font-bold text-primary tracking-wide">
+                Customer Order History
+              </h3>
+              <p className="text-xs text-muted-foreground/60 mt-0.5">
+                Past orders placed by this customer (excluding current order)
+              </p>
+            </div>
+            <Button
+              onClick={handleExportCSV}
+              className="border border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider px-4 py-2 flex items-center gap-2 self-start sm:self-center"
+            >
+              <Download className="w-4 h-4" />
+              Export to CSV
+            </Button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-border bg-muted/30 text-muted-foreground uppercase tracking-widest text-[9px] font-bold">
+                  <th className="p-3">Order ID</th>
+                  <th className="p-3">Date & Time</th>
+                  <th className="p-3">Type</th>
+                  <th className="p-3">Total Amount</th>
+                  <th className="p-3">Payment Method</th>
+                  <th className="p-3">Payment Status</th>
+                  <th className="p-3">Status</th>
+                  <th className="p-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {pastOrders.map((o) => {
+                  const orderIdShort = o.id.substring(0, 8).toUpperCase();
+                  const dateFormatted = formatDateTime(o.created_at);
+                  const totalFormatted = `${Number(o.total_amount).toFixed(2)} PLN`;
+                  const paymentMethod = o.payment_method ? o.payment_method.replace(/_/g, ' ') : 'N/A';
+                  
+                  return (
+                    <tr
+                      key={o.id}
+                      onClick={() => setActivePastOrderId(o.id)}
+                      className="hover:bg-muted/40 transition-colors cursor-pointer"
+                    >
+                      <td className="p-3 font-mono font-bold text-foreground">#{orderIdShort}</td>
+                      <td className="p-3 text-muted-foreground">{dateFormatted}</td>
+                      <td className="p-3 capitalize text-foreground">{o.order_type}</td>
+                      <td className="p-3 font-mono font-semibold text-primary">{totalFormatted}</td>
+                      <td className="p-3 capitalize text-muted-foreground">{paymentMethod}</td>
+                      <td className="p-3">
+                        <span className={`text-[10px] font-semibold uppercase tracking-wider ${
+                          o.payment_status === 'paid' ? 'text-green-500' : 'text-yellow-500'
+                        }`}>
+                          {o.payment_status}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <StatusPill
+                          status={getStatusPillType(o.status)}
+                          label={t(`status.${o.status === 'approved' ? 'confirmed' : o.status}` as any)}
+                        />
+                      </td>
+                      <td className="p-3 text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActivePastOrderId(o.id);
+                          }}
+                          className="text-primary hover:text-primary-foreground hover:bg-primary/20 text-xs font-semibold px-2.5 py-1.5 h-auto"
+                        >
+                          View Details
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </PremiumCard>
+      )}
+
+      {/* Past Order Side Drawer */}
+      <AnimatePresence>
+        {activePastOrderId && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setActivePastOrderId(null)}
+              className="fixed inset-0 bg-black backdrop-blur-xs z-50 cursor-pointer"
+            />
+
+            {/* Sliding Panel */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 right-0 w-full max-w-lg bg-card border-l border-border shadow-2xl z-50 flex flex-col h-full font-sans"
+            >
+              {/* Drawer Header */}
+              <div className="flex justify-between items-center px-6 py-4 border-b border-border bg-muted/20">
+                <div>
+                  <h3 className="text-lg font-serif font-bold text-primary">
+                    Past Order Details
+                  </h3>
+                  <p className="text-[10px] text-muted-foreground/60 font-mono mt-0.5 select-all">
+                    Order ID: #{activePastOrderId.substring(0, 8).toUpperCase()}
+                  </p>
+                </div>
+                <Button
+                  onClick={() => setActivePastOrderId(null)}
+                  variant="ghost"
+                  className="w-8 h-8 rounded-full p-0 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+
+              {/* Drawer Body */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 select-text">
+                {pastOrderLoading ? (
+                  <div className="flex justify-center items-center h-48">
+                    <GoldSpinner />
+                  </div>
+                ) : pastOrderDetail ? (
+                  <>
+                    {/* Status Overview */}
+                    <div className="flex justify-between items-center bg-background border border-border rounded-lg p-4">
+                      <div>
+                        <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block">Order Status</span>
+                        <div className="mt-1">
+                          <StatusPill
+                            status={getStatusPillType(pastOrderDetail.status)}
+                            label={t(`status.${pastOrderDetail.status === 'approved' ? 'confirmed' : pastOrderDetail.status}` as any)}
+                          />
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block">Order Type</span>
+                        <span className="text-sm font-semibold capitalize text-foreground mt-1 block">
+                          {pastOrderDetail.order_type}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Timeline Info */}
+                    <div className="space-y-2.5 bg-background border border-border rounded-lg p-4 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Order Date:</span>
+                        <span className="font-medium text-foreground">{formatDateTime(pastOrderDetail.created_at)}</span>
+                      </div>
+                      {pastOrderDetail.completed_at && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Completed Date:</span>
+                          <span className="font-medium text-foreground">{formatDateTime(pastOrderDetail.completed_at)}</span>
+                        </div>
+                      )}
+                      {pastOrderDetail.approved_at && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Confirmed Date:</span>
+                          <span className="font-medium text-foreground">{formatDateTime(pastOrderDetail.approved_at)}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Order Items */}
+                    <div className="space-y-3 bg-background border border-border rounded-lg p-4">
+                      <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block font-bold">Items Ordered</span>
+                      <div className="divide-y divide-border/60">
+                        {pastOrderItems.map((item) => (
+                          <div key={item.id} className="py-2.5 first:pt-0 last:pb-0 flex justify-between text-xs">
+                            <div className="space-y-0.5 pr-2">
+                              <span className="font-semibold text-foreground">{item.item_name_en}</span>
+                              {item.item_name_pl && item.item_name_pl !== item.item_name_en && (
+                                <span className="text-[10px] text-muted-foreground/50 block">{item.item_name_pl}</span>
+                              )}
+                              <span className="text-[10px] font-mono text-muted-foreground/60 block">
+                                {item.quantity} × {Number(item.unit_price).toFixed(2)} PLN
+                              </span>
+                              {item.spice_level_snapshot !== null && item.spice_level_snapshot !== undefined && (
+                                <span className="text-[10px] text-amber-500 font-semibold block">Spice level: {item.spice_level_snapshot}/5</span>
+                              )}
+                            </div>
+                            <span className="font-mono text-foreground font-semibold whitespace-nowrap">
+                              {Number(item.line_total).toFixed(2)} PLN
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Delivery details if applicable */}
+                    {pastOrderDetail.order_type === 'delivery' && (
+                      <div className="p-4 bg-background border border-border rounded-lg space-y-2 text-xs">
+                        <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block font-bold">Delivery Location</span>
+                        <div className="flex gap-2.5 items-start">
+                          <MapPin className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-medium text-foreground leading-relaxed">
+                              {pastOrderDetail.delivery_address}
+                              {pastOrderDetail.delivery_apartment && `, ${pastOrderDetail.delivery_apartment}`}
+                              {pastOrderDetail.delivery_postal_code && `, ${pastOrderDetail.delivery_postal_code}`}
+                              {pastOrderDetail.delivery_city && ` ${pastOrderDetail.delivery_city}`}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Payment Info */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-3.5 bg-background border border-border rounded-lg text-xs space-y-1">
+                        <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block">Payment Method</span>
+                        <span className="font-semibold capitalize text-foreground font-sans block">
+                          {pastOrderDetail.payment_method ? pastOrderDetail.payment_method.replace(/_/g, ' ') : 'N/A'}
+                        </span>
+                      </div>
+                      <div className="p-3.5 bg-background border border-border rounded-lg text-xs space-y-1">
+                        <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block">Payment Status</span>
+                        <span className={`font-bold uppercase tracking-wider text-xs block ${
+                          pastOrderDetail.payment_status === 'paid' ? 'text-green-500' : 'text-yellow-500'
+                        }`}>
+                          {pastOrderDetail.payment_status || 'pending'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Pricing details */}
+                    <div className="p-4 bg-background border border-border rounded-lg text-xs space-y-2">
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Items Subtotal</span>
+                        <span className="font-mono">{Number(pastOrderDetail.items_subtotal).toFixed(2)} PLN</span>
+                      </div>
+                      {Number(pastOrderDetail.packaging_total) > 0 && (
+                        <div className="flex justify-between text-muted-foreground">
+                          <span>Packaging Fee</span>
+                          <span className="font-mono">{Number(pastOrderDetail.packaging_total).toFixed(2)} PLN</span>
+                        </div>
+                      )}
+                      {pastOrderDetail.order_type === 'delivery' && (
+                        <div className="flex justify-between text-muted-foreground">
+                          <span>Delivery Fee</span>
+                          <span className="font-mono">{Number(pastOrderDetail.delivery_fee).toFixed(2)} PLN</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-foreground font-bold text-sm pt-2.5 border-t border-border/60">
+                        <span>Total Amount</span>
+                        <span className="text-primary font-mono text-base font-bold">
+                          {Number(pastOrderDetail.total_amount).toFixed(2)} PLN
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center text-muted-foreground py-8">
+                    Failed to load order details.
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Modals */}
       {modalType === 'confirm' && (

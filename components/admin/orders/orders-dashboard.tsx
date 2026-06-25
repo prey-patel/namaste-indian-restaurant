@@ -77,6 +77,7 @@ type Props = {
     type: string;
     date: string;
     query: string;
+    payment_status?: string;
   };
 };
 
@@ -208,7 +209,21 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
   const [search, setSearch] = useState(filters.query);
   const [statusFilter, setStatusFilter] = useState(filters.status);
   const [typeFilter, setTypeFilter] = useState(filters.type);
-  const [dateFilter, setDateFilter] = useState(filters.date);
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState(filters.payment_status || 'all');
+
+  const [datePreset, setDatePreset] = useState(() => {
+    if (filters.date === 'today' || filters.date === 'yesterday' || filters.date === 'this_week') {
+      return filters.date;
+    }
+    return filters.date ? 'custom' : 'all';
+  });
+
+  const [customDate, setCustomDate] = useState(() => {
+    if (filters.date && filters.date !== 'today' && filters.date !== 'yesterday' && filters.date !== 'this_week') {
+      return filters.date;
+    }
+    return '';
+  });
 
   // Dialog / Action States
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -217,11 +232,18 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Trigger filters
-  const applyFilters = (status = statusFilter, type = typeFilter, date = dateFilter, query = search) => {
+  const applyFilters = (
+    status = statusFilter,
+    type = typeFilter,
+    date = (datePreset === 'custom' ? customDate : (datePreset === 'all' ? '' : datePreset)),
+    paymentStatus = paymentStatusFilter,
+    query = search
+  ) => {
     const params = new URLSearchParams();
     if (status && status !== 'all') params.set('status', status);
     if (type && type !== 'all') params.set('type', type);
     if (date) params.set('date', date);
+    if (paymentStatus && paymentStatus !== 'all') params.set('payment_status', paymentStatus);
     if (query) params.set('query', query);
     router.push(`/admin/orders?${params.toString()}`);
   };
@@ -236,7 +258,9 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
     setSearch('');
     setStatusFilter('all');
     setTypeFilter('all');
-    setDateFilter('');
+    setPaymentStatusFilter('all');
+    setDatePreset('all');
+    setCustomDate('');
     router.push('/admin/orders');
   };
 
@@ -428,15 +452,15 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
       </div>
 
       {/* Filters bar */}
-      <div className="flex flex-col lg:flex-row gap-4 p-4 bg-card border border-border rounded-lg items-end lg:items-center">
+      <div className="flex flex-col xl:flex-row gap-4 p-4 bg-card border border-border rounded-lg items-end xl:items-center">
         
         {/* Search */}
-        <div className="w-full lg:w-72 relative space-y-1">
+        <div className="w-full xl:w-72 relative space-y-1">
           <span className="text-[9px] uppercase tracking-wider text-muted-foreground/75 font-semibold block">Search Request</span>
           <div className="relative">
             <input
               type="text"
-              placeholder={t('searchPlaceholder')}
+              placeholder="Search by name, phone, email, address, postal code or ID..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={handleSearchKeyDown}
@@ -446,13 +470,13 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
         </div>
 
         {/* Status */}
-        <div className="w-full lg:w-44 space-y-1">
+        <div className="w-full xl:w-44 space-y-1">
           <span className="text-[9px] uppercase tracking-wider text-muted-foreground/75 font-semibold block">{t('filterStatus')}</span>
           <select
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value);
-              applyFilters(e.target.value, typeFilter, dateFilter, search);
+              applyFilters(e.target.value, typeFilter, datePreset === 'custom' ? customDate : (datePreset === 'all' ? '' : datePreset), paymentStatusFilter, search);
             }}
             className="w-full bg-background border border-border rounded px-2.5 py-2 text-xs text-foreground cursor-pointer focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           >
@@ -469,13 +493,13 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
         </div>
 
         {/* Type */}
-        <div className="w-full lg:w-36 space-y-1">
+        <div className="w-full xl:w-36 space-y-1">
           <span className="text-[9px] uppercase tracking-wider text-muted-foreground/75 font-semibold block">{t('filterType')}</span>
           <select
             value={typeFilter}
             onChange={(e) => {
               setTypeFilter(e.target.value);
-              applyFilters(statusFilter, e.target.value, dateFilter, search);
+              applyFilters(statusFilter, e.target.value, datePreset === 'custom' ? customDate : (datePreset === 'all' ? '' : datePreset), paymentStatusFilter, search);
             }}
             className="w-full bg-background border border-border rounded px-2.5 py-2 text-xs text-foreground cursor-pointer focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           >
@@ -485,24 +509,66 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
           </select>
         </div>
 
-        {/* Date */}
-        <div className="w-full lg:w-40 space-y-1">
-          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/75 font-semibold block">{t('filterDate')}</span>
-          <input
-            type="date"
-            value={dateFilter}
+        {/* Payment Status */}
+        <div className="w-full xl:w-36 space-y-1">
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/75 font-semibold block">Payment Status</span>
+          <select
+            value={paymentStatusFilter}
             onChange={(e) => {
-              setDateFilter(e.target.value);
-              applyFilters(statusFilter, typeFilter, e.target.value, search);
+              setPaymentStatusFilter(e.target.value);
+              applyFilters(statusFilter, typeFilter, datePreset === 'custom' ? customDate : (datePreset === 'all' ? '' : datePreset), e.target.value, search);
             }}
             className="w-full bg-background border border-border rounded px-2.5 py-2 text-xs text-foreground cursor-pointer focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-          />
+          >
+            <option value="all">All payments</option>
+            <option value="paid">Paid</option>
+            <option value="pending">Pending</option>
+            <option value="failed">Failed</option>
+          </select>
         </div>
 
+        {/* Date Preset */}
+        <div className="w-full xl:w-40 space-y-1">
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/75 font-semibold block">Date Filter</span>
+          <select
+            value={datePreset}
+            onChange={(e) => {
+              const val = e.target.value;
+              setDatePreset(val);
+              if (val !== 'custom') {
+                applyFilters(statusFilter, typeFilter, val === 'all' ? '' : val, paymentStatusFilter, search);
+              }
+            }}
+            className="w-full bg-background border border-border rounded px-2.5 py-2 text-xs text-foreground cursor-pointer focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+          >
+            <option value="all">All Dates</option>
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="this_week">This Week</option>
+            <option value="custom">Custom Date...</option>
+          </select>
+        </div>
+
+        {/* Custom Date Input (Reveals only when Custom Date is selected) */}
+        {datePreset === 'custom' && (
+          <div className="w-full xl:w-40 space-y-1">
+            <span className="text-[9px] uppercase tracking-wider text-muted-foreground/75 font-semibold block">Choose Date</span>
+            <input
+              type="date"
+              value={customDate}
+              onChange={(e) => {
+                setCustomDate(e.target.value);
+                applyFilters(statusFilter, typeFilter, e.target.value, paymentStatusFilter, search);
+              }}
+              className="w-full bg-background border border-border rounded px-2.5 py-2 text-xs text-foreground cursor-pointer focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+            />
+          </div>
+        )}
+
         {/* Actions */}
-        <div className="flex gap-2 w-full lg:w-auto pt-2 lg:pt-0 justify-end lg:ml-auto">
+        <div className="flex gap-2 w-full xl:w-auto pt-2 xl:pt-0 justify-end xl:ml-auto">
           <Button
-            onClick={() => applyFilters(statusFilter, typeFilter, dateFilter, search)}
+            onClick={() => applyFilters(statusFilter, typeFilter, datePreset === 'custom' ? customDate : (datePreset === 'all' ? '' : datePreset), paymentStatusFilter, search)}
             className="bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs uppercase tracking-wider px-4 py-2 border border-primary/20"
           >
             Filter
