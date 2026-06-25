@@ -2,6 +2,7 @@ import React from 'react';
 import { redirect, notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import ItemForm from '@/components/admin/menu/item-form';
+import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,12 +62,20 @@ export default async function AdminEditMenuItemPage({ params }: Props) {
     price: typeof item.price === 'string' ? parseFloat(item.price) : item.price,
   };
 
+  const cookieStore = await cookies();
+  const locale = cookieStore.get('NEXT_LOCALE')?.value || 'pl';
+  const isEn = locale === 'en';
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-serif font-bold text-primary">Edytuj Danie w Menu / Edit Menu Item</h2>
+        <h2 className="text-2xl font-serif font-bold text-primary">
+          {isEn ? 'Edit Menu Item' : 'Edytuj Danie w Menu'}
+        </h2>
         <p className="text-xs text-muted-foreground mt-1">
-          Zmodyfikuj parametry potrawy, zdjęcie i sprawdź podgląd w czasie rzeczywistym.
+          {isEn
+            ? 'Modify dish parameters, image, and verify the changes in the real-time preview.'
+            : 'Zmodyfikuj parametry potrawy, zdjęcie i sprawdź podgląd w czasie rzeczywistym.'}
         </p>
       </div>
       <ItemForm categories={categories || []} initialData={formattedItem} />

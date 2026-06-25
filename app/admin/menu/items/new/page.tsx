@@ -2,6 +2,7 @@ import React from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import ItemForm from '@/components/admin/menu/item-form';
+import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,12 +37,20 @@ export default async function AdminNewMenuItemPage() {
     console.error('Error fetching categories for selector:', catError);
   }
 
+  const cookieStore = await cookies();
+  const locale = cookieStore.get('NEXT_LOCALE')?.value || 'pl';
+  const isEn = locale === 'en';
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-serif font-bold text-primary">Nowe Danie w Menu / New Menu Item</h2>
+        <h2 className="text-2xl font-serif font-bold text-primary">
+          {isEn ? 'New Menu Item' : 'Nowe Danie w Menu'}
+        </h2>
         <p className="text-xs text-muted-foreground mt-1">
-          Dodaj nową potrawę do karty dań. Ustaw parametry, zdjęcie i sprawdź podgląd w czasie rzeczywistym.
+          {isEn
+            ? 'Add a new dish to the menu card. Set parameters, image, and check the real-time preview.'
+            : 'Dodaj nową potrawę do karty dań. Ustaw parametry, zdjęcie i sprawdź podgląd w czasie rzeczywistym.'}
         </p>
       </div>
       <ItemForm categories={categories || []} />

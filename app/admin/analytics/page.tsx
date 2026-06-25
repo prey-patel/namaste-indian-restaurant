@@ -3,13 +3,18 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAnalyticsDataAction } from "./actions";
 import AnalyticsDashboard from "@/components/admin/analytics/analytics-dashboard";
+import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Raporty i Analizy / Analytics — Namaste Admin",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata() {
+  const cookieStore = await cookies();
+  const locale = cookieStore.get("NEXT_LOCALE")?.value || "pl";
+  return {
+    title: locale === "en" ? "Analytics — Namaste Admin" : "Raporty i Analizy — Namaste Admin",
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function AdminAnalyticsPage() {
   const supabase = await createClient();
@@ -36,6 +41,11 @@ export default async function AdminAnalyticsPage() {
     redirect("/admin");
   }
 
+  // Resolve current locale
+  const cookieStore = await cookies();
+  const locale = cookieStore.get("NEXT_LOCALE")?.value || "pl";
+  const isEn = locale === "en";
+
   // 3. Define default date range (last 30 days) in Europe/Warsaw timezone
   const now = new Date();
   const endDateStr = now.toLocaleDateString("en-CA", { timeZone: "Europe/Warsaw" });
@@ -56,10 +66,12 @@ export default async function AdminAnalyticsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-serif font-bold text-foreground">
-          Raporty i Analizy / Analytics
+          {isEn ? "Analytics" : "Raporty i Analizy"}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Monitoruj sprzedaż, rezerwacje i popularność dań w czasie rzeczywistym. / Monitor sales, reservations, and dish popularity in real time.
+          {isEn
+            ? "Monitor sales, reservations, and dish popularity in real time."
+            : "Monitoruj sprzedaż, rezerwacje i popularność dań w czasie rzeczywistym."}
         </p>
       </div>
 
@@ -71,7 +83,9 @@ export default async function AdminAnalyticsPage() {
         />
       ) : (
         <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-6 text-center text-red-600 [.admin-theme_&]:text-red-800">
-          Nie udało się załadować danych analitycznych. Spróbuj odświeżyć stronę. / Failed to load analytics data. Please refresh the page.
+          {isEn
+            ? "Failed to load analytics data. Please refresh the page."
+            : "Nie udało się załadować danych analitycznych. Spróbuj odświeżyć stronę."}
         </div>
       )}
     </div>
