@@ -710,7 +710,17 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
 
                       {/* Action buttons */}
                       <td className="p-4 text-right">
-                        <div className="flex justify-end gap-1.5">
+                        <div className="flex justify-end gap-1.5 items-center flex-wrap">
+                          {/* View details */}
+                          <Link href={`/admin/orders/${order.id}`}>
+                            <Button
+                              variant="outline"
+                              className="border border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary font-bold text-[10px] uppercase tracking-wider px-2.5 py-1 flex items-center gap-1.5 h-auto"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              View
+                            </Button>
+                          </Link>
                           
                           {/* Confirm Button */}
                           {order.status === 'pending' && (
@@ -892,6 +902,16 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
 
                   {/* Actions footer */}
                   <div className="flex flex-wrap gap-2 justify-end pt-1 border-t border-border">
+                    {/* View Details */}
+                    <Link href={`/admin/orders/${order.id}`}>
+                      <Button
+                        variant="outline"
+                        className="border border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary font-bold text-[10px] uppercase tracking-wider px-2.5 py-1.5 h-auto flex items-center gap-1.5"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        View Details
+                      </Button>
+                    </Link>
                     {/* Confirm Button */}
                     {order.status === 'pending' && (
                       <>
