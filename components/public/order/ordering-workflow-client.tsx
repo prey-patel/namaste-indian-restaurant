@@ -117,6 +117,7 @@ export default function OrderingWorkflowClient({
   // Basket State
   const [basket, setBasket] = useState<BasketItem[]>([]);
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
   // Submission & Message States
   const [loading, setLoading] = useState(false);
@@ -566,10 +567,46 @@ export default function OrderingWorkflowClient({
             {locale === 'pl' ? 'Karta Dań' : 'Menu Selection'}
           </h2>
 
-          <div className="space-y-10">
+          {/* Category Filter Pills */}
+          <div className="flex items-center gap-3 overflow-x-auto pb-4 pt-1 no-scrollbar select-none scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
+            <button
+              onClick={() => setSelectedCategoryId(null)}
+              className={`px-5 py-2.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all duration-300 whitespace-nowrap cursor-pointer ${
+                selectedCategoryId === null
+                  ? 'bg-primary text-[#050B1E] border border-primary shadow-[0_0_12px_rgba(212,175,55,0.25)]'
+                  : 'border border-primary/20 hover:border-primary/50 text-slate-300 bg-[#070B1E]/40 hover:bg-primary/5'
+              }`}
+            >
+              {locale === 'pl' ? 'Wszystkie kategorie' : 'All Categories'}
+            </button>
+
             {categories.map((category) => {
+              const isSelected = selectedCategoryId === category.id;
               const categoryItems = getItemsByCategory(category.id);
               if (categoryItems.length === 0) return null;
+
+              return (
+                <button
+                  key={category.id}
+                  onClick={() => setSelectedCategoryId(category.id)}
+                  className={`px-5 py-2.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all duration-300 whitespace-nowrap cursor-pointer ${
+                    isSelected
+                      ? 'bg-primary text-[#050B1E] border border-primary shadow-[0_0_12px_rgba(212,175,55,0.25)]'
+                      : 'border border-primary/20 hover:border-primary/50 text-slate-300 bg-[#070B1E]/40 hover:bg-primary/5'
+                  }`}
+                >
+                  {locale === 'pl' ? category.name_pl : category.name_en}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="space-y-10">
+            {categories
+              .filter((category) => selectedCategoryId === null || category.id === selectedCategoryId)
+              .map((category) => {
+                const categoryItems = getItemsByCategory(category.id);
+                if (categoryItems.length === 0) return null;
 
               return (
                 <div key={category.id} className="space-y-4">
