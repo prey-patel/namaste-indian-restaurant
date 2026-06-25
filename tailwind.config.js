@@ -19,6 +19,7 @@ module.exports = {
       fontFamily: {
         sans: ["var(--font-outfit)", "sans-serif"],
         serif: ["var(--font-playfair)", "serif"],
+        script: ["var(--font-pinyon)", "cursive"],
       },
       colors: {
         border: "hsl(var(--border))",

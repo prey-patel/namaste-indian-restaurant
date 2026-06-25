@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { Playfair_Display, Outfit } from 'next/font/google';
+import { Playfair_Display, Outfit, Pinyon_Script } from 'next/font/google';
 import PwaRegister from '@/components/pwa-register';
 import './globals.css';
 
@@ -12,6 +12,13 @@ const playfair = Playfair_Display({
 const outfit = Outfit({
   subsets: ['latin'],
   variable: '--font-outfit',
+  display: 'swap',
+});
+
+const pinyon = Pinyon_Script({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-pinyon',
   display: 'swap',
 });
 
@@ -41,7 +48,7 @@ type Props = {
 
 export default function RootLayout({ children }: Props) {
   return (
-    <html lang="pl" className={`${playfair.variable} ${outfit.variable} dark`}>
+    <html lang="pl" className={`${playfair.variable} ${outfit.variable} ${pinyon.variable} dark`}>
       <body className="antialiased min-h-screen bg-background text-foreground flex flex-col font-sans">
         <PwaRegister />
         {children}
