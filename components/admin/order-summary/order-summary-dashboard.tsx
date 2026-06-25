@@ -45,11 +45,20 @@ type Order = {
   items_subtotal: number;
   packaging_total: number;
   delivery_fee: number;
+  discount_total?: number;
   payment_status: string;
   payment_method: string;
   customer_notes: string | null;
+  rejection_reason: string | null;
+  cancellation_reason: string | null;
+  estimated_time: string | null;
   created_at: string;
+  approved_at: string | null;
+  preparing_at: string | null;
+  ready_at: string | null;
+  dispatched_at: string | null;
   completed_at: string | null;
+  delivery_distance_car_meters?: number | null;
 };
 
 type CrmStats = {
@@ -215,6 +224,9 @@ export default function OrderSummaryDashboard({
   const [localQuery, setLocalQuery] = useState(filters.query);
   const [localDate, setLocalDate] = useState(filters.date);
 
+  // Global export state
+  const [globalExporting, setGlobalExporting] = useState(false);
+
   // Past-order detail drawer
   const [activePastOrderId, setActivePastOrderId] = useState<string | null>(null);
   const [drawerLoading, setDrawerLoading] = useState(false);
@@ -338,6 +350,128 @@ export default function OrderSummaryDashboard({
     URL.revokeObjectURL(url);
   };
 
+  // ── Global Export All CSV (29 columns) ───────────────────────────────────
+
+  const handleGlobalExportCSV = async () => {
+    if (initialOrders.length === 0) return;
+    setGlobalExporting(true);
+
+    try {
+      // Fetch all order_items for displayed orders in one batch
+      const orderIds = initialOrders.map((o) => o.id);
+      const supabase = createClient();
+      const { data: allItems } = await supabase
+        .from('order_items')
+        .select('order_id, item_name_en, quantity')
+        .in('order_id', orderIds);
+
+      // Group items by order_id
+      const itemsByOrder: Record<string, { name: string; qty: number }[]> = {};
+      (allItems || []).forEach((item: any) => {
+        if (!itemsByOrder[item.order_id]) itemsByOrder[item.order_id] = [];
+        itemsByOrder[item.order_id].push({ name: item.item_name_en || 'Unknown', qty: item.quantity || 1 });
+      });
+
+      const headers = [
+        'Order ID (Short)',
+        'Full Order UUID',
+        'Date & Time (Europe/Warsaw)',
+        'Customer Name',
+        'Customer Email',
+        'Customer Phone',
+        'Order Type',
+        'Order Status',
+        'Payment Method',
+        'Payment Status',
+        'Items Subtotal (PLN)',
+        'Packaging Fee (PLN)',
+        'Delivery Fee (PLN)',
+        'Discount (PLN)',
+        'Total Amount (PLN)',
+        'Delivery Address',
+        'Delivery Postal Code',
+        'Delivery City',
+        'Delivery Apartment',
+        'Customer Notes',
+        'Rejection / Cancellation Reason',
+        'Estimated Time',
+        'Confirmed At',
+        'Preparing At',
+        'Ready At',
+        'Completed At',
+        'Items List',
+        'Delivery Distance (km)',
+        'Number of Items',
+      ];
+
+      const rows = initialOrders.map((o) => {
+        const items = itemsByOrder[o.id] || [];
+        const itemsList = items.map((i) => `${i.name} x${i.qty}`).join(', ');
+        const itemCount = items.reduce((sum, i) => sum + i.qty, 0);
+        const distKm =
+          o.delivery_distance_car_meters != null
+            ? (o.delivery_distance_car_meters / 1000).toFixed(2)
+            : '';
+        const reason = o.rejection_reason || o.cancellation_reason || '';
+
+        return [
+          `#${o.id.substring(0, 8).toUpperCase()}`,
+          o.id,
+          formatDateTime(o.created_at),
+          o.customer_name || '',
+          o.customer_email || '',
+          o.customer_phone || '',
+          o.order_type === 'delivery' ? 'Delivery' : 'Takeaway',
+          (o.status || '').replace(/_/g, ' ').toUpperCase(),
+          (o.payment_method || 'N/A').replace(/_/g, ' ').toUpperCase(),
+          (o.payment_status || 'PENDING').toUpperCase(),
+          Number(o.items_subtotal || 0).toFixed(2),
+          Number(o.packaging_total || 0).toFixed(2),
+          Number(o.delivery_fee || 0).toFixed(2),
+          Number(o.discount_total || 0).toFixed(2),
+          Number(o.total_amount || 0).toFixed(2),
+          o.delivery_address || '',
+          o.delivery_postal_code || '',
+          o.delivery_city || '',
+          o.delivery_apartment || '',
+          o.customer_notes || '',
+          reason,
+          o.estimated_time ? formatDateTime(o.estimated_time) : '',
+          o.approved_at ? formatDateTime(o.approved_at) : '',
+          o.preparing_at ? formatDateTime(o.preparing_at) : '',
+          o.ready_at ? formatDateTime(o.ready_at) : '',
+          o.completed_at ? formatDateTime(o.completed_at) : '',
+          itemsList,
+          distKm,
+          String(itemCount),
+        ];
+      });
+
+      const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+      const csvContent = [
+        headers.map(escape).join(','),
+        ...rows.map((r) => r.map(escape).join(',')),
+      ].join('\r\n');
+
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const now = new Date();
+      const dateStamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      a.download = `all_orders_export_${dateStamp}.csv`;
+      a.style.visibility = 'hidden';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Global CSV export failed:', err);
+    } finally {
+      setGlobalExporting(false);
+    }
+  };
+
   // ── Derived ──────────────────────────────────────────────────────────────
 
   const loyalty = crmStats ? getLoyaltyTier(crmStats.totalOrders) : null;
@@ -368,6 +502,20 @@ export default function OrderSummaryDashboard({
               <span className="flex items-center gap-1.5 text-primary animate-pulse">
                 <RefreshCw className="w-3 h-3 animate-spin" /> Filtering…
               </span>
+            )}
+            {initialOrders.length > 0 && (
+              <Button
+                type="button"
+                onClick={handleGlobalExportCSV}
+                disabled={globalExporting}
+                className="h-auto px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider gap-1.5 border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary"
+              >
+                {globalExporting ? (
+                  <><RefreshCw className="w-3 h-3 animate-spin" /> Exporting…</>
+                ) : (
+                  <><Download className="w-3 h-3" /> Export All to CSV</>
+                )}
+              </Button>
             )}
           </div>
         </div>
