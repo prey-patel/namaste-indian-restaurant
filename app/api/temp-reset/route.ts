@@ -5,23 +5,22 @@ export async function GET() {
   try {
     const adminClient = createAdminClient();
     
-    // Find the user ID for owner@namaste.com
-    const { data: usersData, error: listError } = await adminClient.auth.admin.listUsers();
-    if (listError) throw listError;
+    // Fetch profiles
+    const { data: profiles, error: profileErr } = await adminClient
+      .from('profiles')
+      .select('email, role, is_active');
+      
+    if (profileErr) throw profileErr;
     
-    const ownerUser = usersData.users.find(u => u.email === 'owner@namaste.com');
-    if (!ownerUser) {
-      return NextResponse.json({ success: false, error: 'User owner@namaste.com not found' });
-    }
+    // Fetch auth users
+    const { data: authData, error: authErr } = await adminClient.auth.admin.listUsers();
+    if (authErr) throw authErr;
     
-    // Update password
-    const { error: updateError } = await adminClient.auth.admin.updateUserById(
-      ownerUser.id,
-      { password: 'NamastePassword123!' }
-    );
-    if (updateError) throw updateError;
-    
-    return NextResponse.json({ success: true, message: 'Password reset successfully to NamastePassword123!' });
+    return NextResponse.json({ 
+      success: true, 
+      profiles: profiles || [],
+      authUsers: authData.users.map(u => ({ id: u.id, email: u.email }))
+    });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message });
   }
