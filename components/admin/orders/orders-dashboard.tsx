@@ -80,6 +80,49 @@ type Props = {
   };
 };
 
+function OrderAgeTimer({ createdAt }: { createdAt: string }) {
+  const [elapsed, setElapsed] = useState('');
+
+  useEffect(() => {
+    const calculateElapsed = () => {
+      const createdTime = new Date(createdAt).getTime();
+      const diffMs = Date.now() - createdTime;
+
+      if (diffMs <= 0) {
+        setElapsed('0s');
+        return;
+      }
+
+      const diffSecs = Math.floor(diffMs / 1000);
+      const diffMins = Math.floor(diffSecs / 60);
+      const diffHours = Math.floor(diffMins / 60);
+
+      const displaySecs = diffSecs % 60;
+      const displayMins = diffMins % 60;
+
+      if (diffHours > 0) {
+        setElapsed(`${diffHours}h ${displayMins}m ${displaySecs}s`);
+      } else if (diffMins > 0) {
+        setElapsed(`${diffMins}m ${displaySecs}s`);
+      } else {
+        setElapsed(`${displaySecs}s`);
+      }
+    };
+
+    calculateElapsed();
+    const interval = setInterval(calculateElapsed, 1000);
+
+    return () => clearInterval(interval);
+  }, [createdAt]);
+
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/10 border border-amber-500/20 text-amber-500 animate-pulse select-none">
+      <Clock className="w-3 h-3 text-amber-500 shrink-0" />
+      {elapsed}
+    </span>
+  );
+}
+
 export default function OrdersDashboard({ initialOrders, metrics, filters }: Props) {
   const router = useRouter();
   
@@ -524,6 +567,11 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                           Ref: {order.token.substring(0, 8)}...
                         </div>
                         <div className="text-muted-foreground/60">{order.customer_phone}</div>
+                        {order.status === 'pending' && (
+                          <div className="mt-1.5 flex items-center">
+                            <OrderAgeTimer createdAt={order.created_at} />
+                          </div>
+                        )}
                         {order.order_type === 'delivery' && (
                           <div className="flex flex-col gap-0.5 mt-1">
                             <div className="text-[10px] flex items-center gap-1 text-primary">
@@ -719,6 +767,11 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                       <span className="text-[10px] font-mono text-muted-foreground/60">
                         Ref: {order.token.substring(0, 8)}...
                       </span>
+                      {order.status === 'pending' && (
+                        <div className="mt-1 flex items-center">
+                          <OrderAgeTimer createdAt={order.created_at} />
+                        </div>
+                      )}
                     </div>
                     <StatusPill status={getStatusPillType(order.status)} label={t(`status.${mappedStatus}` as any)} />
                   </div>
