@@ -188,10 +188,25 @@ export default function HeroSection({
             {heroTitle}
           </motion.span>
           <motion.span
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="block mt-2 md:mt-3 mb-1 md:mb-2 font-script text-5xl sm:text-7xl md:text-8xl lg:text-[92px] tracking-wide bg-gradient-to-r from-[#F0C965] via-[#D4AF37] to-[#F2D785] bg-clip-text text-transparent drop-shadow-[0_2px_12px_rgba(212,175,55,0.4)] pb-4 pt-1"
+            initial={{ opacity: 0, y: 30, scale: 1 }}
+            animate={{ 
+              opacity: 1, 
+              y: 0,
+              scale: [1, 1.05, 0.98, 1.08, 1, 1]
+            }}
+            transition={{ 
+              opacity: { duration: 0.8, delay: 0.3 },
+              y: { duration: 0.8, delay: 0.3 },
+              scale: {
+                duration: 1.6,
+                delay: 1.2,
+                repeat: Infinity,
+                repeatType: 'loop',
+                ease: 'easeInOut',
+                repeatDelay: 2
+              }
+            }}
+            className="inline-block mt-2 md:mt-3 mb-1 md:mb-2 font-script text-5xl sm:text-7xl md:text-8xl lg:text-[92px] tracking-wide bg-gradient-to-r from-[#F0C965] via-[#D4AF37] to-[#F2D785] bg-clip-text text-transparent drop-shadow-[0_2px_12px_rgba(212,175,55,0.4)] pb-4 pt-1 origin-center"
           >
             {heroTitleAccent}
           </motion.span>
