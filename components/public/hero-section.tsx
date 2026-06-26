@@ -164,20 +164,6 @@ export default function HeroSection({
       {/* HERO CONTENT CONTAINER */}
       <div className="max-w-4xl mx-auto w-full flex-1 flex flex-col justify-center items-center relative z-10 space-y-8 my-auto">
         
-        {/* Premium Gold Logo Badge */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8 }}
-          className="mb-2"
-        >
-          <img
-            src="/images/logo.png"
-            alt="Namaste Indian Restaurant Logo"
-            className="w-28 h-28 sm:w-36 sm:h-36 object-contain drop-shadow-[0_4px_20px_rgba(212,175,55,0.15)]"
-          />
-        </motion.div>
-
         {/* Subtitle / Philosophy strip */}
         <motion.div
           initial={{ opacity: 0, y: -15 }}
