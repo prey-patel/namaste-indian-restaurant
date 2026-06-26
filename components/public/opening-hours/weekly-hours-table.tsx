@@ -17,7 +17,7 @@ export default function WeeklyHoursTable({ weeklyHours, todayDayOfWeek }: Props)
   const isPl = locale === 'pl';
 
   return (
-    <div className="w-full bg-[#050b1e]/40 backdrop-blur-md border border-primary/15 rounded-2xl shadow-2xl overflow-hidden font-sans select-none">
+    <div className="w-full bg-[#050b1e]/40 backdrop-blur-md border border-primary/15 rounded-2xl shadow-2xl overflow-hidden font-sans">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>

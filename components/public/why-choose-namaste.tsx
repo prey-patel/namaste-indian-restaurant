@@ -82,7 +82,7 @@ export default function WhyChooseNamaste({
   };
 
   return (
-    <section className="relative py-20 md:py-28 bg-[#030714] overflow-hidden text-center select-none">
+    <section className="relative py-20 md:py-28 bg-[#030714] overflow-hidden text-center">
       
       {/* Background mandala decoration */}
       <div className="absolute -left-12 -top-12 w-[350px] h-[350px] opacity-[0.03] pointer-events-none">

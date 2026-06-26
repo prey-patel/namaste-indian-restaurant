@@ -16,7 +16,7 @@ export default function FooterHours({ dineIn, delivery }: Props) {
   const isPl = locale === 'pl';
   
   return (
-    <div className="flex flex-col space-y-4 font-sans select-none text-left">
+    <div className="flex flex-col space-y-4 font-sans text-left">
       <h4 className="font-bold text-foreground text-xs uppercase tracking-widest border-b border-primary/10 pb-2">
         {t('todaysHours')}
       </h4>

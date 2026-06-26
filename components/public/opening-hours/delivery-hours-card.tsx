@@ -13,7 +13,7 @@ export default function DeliveryHoursCard({ delivery }: Props) {
   const isPl = locale === 'pl';
   
   return (
-    <div className={`border p-5 rounded-lg text-left select-none space-y-4 font-sans ${
+    <div className={`border p-5 rounded-lg text-left space-y-4 font-sans ${
       delivery.isOpen 
         ? 'border-primary/20 bg-[#050B1E]/60 text-foreground' 
         : 'border-red-500/30 bg-red-500/5 text-foreground'

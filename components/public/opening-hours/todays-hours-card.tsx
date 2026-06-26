@@ -14,7 +14,7 @@ export default function TodaysHoursCard({ dineIn, delivery }: Props) {
   const t = useTranslations('openingHours');
   
   return (
-    <div className="bg-[#FCFAF2] border border-primary/20 text-[#050B1E] rounded-2xl shadow-xl p-6 md:p-8 space-y-6 max-w-sm w-full font-sans select-none">
+    <div className="bg-[#FCFAF2] border border-primary/20 text-[#050B1E] rounded-2xl shadow-xl p-6 md:p-8 space-y-6 max-w-sm w-full font-sans">
       <div className="flex items-center gap-3 border-b border-primary/15 pb-4">
         <Clock className="w-4.5 h-4.5 text-primary" />
         <h3 className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#050B1E]/60">

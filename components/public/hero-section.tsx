@@ -107,7 +107,7 @@ export default function HeroSection({
     <section
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="relative min-h-screen bg-[#040815] text-center overflow-hidden flex flex-col justify-center items-center px-6 sm:px-12 pt-32 pb-16 select-none"
+      className="relative min-h-screen bg-[#040815] text-center overflow-hidden flex flex-col justify-center items-center px-6 sm:px-12 pt-32 pb-16"
     >
       {/* 3D PARALLAX BACKGROUND GLOWS */}
       <motion.div
