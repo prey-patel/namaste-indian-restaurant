@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useTransition } from 'react';
+import React, { useState, useCallback, useTransition, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
@@ -250,6 +250,12 @@ export default function OrderSummaryDashboard({
   // Stats date range local state
   const [localStatsFrom, setLocalStatsFrom] = useState(statsFrom);
   const [localStatsTo, setLocalStatsTo] = useState(statsTo);
+
+  // Sync local inputs if stats date range props change from URL navigation
+  useEffect(() => {
+    setLocalStatsFrom(statsFrom);
+    setLocalStatsTo(statsTo);
+  }, [statsFrom, statsTo]);
 
   // Global export state
   const [globalExporting, setGlobalExporting] = useState(false);
@@ -605,19 +611,24 @@ export default function OrderSummaryDashboard({
                 const fStr = `${from.getFullYear()}-${String(from.getMonth()+1).padStart(2,'0')}-${String(from.getDate()).padStart(2,'0')}`;
                 return [fStr, to];
               }},
-            ].map((preset) => (
-              <button
-                key={preset.label}
-                type="button"
-                onClick={() => {
-                  const [f, t] = preset.getRange();
-                  pushStatsRange(f, t);
-                }}
-                className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md border border-border bg-background text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all duration-200"
-              >
-                {preset.label}
-              </button>
-            ))}
+            ].map((preset) => {
+              const [f, t] = preset.getRange();
+              const isActive = statsFrom === f && statsTo === t;
+              return (
+                <button
+                  key={preset.label}
+                  type="button"
+                  onClick={() => pushStatsRange(f, t)}
+                  className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md border transition-all duration-200 ${
+                    isActive
+                      ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                      : 'bg-background border-border text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/30'
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              );
+            })}
           </div>
 
           {/* Manual date pickers */}
