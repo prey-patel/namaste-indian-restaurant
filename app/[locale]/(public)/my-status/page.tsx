@@ -32,7 +32,12 @@ export default async function MyStatusPage({ params }: Props) {
 
         <div className="container mx-auto px-4 relative z-10 space-y-8 max-w-2xl">
           {/* Header */}
-          <div className="space-y-3">
+          <div className="space-y-3 flex flex-col items-center">
+            <img
+              src="/images/logo.png"
+              alt="Namaste Logo"
+              className="h-16 w-auto object-contain mb-2"
+            />
             <div className="flex justify-center items-center space-x-2 text-primary">
               <div className="h-[1px] w-6 bg-primary/30" />
               <span className="text-[10px] tracking-[0.25em] font-extrabold uppercase">

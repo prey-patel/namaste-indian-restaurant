@@ -37,7 +37,13 @@ export default async function Footer() {
         
         {/* Restaurant Contact Section */}
         <div className="flex flex-col space-y-3 text-left">
-          <h3 className="font-serif text-lg font-bold text-primary tracking-wide">{displayName}</h3>
+          <Link href={ROUTES.home} className="inline-block w-fit">
+            <img
+              src="/images/logo.png"
+              alt="Namaste Logo"
+              className="h-16 w-auto object-contain hover:brightness-110 transition-all"
+            />
+          </Link>
           <a 
             href={mapsUrl}
             target="_blank"

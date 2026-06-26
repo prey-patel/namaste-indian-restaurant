@@ -102,18 +102,12 @@ export default function Header() {
       <header className="sticky top-0 z-[1000] w-full border-b border-primary/20 bg-[#040815]/90 backdrop-blur-md">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
           
-          {/* Brand Logo - Centered alignment inside the block */}
-          <Link href={ROUTES.home} className="flex flex-col items-center group focus-visible:ring-2 focus-visible:ring-primary rounded p-1">
-            <svg className="w-5 h-5 text-primary mb-1 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M12 2l2.4 4.8 5.3.8-3.8 3.7.9 5.3-4.8-2.5-4.8 2.5.9-5.3-3.8-3.7 5.3-.8z" fill="currentColor" fillOpacity="0.2" />
-              <circle cx="12" cy="12" r="2" fill="currentColor" />
-            </svg>
-            <span className="text-xl font-serif font-black tracking-[0.2em] text-primary leading-none group-hover:brightness-110 transition-all">
-              NAMASTE
-            </span>
-            <span className="text-[7px] tracking-[0.2em] text-muted-foreground/80 font-sans font-bold uppercase mt-1">
-              INDIAN RESTAURANT
-            </span>
+          <Link href={ROUTES.home} className="flex items-center group focus-visible:ring-2 focus-visible:ring-primary rounded p-1">
+            <img
+              src="/images/logo.png"
+              alt="Namaste Logo"
+              className="h-14 w-auto object-contain transition-transform group-hover:scale-105"
+            />
           </Link>
 
           {/* Desktop Navigation Links */}
@@ -290,7 +284,14 @@ export default function Header() {
             >
               {/* Close Button */}
               <div className="flex justify-between items-center mb-8">
-                <span className="font-serif text-lg font-bold text-primary tracking-widest">MENU</span>
+                <div className="flex items-center gap-2">
+                  <img
+                    src="/images/logo.png"
+                    alt="Namaste Logo"
+                    className="h-8 w-auto object-contain"
+                  />
+                  <span className="font-serif text-lg font-bold text-primary tracking-widest">MENU</span>
+                </div>
                 <button
                   onClick={() => {
                     setIsDrawerOpen(false);
