@@ -18,6 +18,8 @@ type Props = {
     payment_status?: string;
     date?: string;
     selected_email?: string;
+    stats_from?: string;
+    stats_to?: string;
   }>;
 };
 
@@ -65,6 +67,13 @@ export default async function AdminOrderSummaryPage({ searchParams }: Props) {
   const payment_status = sp.payment_status || 'all';
   const date = sp.date || '';
   const selected_email = sp.selected_email?.trim() || '';
+
+  // Stats date range — defaults to current month in Warsaw timezone
+  const nowWarsaw = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Warsaw' }));
+  const defaultFrom = `${nowWarsaw.getFullYear()}-${String(nowWarsaw.getMonth() + 1).padStart(2, '0')}-01`;
+  const defaultTo = warsawDateStr(new Date());
+  const statsFrom = sp.stats_from || defaultFrom;
+  const statsTo = sp.stats_to || defaultTo;
 
   // 4. Build filtered orders query
   let qb = supabase
@@ -133,6 +142,65 @@ export default async function AdminOrderSummaryPage({ searchParams }: Props) {
     console.error('[OrderSummary] Failed to fetch orders:', ordersError);
   }
   const safeOrders = (orders || []) as any[];
+
+  // ── Stats computation ─────────────────────────────────────────────────────
+  const [statsStart] = warsawRange(statsFrom);
+  const [, statsEnd] = warsawRange(statsTo);
+
+  const { data: statsOrders } = await supabase
+    .from('orders')
+    .select('total_amount, order_type, status, payment_method, delivery_distance_car_meters')
+    .gte('created_at', statsStart)
+    .lte('created_at', statsEnd);
+
+  const allStatsOrders = (statsOrders || []) as any[];
+
+  // 1. Total Sales — sum of total_amount for completed orders
+  const completedOrders = allStatsOrders.filter((o: any) => o.status === 'completed');
+  const totalSales = completedOrders.reduce((sum: number, o: any) => sum + Number(o.total_amount || 0), 0);
+
+  // 2. Total Orders — count of all orders in range
+  const totalOrders = allStatsOrders.length;
+
+  // 3. Avg. Order Value — total sales ÷ completed count
+  const avgOrderValue = completedOrders.length > 0 ? totalSales / completedOrders.length : 0;
+
+  // 4. Delivery vs Takeaway
+  const deliveryCount = allStatsOrders.filter((o: any) => o.order_type === 'delivery').length;
+  const takeawayCount = allStatsOrders.filter((o: any) => o.order_type === 'takeaway').length;
+
+  // 5. Cancelled / Rejected
+  const cancelledRejectedCount = allStatsOrders.filter(
+    (o: any) => o.status === 'cancelled' || o.status === 'rejected'
+  ).length;
+
+  // 6. Payment Method Split (based on completed orders)
+  const cashTotal = completedOrders
+    .filter((o: any) => o.payment_method === 'cash' || o.payment_method === 'cash_on_delivery')
+    .reduce((sum: number, o: any) => sum + Number(o.total_amount || 0), 0);
+  const onlineTotal = completedOrders
+    .filter((o: any) => o.payment_method !== 'cash' && o.payment_method !== 'cash_on_delivery')
+    .reduce((sum: number, o: any) => sum + Number(o.total_amount || 0), 0);
+
+  // 7. Avg. Delivery Distance
+  const deliveryWithDist = allStatsOrders.filter(
+    (o: any) => o.order_type === 'delivery' && o.delivery_distance_car_meters != null && o.delivery_distance_car_meters > 0
+  );
+  const avgDeliveryDistanceKm = deliveryWithDist.length > 0
+    ? deliveryWithDist.reduce((sum: number, o: any) => sum + Number(o.delivery_distance_car_meters), 0) / deliveryWithDist.length / 1000
+    : 0;
+
+  const stats = {
+    totalSales,
+    totalOrders,
+    avgOrderValue,
+    deliveryCount,
+    takeawayCount,
+    cancelledRejectedCount,
+    cashTotal,
+    onlineTotal,
+    avgDeliveryDistanceKm,
+  };
 
   // 5. Customer CRM data — fetched only when a customer email is selected
   let selectedCustomer: { name: string; email: string; phone: string } | null = null;
@@ -244,6 +312,9 @@ export default async function AdminOrderSummaryPage({ searchParams }: Props) {
       crmStats={crmStats}
       pastOrders={pastOrders}
       favoriteDishes={favoriteDishes}
+      stats={stats}
+      statsFrom={statsFrom}
+      statsTo={statsTo}
     />
   );
 }

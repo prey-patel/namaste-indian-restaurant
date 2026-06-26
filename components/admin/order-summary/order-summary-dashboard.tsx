@@ -18,6 +18,7 @@ import {
   Phone,
   CreditCard,
   Calendar,
+  CalendarRange,
   ShoppingBag,
   Star,
   TrendingUp,
@@ -26,6 +27,10 @@ import {
   RefreshCw,
   Inbox,
   Filter,
+  Truck,
+  XCircle,
+  Banknote,
+  Navigation,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -93,6 +98,18 @@ type Filters = {
   selected_email: string;
 };
 
+type OrderStats = {
+  totalSales: number;
+  totalOrders: number;
+  avgOrderValue: number;
+  deliveryCount: number;
+  takeawayCount: number;
+  cancelledRejectedCount: number;
+  cashTotal: number;
+  onlineTotal: number;
+  avgDeliveryDistanceKm: number;
+};
+
 type Props = {
   initialOrders: Order[];
   filters: Filters;
@@ -105,6 +122,9 @@ type Props = {
   crmStats: CrmStats | null;
   pastOrders: PastOrder[];
   favoriteDishes: FavoriteDish[];
+  stats: OrderStats;
+  statsFrom: string;
+  statsTo: string;
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -215,6 +235,9 @@ export default function OrderSummaryDashboard({
   crmStats,
   pastOrders,
   favoriteDishes,
+  stats,
+  statsFrom,
+  statsTo,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -223,6 +246,10 @@ export default function OrderSummaryDashboard({
   // Local search input state (debounced push to URL)
   const [localQuery, setLocalQuery] = useState(filters.query);
   const [localDate, setLocalDate] = useState(filters.date);
+
+  // Stats date range local state
+  const [localStatsFrom, setLocalStatsFrom] = useState(statsFrom);
+  const [localStatsTo, setLocalStatsTo] = useState(statsTo);
 
   // Global export state
   const [globalExporting, setGlobalExporting] = useState(false);
@@ -236,7 +263,7 @@ export default function OrderSummaryDashboard({
   // ── URL helpers ──────────────────────────────────────────────────────────
 
   const buildUrl = useCallback(
-    (overrides: Partial<Filters>) => {
+    (overrides: Partial<Filters>, statsOverrides?: { stats_from?: string; stats_to?: string }) => {
       const next: Filters = { ...filters, ...overrides };
       const params = new URLSearchParams();
       if (next.query) params.set('query', next.query);
@@ -246,11 +273,22 @@ export default function OrderSummaryDashboard({
         params.set('payment_status', next.payment_status);
       if (next.date) params.set('date', next.date);
       if (next.selected_email) params.set('selected_email', next.selected_email);
+      // Preserve stats date range
+      const sf = statsOverrides?.stats_from ?? statsFrom;
+      const st = statsOverrides?.stats_to ?? statsTo;
+      if (sf) params.set('stats_from', sf);
+      if (st) params.set('stats_to', st);
       const qs = params.toString();
       return `${pathname}${qs ? `?${qs}` : ''}`;
     },
-    [filters, pathname]
+    [filters, pathname, statsFrom, statsTo]
   );
+
+  const pushStatsRange = (from: string, to: string) => {
+    setLocalStatsFrom(from);
+    setLocalStatsTo(to);
+    startTransition(() => router.push(buildUrl({}, { stats_from: from, stats_to: to })));
+  };
 
   const push = (overrides: Partial<Filters>) => {
     startTransition(() => router.push(buildUrl(overrides)));
@@ -482,7 +520,7 @@ export default function OrderSummaryDashboard({
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-background font-sans">
+    <div className="min-h-screen flex flex-col bg-background font-sans">
       {/* ── Page Header ── */}
       <div className="border-b border-border bg-card px-6 py-5">
         <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -518,6 +556,200 @@ export default function OrderSummaryDashboard({
               </Button>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* ── Stats Date Range Picker + KPI Cards ── */}
+      <div className="border-b border-border bg-gradient-to-b from-card to-background px-6 py-5 space-y-5">
+
+        {/* Date Range Picker Row */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+            <CalendarRange className="w-4 h-4 text-primary/70" />
+            <span className="uppercase tracking-wider text-[10px]">Stats Period</span>
+          </div>
+
+          {/* Quick-select buttons */}
+          <div className="flex items-center gap-1.5">
+            {[
+              { label: 'Today', getRange: () => {
+                const now = new Date();
+                const d = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Warsaw' }));
+                const s = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                return [s, s];
+              }},
+              { label: 'This Week', getRange: () => {
+                const now = new Date();
+                const d = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Warsaw' }));
+                const dow = d.getDay();
+                const mondayOffset = dow === 0 ? 6 : dow - 1;
+                const monday = new Date(d);
+                monday.setDate(monday.getDate() - mondayOffset);
+                const mStr = `${monday.getFullYear()}-${String(monday.getMonth()+1).padStart(2,'0')}-${String(monday.getDate()).padStart(2,'0')}`;
+                const tStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                return [mStr, tStr];
+              }},
+              { label: 'This Month', getRange: () => {
+                const now = new Date();
+                const d = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Warsaw' }));
+                const from = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+                const to = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                return [from, to];
+              }},
+              { label: 'Last 30 Days', getRange: () => {
+                const now = new Date();
+                const d = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Warsaw' }));
+                const to = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                const from = new Date(d);
+                from.setDate(from.getDate() - 30);
+                const fStr = `${from.getFullYear()}-${String(from.getMonth()+1).padStart(2,'0')}-${String(from.getDate()).padStart(2,'0')}`;
+                return [fStr, to];
+              }},
+            ].map((preset) => (
+              <button
+                key={preset.label}
+                type="button"
+                onClick={() => {
+                  const [f, t] = preset.getRange();
+                  pushStatsRange(f, t);
+                }}
+                className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md border border-border bg-background text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all duration-200"
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Manual date pickers */}
+          <div className="flex items-center gap-2 ml-auto">
+            <label className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">From</label>
+            <input
+              type="date"
+              value={localStatsFrom}
+              onChange={(e) => setLocalStatsFrom(e.target.value)}
+              className="px-2.5 py-1.5 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition"
+            />
+            <label className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">To</label>
+            <input
+              type="date"
+              value={localStatsTo}
+              onChange={(e) => setLocalStatsTo(e.target.value)}
+              className="px-2.5 py-1.5 text-xs bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition"
+            />
+            <Button
+              type="button"
+              onClick={() => pushStatsRange(localStatsFrom, localStatsTo)}
+              className="h-auto px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              Apply
+            </Button>
+          </div>
+        </div>
+
+        {/* KPI Stat Cards Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+
+          {/* 1. Total Sales */}
+          <div className="group relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 via-background to-primary/10 p-4 space-y-2 transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-full -translate-y-4 translate-x-4 group-hover:scale-150 transition-transform duration-500" />
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-primary" />
+              </div>
+            </div>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold">Total Sales</p>
+            <p className="text-xl font-bold font-mono text-primary leading-none">{stats.totalSales.toFixed(2)}</p>
+            <p className="text-[9px] text-muted-foreground/50">PLN</p>
+          </div>
+
+          {/* 2. Total Orders */}
+          <div className="group relative overflow-hidden rounded-xl border border-border bg-gradient-to-br from-blue-500/5 via-background to-blue-500/10 p-4 space-y-2 transition-all duration-300 hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/5">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/5 rounded-full -translate-y-4 translate-x-4 group-hover:scale-150 transition-transform duration-500" />
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                <ShoppingBag className="w-4 h-4 text-blue-500" />
+              </div>
+            </div>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold">Total Orders</p>
+            <p className="text-xl font-bold font-mono text-foreground leading-none">{stats.totalOrders}</p>
+            <p className="text-[9px] text-muted-foreground/50">all statuses</p>
+          </div>
+
+          {/* 3. Avg. Order Value */}
+          <div className="group relative overflow-hidden rounded-xl border border-border bg-gradient-to-br from-emerald-500/5 via-background to-emerald-500/10 p-4 space-y-2 transition-all duration-300 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/5 rounded-full -translate-y-4 translate-x-4 group-hover:scale-150 transition-transform duration-500" />
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                <BarChart2 className="w-4 h-4 text-emerald-500" />
+              </div>
+            </div>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold">Avg. Order Value</p>
+            <p className="text-xl font-bold font-mono text-foreground leading-none">{stats.avgOrderValue.toFixed(2)}</p>
+            <p className="text-[9px] text-muted-foreground/50">PLN / completed</p>
+          </div>
+
+          {/* 4. Delivery vs Takeaway */}
+          <div className="group relative overflow-hidden rounded-xl border border-border bg-gradient-to-br from-violet-500/5 via-background to-violet-500/10 p-4 space-y-2 transition-all duration-300 hover:border-violet-500/30 hover:shadow-lg hover:shadow-violet-500/5">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-violet-500/5 rounded-full -translate-y-4 translate-x-4 group-hover:scale-150 transition-transform duration-500" />
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                <Truck className="w-4 h-4 text-violet-500" />
+              </div>
+            </div>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold">Delivery / Takeaway</p>
+            <div className="flex items-baseline gap-1.5">
+              <p className="text-xl font-bold font-mono text-foreground leading-none">{stats.deliveryCount}</p>
+              <span className="text-xs text-muted-foreground/40">/</span>
+              <p className="text-xl font-bold font-mono text-foreground leading-none">{stats.takeawayCount}</p>
+            </div>
+            <p className="text-[9px] text-muted-foreground/50">orders</p>
+          </div>
+
+          {/* 5. Cancelled / Rejected */}
+          <div className="group relative overflow-hidden rounded-xl border border-border bg-gradient-to-br from-red-500/5 via-background to-red-500/10 p-4 space-y-2 transition-all duration-300 hover:border-red-500/30 hover:shadow-lg hover:shadow-red-500/5">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-red-500/5 rounded-full -translate-y-4 translate-x-4 group-hover:scale-150 transition-transform duration-500" />
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+                <XCircle className="w-4 h-4 text-red-500" />
+              </div>
+            </div>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold">Cancelled / Rejected</p>
+            <p className="text-xl font-bold font-mono text-foreground leading-none">{stats.cancelledRejectedCount}</p>
+            <p className="text-[9px] text-muted-foreground/50">orders</p>
+          </div>
+
+          {/* 6. Cash / Online */}
+          <div className="group relative overflow-hidden rounded-xl border border-border bg-gradient-to-br from-amber-500/5 via-background to-amber-500/10 p-4 space-y-2 transition-all duration-300 hover:border-amber-500/30 hover:shadow-lg hover:shadow-amber-500/5">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/5 rounded-full -translate-y-4 translate-x-4 group-hover:scale-150 transition-transform duration-500" />
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                <Banknote className="w-4 h-4 text-amber-500" />
+              </div>
+            </div>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold">Cash / Online</p>
+            <div className="flex items-baseline gap-1">
+              <p className="text-lg font-bold font-mono text-foreground leading-none">{stats.cashTotal.toFixed(0)}</p>
+              <span className="text-[10px] text-muted-foreground/40">/</span>
+              <p className="text-lg font-bold font-mono text-foreground leading-none">{stats.onlineTotal.toFixed(0)}</p>
+            </div>
+            <p className="text-[9px] text-muted-foreground/50">PLN (completed)</p>
+          </div>
+
+          {/* 7. Avg. Delivery Distance */}
+          <div className="group relative overflow-hidden rounded-xl border border-border bg-gradient-to-br from-cyan-500/5 via-background to-cyan-500/10 p-4 space-y-2 transition-all duration-300 hover:border-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/5">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-cyan-500/5 rounded-full -translate-y-4 translate-x-4 group-hover:scale-150 transition-transform duration-500" />
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                <Navigation className="w-4 h-4 text-cyan-500" />
+              </div>
+            </div>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold">Avg. Distance</p>
+            <p className="text-xl font-bold font-mono text-foreground leading-none">
+              {stats.avgDeliveryDistanceKm > 0 ? stats.avgDeliveryDistanceKm.toFixed(1) : '—'}
+            </p>
+            <p className="text-[9px] text-muted-foreground/50">{stats.avgDeliveryDistanceKm > 0 ? 'km' : 'no data'}</p>
+          </div>
+
         </div>
       </div>
 
@@ -634,7 +866,7 @@ export default function OrderSummaryDashboard({
       </div>
 
       {/* ── Main Content ── */}
-      <div className={`flex h-[calc(100vh-160px)] overflow-hidden ${hasCrm ? 'flex-row' : ''}`}>
+      <div className={`flex flex-1 overflow-hidden ${hasCrm ? 'flex-row' : ''}`}>
 
         {/* ── Left Panel: Orders Table ── */}
         <div className={`flex flex-col overflow-hidden border-r border-border ${hasCrm ? 'w-[52%] shrink-0' : 'w-full'}`}>
