@@ -639,9 +639,24 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                           </div>
                         )}
                         {order.order_type === 'delivery' && (
-                          <div className="flex flex-col gap-0.5 mt-1">
-                            <div className="text-[10px] flex items-center gap-1 text-primary">
-                              <MapPin className="w-3 h-3 flex-shrink-0 text-primary" />
+                          <div className="flex flex-col gap-1 mt-1 border-t border-border/10 pt-1">
+                            {order.delivery_address && (
+                              <a
+                                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                                  [order.delivery_address, order.delivery_postal_code, order.delivery_city].filter(Boolean).join(', ')
+                                )}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] font-semibold text-primary hover:underline hover:text-primary/95 flex items-start gap-1 group max-w-[200px]"
+                                title="Click to open route on Google Maps"
+                              >
+                                <MapPin className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                                <span className="leading-tight text-left">
+                                  {[order.delivery_address, order.delivery_postal_code, order.delivery_city].filter(Boolean).join(', ')}
+                                </span>
+                              </a>
+                            )}
+                            <div className="text-[9px] flex items-center gap-1 text-muted-foreground pl-0.5 mt-0.5">
                               {order.delivery_geocoding_status === 'success' && order.delivery_distance_car_meters ? (
                                 <span>🚗 {(order.delivery_distance_car_meters / 1000).toFixed(1)} km ({Math.ceil(order.delivery_duration_car_seconds! / 60)}m)</span>
                               ) : order.delivery_geocoding_status === 'failed' || order.delivery_distance_error ? (
@@ -651,7 +666,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                               )}
                             </div>
                             {order.delivery_geocoding_status === 'success' && order.delivery_distance_walk_meters && (
-                              <div className="text-[10px] pl-4 text-muted-foreground">
+                              <div className="text-[9px] pl-4 text-muted-foreground/60">
                                 <span>🚶 {(order.delivery_distance_walk_meters / 1000).toFixed(1)} km ({Math.ceil(order.delivery_duration_walk_seconds! / 60)}m)</span>
                               </div>
                             )}
@@ -863,9 +878,24 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                       <span className="font-bold text-primary font-mono">{order.total_amount.toFixed(2)} PLN</span>
                     </div>
                     {order.order_type === 'delivery' && (
-                      <div className="col-span-2 pt-1.5 border-t border-border/20 text-[10px] text-primary flex flex-col gap-0.5">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3 flex-shrink-0 text-primary" />
+                      <div className="col-span-2 pt-1.5 border-t border-border/20 text-[10px] text-primary flex flex-col gap-1">
+                        {order.delivery_address && (
+                          <a
+                            href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                              [order.delivery_address, order.delivery_postal_code, order.delivery_city].filter(Boolean).join(', ')
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] font-semibold text-primary hover:underline hover:text-primary/95 flex items-start gap-1 group"
+                            title="Click to open route on Google Maps"
+                          >
+                            <MapPin className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                            <span className="leading-tight text-left">
+                              {[order.delivery_address, order.delivery_postal_code, order.delivery_city].filter(Boolean).join(', ')}
+                            </span>
+                          </a>
+                        )}
+                        <div className="flex items-center gap-1 text-[9px] text-muted-foreground pl-0.5 mt-0.5">
                           {order.delivery_geocoding_status === 'success' && order.delivery_distance_car_meters ? (
                             <span>🚗 {(order.delivery_distance_car_meters / 1000).toFixed(1)} km ({Math.ceil(order.delivery_duration_car_seconds! / 60)} mins)</span>
                           ) : order.delivery_geocoding_status === 'failed' || order.delivery_distance_error ? (
@@ -875,7 +905,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                           )}
                         </div>
                         {order.delivery_geocoding_status === 'success' && order.delivery_distance_walk_meters && (
-                          <div className="pl-4 text-muted-foreground">
+                          <div className="pl-4 text-[9px] text-muted-foreground/60">
                             <span>🚶 {(order.delivery_distance_walk_meters / 1000).toFixed(1)} km ({Math.ceil(order.delivery_duration_walk_seconds! / 60)} mins)</span>
                           </div>
                         )}
