@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
-import { createClient } from '@/lib/supabase/server';
+import { createAnonClient } from '@/lib/supabase/anon';
 
 export type DbServiceHour = {
   id: string;
@@ -207,7 +207,7 @@ async function fetchPublicOpeningHours(locale: string): Promise<OpeningHoursPayl
   };
 
   try {
-    const supabase = await createClient();
+    const supabase = createAnonClient();
     const { dayOfWeek, timeString, dateString } = getWarsawDateDetails();
     
     // Fetch service hours, operational status, and active holiday closures concurrently

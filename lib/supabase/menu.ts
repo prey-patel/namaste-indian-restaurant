@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 
-import { createClient } from './server';
+import { createAnonClient } from './anon';
 import { createAdminClient } from './admin';
 
 export type PublicCategory = {
@@ -40,7 +40,7 @@ export type PublicMenuItem = {
  */
 async function fetchPublicCategories(): Promise<PublicCategory[]> {
   try {
-    const supabase = await createClient();
+    const supabase = createAnonClient();
     const { data, error } = await supabase
       .from('categories')
       .select('id, name_pl, name_en, slug, display_order')
@@ -78,7 +78,7 @@ export const getPublicCategories = cache(async () => {
  */
 async function fetchPublicMenuItems(): Promise<PublicMenuItem[]> {
   try {
-    const supabase = await createClient();
+    const supabase = createAnonClient();
     const { data, error } = await supabase
       .from('menu_items')
       .select(`
@@ -144,7 +144,7 @@ async function fetchImageSignedUrl(filePath: string): Promise<string | null> {
   if (!filePath) return null;
 
   try {
-    const supabase = await createClient();
+    const supabase = createAnonClient();
 
     // Query media_assets with public client to verify RLS permission (only approved & public assets are visible)
     const { data: asset, error: assetError } = await supabase
