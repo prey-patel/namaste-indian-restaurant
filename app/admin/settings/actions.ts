@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 import { geocodeRestaurantAddress } from '@/lib/delivery/distance';
 
@@ -52,6 +52,10 @@ function revalidateAllPaths() {
   for (const p of paths) {
     revalidatePath(p);
   }
+  
+  // Clear the public settings and opening hours data caches
+  revalidateTag('public-system-settings');
+  revalidateTag('public-opening-hours');
 }
 
 // 1. Restaurant Profile Action

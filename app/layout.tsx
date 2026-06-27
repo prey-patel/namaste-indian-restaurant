@@ -24,8 +24,8 @@ const pinyon = Pinyon_Script({
 
 export const metadata = {
   icons: {
-    icon: '/icon.svg',
-    shortcut: '/icon.svg',
+    icon: '/icon-192.png',
+    shortcut: '/icon-192.png',
     apple: '/icon-192.png',
   },
   appleWebApp: {

@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { categoryFormSchema, menuItemFormSchema } from '@/lib/validation/admin-menu';
 import { z } from 'zod';
@@ -40,6 +40,14 @@ async function validateAdminAccess() {
   return user.id;
 }
 
+// Helper to revalidate all menu pages and tags
+function revalidateMenu() {
+  revalidatePath('/[locale]/menu', 'layout');
+  revalidatePath('/admin/menu', 'layout');
+  revalidateTag('public-menu');
+  revalidateTag('public-menu-images');
+}
+
 // ==========================================
 // CATEGORY ACTIONS
 // ==========================================
@@ -66,8 +74,7 @@ export async function createCategoryAction(rawData: z.infer<typeof categoryFormS
       return { success: false, error: 'Database write failed' };
     }
 
-    revalidatePath('/[locale]/menu', 'layout');
-    revalidatePath('/admin/menu', 'layout');
+    revalidateMenu();
     return { success: true };
   } catch (err: any) {
     console.error('Failed to create category:', err);
@@ -93,8 +100,7 @@ export async function updateCategoryAction(id: string, rawData: Partial<z.infer<
       return { success: false, error: 'Database update failed' };
     }
 
-    revalidatePath('/[locale]/menu', 'layout');
-    revalidatePath('/admin/menu', 'layout');
+    revalidateMenu();
     return { success: true };
   } catch (err: any) {
     console.error('Failed to update category:', err);
@@ -123,8 +129,7 @@ export async function deleteCategoryAction(id: string) {
       return { success: false, error: 'Database deletion failed' };
     }
 
-    revalidatePath('/[locale]/menu', 'layout');
-    revalidatePath('/admin/menu', 'layout');
+    revalidateMenu();
     return { success: true };
   } catch (err: any) {
     console.error('Failed to delete category:', err);
@@ -192,8 +197,7 @@ export async function createMenuItemAction(rawData: z.infer<typeof menuItemFormS
       }
     }
 
-    revalidatePath('/[locale]/menu', 'layout');
-    revalidatePath('/admin/menu', 'layout');
+    revalidateMenu();
     return { success: true };
   } catch (err: any) {
     console.error('Failed to create menu item:', err);
@@ -258,8 +262,7 @@ export async function updateMenuItemAction(
       }
     }
 
-    revalidatePath('/[locale]/menu', 'layout');
-    revalidatePath('/admin/menu', 'layout');
+    revalidateMenu();
     return { success: true };
   } catch (err: any) {
     console.error('Failed to update menu item:', err);
@@ -288,8 +291,7 @@ export async function deleteMenuItemAction(id: string) {
       return { success: false, error: 'Database deletion failed' };
     }
 
-    revalidatePath('/[locale]/menu', 'layout');
-    revalidatePath('/admin/menu', 'layout');
+    revalidateMenu();
     return { success: true };
   } catch (err: any) {
     console.error('Failed to delete menu item:', err);

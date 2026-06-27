@@ -1,4 +1,6 @@
 import "server-only";
+import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
 
 import { createClient } from './server';
 import { createAdminClient } from './admin';
@@ -36,7 +38,7 @@ export type PublicMenuItem = {
 /**
  * Fetches active, non-deleted categories from the database using public/anon client.
  */
-export async function getPublicCategories(): Promise<PublicCategory[]> {
+async function fetchPublicCategories(): Promise<PublicCategory[]> {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -58,10 +60,23 @@ export async function getPublicCategories(): Promise<PublicCategory[]> {
   }
 }
 
+const getCachedPublicCategories = unstable_cache(
+  async () => fetchPublicCategories(),
+  ['public-categories'],
+  {
+    revalidate: 300, // 5 minutes
+    tags: ['public-menu']
+  }
+);
+
+export const getPublicCategories = cache(async () => {
+  return getCachedPublicCategories();
+});
+
 /**
  * Fetches active, available, non-deleted menu items using public/anon client.
  */
-export async function getPublicMenuItems(): Promise<PublicMenuItem[]> {
+async function fetchPublicMenuItems(): Promise<PublicMenuItem[]> {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -108,11 +123,24 @@ export async function getPublicMenuItems(): Promise<PublicMenuItem[]> {
   }
 }
 
+const getCachedPublicMenuItems = unstable_cache(
+  async () => fetchPublicMenuItems(),
+  ['public-menu-items'],
+  {
+    revalidate: 300, // 5 minutes
+    tags: ['public-menu']
+  }
+);
+
+export const getPublicMenuItems = cache(async () => {
+  return getCachedPublicMenuItems();
+});
+
 /**
  * Securely resolves a temporary signed URL for a public, approved menu image path.
  * Verifies with the anon client that the asset is approved and public before signing.
  */
-export async function getImageSignedUrl(filePath: string): Promise<string | null> {
+async function fetchImageSignedUrl(filePath: string): Promise<string | null> {
   if (!filePath) return null;
 
   try {
@@ -151,13 +179,30 @@ export async function getImageSignedUrl(filePath: string): Promise<string | null
   }
 }
 
+// 1. Cross-request data caching with Next.js unstable_cache
+const getCachedImageSignedUrl = (filePath: string) => {
+  return unstable_cache(
+    async () => fetchImageSignedUrl(filePath),
+    ['image-signed-url', filePath], // Use filePath as key component
+    {
+      revalidate: 600, // 10 minutes (signed URLs last 1 hour, completely safe)
+      tags: ['public-menu-images']
+    }
+  )();
+};
+
+// 2. Request deduplication using React cache
+export const getImageSignedUrl = cache(async (filePath: string) => {
+  return getCachedImageSignedUrl(filePath);
+});
+
 /**
  * High-level server loader: fetches categories, items, and resolves verified signed image URLs.
  */
-export async function getPublicMenuData(): Promise<{
+export const getPublicMenuData = cache(async (): Promise<{
   categories: PublicCategory[];
   items: PublicMenuItem[];
-}> {
+}> => {
   const [categories, items] = await Promise.all([
     getPublicCategories(),
     getPublicMenuItems(),
@@ -178,4 +223,4 @@ export async function getPublicMenuData(): Promise<{
     categories,
     items: resolvedItems,
   };
-}
+});

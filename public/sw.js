@@ -2,7 +2,6 @@ const CACHE_NAME = 'namaste-cache-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/admin',
-  '/icon.svg',
   '/icon-192.png',
   '/icon-512.png',
 ];

@@ -1,4 +1,6 @@
 import "server-only";
+import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
 
 import { createAdminClient } from './admin';
 
@@ -32,7 +34,7 @@ export type PublicSettings = {
  * Server-only helper to fetch public-safe settings via get_public_system_settings RPC.
  * Returns defaults if settings are missing or database is offline.
  */
-export async function getPublicSystemSettings(): Promise<PublicSettings> {
+async function fetchPublicSystemSettings(): Promise<PublicSettings> {
   const defaults: PublicSettings = {
     restaurant_address: 'Warszawska 1/3',
     restaurant_full_address: 'Warszawska 1/3, 06-400 Ciechanów, Poland',
@@ -114,3 +116,16 @@ export async function getPublicSystemSettings(): Promise<PublicSettings> {
     return defaults;
   }
 }
+
+const getCachedPublicSystemSettings = unstable_cache(
+  async () => fetchPublicSystemSettings(),
+  ['public-system-settings'],
+  {
+    revalidate: 300, // 5 minutes
+    tags: ['public-system-settings']
+  }
+);
+
+export const getPublicSystemSettings = cache(async () => {
+  return getCachedPublicSystemSettings();
+});

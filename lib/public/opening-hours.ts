@@ -1,4 +1,6 @@
 import "server-only";
+import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 
 export type DbServiceHour = {
@@ -196,7 +198,7 @@ export function getWeeklyHoursList(serviceHours: DbServiceHour[], locale: string
 /**
  * Main server-side function to retrieve prepared opening hours data.
  */
-export async function getPublicOpeningHours(locale: string): Promise<OpeningHoursPayload> {
+async function fetchPublicOpeningHours(locale: string): Promise<OpeningHoursPayload> {
   const emptyPayload: OpeningHoursPayload = {
     todayDayOfWeek: new Date().getDay(),
     dineIn: { isOpen: false, hoursText: locale === 'pl' ? 'Zamknięte' : 'Closed', isClosedToday: true },
@@ -247,3 +249,20 @@ export async function getPublicOpeningHours(locale: string): Promise<OpeningHour
     return emptyPayload;
   }
 }
+
+// 1. Cross-request data caching with Next.js unstable_cache
+const getCachedPublicOpeningHours = (locale: string) => {
+  return unstable_cache(
+    async () => fetchPublicOpeningHours(locale),
+    ['public-opening-hours', locale], // Include locale to avoid cross-language cache mixups
+    {
+      revalidate: 120, // Cache for 2 minutes
+      tags: ['public-opening-hours']
+    }
+  )();
+};
+
+// 2. Request deduplication using React cache
+export const getPublicOpeningHours = cache(async (locale: string) => {
+  return getCachedPublicOpeningHours(locale);
+});
