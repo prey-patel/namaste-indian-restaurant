@@ -29,7 +29,7 @@ type Props = {
   userRole: string;
 };
 
-const KITCHEN_STATUSES = ['approved', 'preparing', 'ready_for_pickup', 'out_for_delivery'];
+const KITCHEN_STATUSES = ['approved', 'preparing'];
 const POLL_INTERVAL = 30000; // 30 seconds fallback
 
 export default function KdsBoard({ initialOrders, userRole }: Props) {
@@ -232,9 +232,6 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
   // Categorize orders into columns
   const newOrders = orders.filter(o => o.status === 'approved');
   const preparingOrders = orders.filter(o => o.status === 'preparing');
-  const readyOrders = orders.filter(
-    o => o.status === 'ready_for_pickup' || o.status === 'out_for_delivery'
-  );
 
   const formatTime = (d: Date) =>
     d.toLocaleTimeString('en-GB', {
@@ -282,7 +279,9 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
           {/* Last Updated */}
           <span className="text-[10px] text-muted-foreground/50 font-mono">
             {t('lastUpdated')}: {lastUpdated ? formatTime(lastUpdated) : '--:--:--'}
-          </span>          {/* Refresh */}
+          </span>
+
+          {/* Refresh */}
           <button
             onClick={handleRefresh}
             className="p-2 rounded-lg border border-border dark:border-white/10 hover:bg-muted dark:hover:bg-white/5 text-muted-foreground hover:text-foreground dark:hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
@@ -354,8 +353,8 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
         />
       </div>
 
-      {/* Three Column KDS Grid */}
-      <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 ${
+      {/* Two Column KDS Grid */}
+      <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 ${
         isFullscreen ? 'px-6 pb-6' : ''
       }`}>
         {/* Column 1: New / Confirmed */}
@@ -410,38 +409,6 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
             </div>
           ) : (
             preparingOrders.map(order => (
-              <KdsOrderCard
-                key={order.id}
-                order={order}
-                onStartPreparing={handleStartPreparing}
-                onMarkReady={handleMarkReady}
-                isPending={isPending}
-                isUnseen={unseenOrderIds.has(order.id)}
-                theme={theme}
-              />
-            ))
-          )}
-        </div>
-
-        {/* Column 3: Ready / Handoff */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 border-b-2 border-green-500/30 dark:border-green-400/40 pb-2">
-            <div className="w-3 h-3 rounded-full bg-green-600 dark:bg-green-400" />
-            <h2 className="text-lg font-bold text-green-700 dark:text-green-400 uppercase tracking-widest">
-              {t('columnReady')}
-            </h2>
-            <span className="ml-auto bg-green-500/10 dark:bg-green-500/20 text-green-700 dark:text-green-400 text-xs font-mono font-bold px-2 py-0.5 rounded-full">
-              {readyOrders.length}
-            </span>
-          </div>
-
-          {readyOrders.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground/30">
-              <CheckCircle className="w-10 h-10 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">{t('noReadyOrders')}</p>
-            </div>
-          ) : (
-            readyOrders.map(order => (
               <KdsOrderCard
                 key={order.id}
                 order={order}
