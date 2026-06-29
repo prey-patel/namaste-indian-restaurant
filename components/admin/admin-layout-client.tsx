@@ -7,9 +7,11 @@ import AdminTopbar from './admin-topbar';
 import RealtimeTableListener from '@/components/common/realtime-table-listener';
 import { useScreenWakeLock } from '@/hooks/use-screen-wake-lock';
 import { AdminAlertsProvider } from '@/components/admin/alerts/admin-alerts-context';
+import { useAdminPushRegister } from '@/hooks/use-admin-push-register';
 
 export default function AdminLayoutClient({ children }: { children: ReactNode }) {
   useScreenWakeLock();
+  useAdminPushRegister();
   const pathname = usePathname();
   const isLoginPage = pathname === '/admin/login';
   const isKdsPage = pathname === '/admin/kds';

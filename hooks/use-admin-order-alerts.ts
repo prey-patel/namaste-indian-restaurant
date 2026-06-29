@@ -46,6 +46,8 @@ export function useAdminOrderAlerts(pendingCount: number) {
   const [isVisible, setIsVisible] = useState(true);
 
   const audioContextRef = useRef<AudioContext | null>(null);
+  const decodedBufferRef = useRef<AudioBuffer | null>(null);
+  const isLoadingSoundRef = useRef<boolean>(false);
   const isPlayingRef = useRef(false);
   const workerRef = useRef<Worker | null>(null);
   
@@ -194,73 +196,52 @@ export function useAdminOrderAlerts(pendingCount: number) {
     return () => stopBlinking();
   }, [pendingCount, isVisible]);
 
-  // 6. Play tone based on dynamic stages
+  // 6. Play tone based on dynamic stages using decoded MP3 file
   const playTone = (stage: number) => {
-    if (!audioContextRef.current) return;
+    if (!audioContextRef.current || !decodedBufferRef.current) {
+      console.warn('[Audio Alerts] Cannot play sound: context or buffer not ready.');
+      return;
+    }
     const ctx = audioContextRef.current;
     if (ctx.state === 'suspended') return;
 
     try {
-      const osc1 = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
+      const source = ctx.createBufferSource();
+      source.buffer = decodedBufferRef.current;
+
       const gain = ctx.createGain();
-
-      osc1.connect(gain);
-      osc2.connect(gain);
+      source.connect(gain);
       gain.connect(ctx.destination);
-
-      osc1.type = 'sine';
-      osc2.type = 'sine';
 
       const now = ctx.currentTime;
 
+      // Adjust volume based on stage
+      let volume = 0.25;
       if (stage === 1) {
-        // Stage 1: Quiet gentle beep (C5, 523Hz) every 8s
-        osc1.frequency.setValueAtTime(523.25, now);
-        gain.gain.setValueAtTime(0.05, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-        osc1.start(now);
-        osc1.stop(now + 0.6);
+        volume = 0.25; // Quiet
       } else if (stage === 2) {
-        // Stage 2: Alternating dual-tone chime (C5 & E5) every 4s
-        osc1.frequency.setValueAtTime(523.25, now);
-        osc1.start(now);
-        osc1.stop(now + 0.25);
-
-        osc2.frequency.setValueAtTime(659.25, now + 0.18);
-        osc2.start(now + 0.18);
-        osc2.stop(now + 0.5);
-
-        gain.gain.setValueAtTime(0.15, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+        volume = 0.6;  // Medium
       } else {
-        // Stage 3: Rapid loud alarm (E5 & G5) every 1.5s
-        osc1.frequency.setValueAtTime(659.25, now);
-        osc1.start(now);
-        osc1.stop(now + 0.18);
-
-        osc2.frequency.setValueAtTime(783.99, now + 0.12);
-        osc2.start(now + 0.12);
-        osc2.stop(now + 0.4);
-
-        gain.gain.setValueAtTime(0.35, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+        volume = 1.0;  // Loud
       }
+
+      gain.gain.setValueAtTime(volume, now);
+
+      // Increase pitch/speed slightly in Stage 3 for urgency
+      if (stage === 3) {
+        source.playbackRate.setValueAtTime(1.15, now);
+      }
+
+      source.start(now);
     } catch (err) {
-      console.warn('[Audio Alerts] Tone generation error:', err);
+      console.warn('[Audio Alerts] Sound playback error:', err);
     }
   };
 
   const startSound = (interval: number) => {
     if (isPlayingRef.current) return;
     try {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      }
-      const ctx = audioContextRef.current;
-      if (ctx.state === 'suspended') {
-        ctx.resume();
-      }
+      unlockAudio();
       isPlayingRef.current = true;
 
       if (workerRef.current) {
@@ -342,23 +323,35 @@ export function useAdminOrderAlerts(pendingCount: number) {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
-    if (audioContextRef.current.state === 'suspended') {
-      audioContextRef.current.resume();
+    const ctx = audioContextRef.current;
+    if (ctx.state === 'suspended') {
+      ctx.resume();
     }
-    // Small baseline beep to confirm audio path is unlocked
-    try {
-      const ctx = audioContextRef.current;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.setValueAtTime(800, ctx.currentTime);
-      gain.gain.setValueAtTime(0.01, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.1);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.1);
-    } catch (e) {
-      console.warn('Test tone failed:', e);
+
+    // Trigger load and decode of the alarm sound file
+    if (!decodedBufferRef.current && !isLoadingSoundRef.current) {
+      isLoadingSoundRef.current = true;
+      fetch('/alarm.mp3')
+        .then((res) => res.arrayBuffer())
+        .then((arrayBuffer) => ctx.decodeAudioData(arrayBuffer))
+        .then((decodedBuffer) => {
+          decodedBufferRef.current = decodedBuffer;
+          console.log('[Audio Alerts] Alarm sound loaded and decoded successfully.');
+          
+          // Play a tiny 100ms silent beep to finalize AudioContext activation
+          const source = ctx.createBufferSource();
+          source.buffer = decodedBuffer;
+          const gain = ctx.createGain();
+          source.connect(gain);
+          gain.connect(ctx.destination);
+          gain.gain.setValueAtTime(0.01, ctx.currentTime);
+          source.start(ctx.currentTime);
+          source.stop(ctx.currentTime + 0.1);
+        })
+        .catch((err) => {
+          console.error('[Audio Alerts] Failed to load/decode alarm sound:', err);
+          isLoadingSoundRef.current = false;
+        });
     }
   };
 

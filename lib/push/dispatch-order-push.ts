@@ -19,7 +19,7 @@ export async function dispatchOrderPush(
     // 1. Fetch order details securely
     const { data: order, error: orderError } = await adminClient
       .from('orders')
-      .select('id, order_type, token')
+      .select('id, order_type, token, customer_name, total_amount')
       .eq('id', orderId)
       .single();
 
@@ -35,13 +35,14 @@ export async function dispatchOrderPush(
     let clickPath: string;
 
     if (eventType === 'pending-admin') {
-      title = 'New order waiting for approval';
-      body = 'Delivery/takeaway order needs review.';
+      const typeStr = order.order_type === 'delivery' ? 'Delivery' : 'Takeaway';
+      title = `New ${typeStr} Order 🔔`;
+      body = `${order.customer_name || 'Customer'} • ${Number(order.total_amount || 0).toFixed(2)} PLN`;
       targetRoles = ['owner', 'manager'];
       clickPath = '/admin/orders';
     } else if (eventType === 'approved-kds') {
-      title = 'New kitchen order';
-      body = 'Approved order is ready for kitchen.';
+      title = `Kitchen Order Approved 🍳`;
+      body = `Order #${order.token || 'N/A'} is ready for preparation.`;
       targetRoles = ['kitchen', 'manager', 'owner'];
       clickPath = '/admin/kds';
     } else {

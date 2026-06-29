@@ -92,7 +92,7 @@ self.addEventListener('push', (event) => {
       body: body || '',
       icon: '/icon-192.png',
       badge: '/icon-192.png',
-      vibrate: [200, 100, 200],
+      vibrate: [500, 200, 500, 200, 500],
       data: data || {},
       actions: [
         { action: 'open', title: 'Open Panel' }
