@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import {
   Truck, Phone, MapPin, Clock, Package, CheckCircle2, Navigation,
   Wifi, WifiOff, AlertTriangle, CreditCard, Banknote, Timer,
-  ChevronRight, Home, User, Bell, Volume2, VolumeX
+  Home, User, Bell, Volume2, VolumeX, Sun, Moon
 } from 'lucide-react';
 import { acceptDeliveryAction, completeOrderAction } from '@/app/admin/orders/actions';
 
@@ -91,7 +91,7 @@ function useElapsedTimer(startTime: string | null): string {
 }
 
 // ─── Live Delivery Timer Component ───────────────────────────────────────
-function DeliveryTimer({ dispatchedAt }: { dispatchedAt: string | null }) {
+function DeliveryTimer({ dispatchedAt, theme }: { dispatchedAt: string | null; theme: 'dark' | 'light' }) {
   const [time, setTime] = useState({ mins: 0, secs: 0 });
 
   useEffect(() => {
@@ -113,12 +113,20 @@ function DeliveryTimer({ dispatchedAt }: { dispatchedAt: string | null }) {
   const isLong = time.mins >= 45;
   const isWarning = time.mins >= 30 && time.mins < 45;
 
+  const isLight = theme === 'light';
+
+  const styleClass = (() => {
+    if (isLong) {
+      return isLight ? 'bg-red-50 text-red-700 ring-1 ring-red-200' : 'bg-red-500/15 text-red-400 ring-1 ring-red-500/30';
+    }
+    if (isWarning) {
+      return isLight ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' : 'bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/30';
+    }
+    return isLight ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' : 'bg-blue-500/15 text-blue-300 ring-1 ring-blue-500/30';
+  })();
+
   return (
-    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-mono text-sm font-bold tabular-nums ${
-      isLong ? 'bg-red-500/15 text-red-400 ring-1 ring-red-500/30' :
-      isWarning ? 'bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/30' :
-      'bg-blue-500/15 text-blue-300 ring-1 ring-blue-500/30'
-    }`}>
+    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-mono text-sm font-bold tabular-nums ${styleClass}`}>
       <Timer className="w-3.5 h-3.5" />
       <span>{String(time.mins).padStart(2, '0')}:{String(time.secs).padStart(2, '0')}</span>
     </div>
@@ -160,6 +168,7 @@ function getFullAddress(order: DeliveryOrder) {
   return parts.join(', ') || 'No address';
 }
 
+// Opens native maps directions query directly
 function getGoogleMapsUrl(order: DeliveryOrder) {
   const address = getFullAddress(order);
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}&travelmode=driving`;
@@ -182,7 +191,8 @@ function DeliveryCard({
   isNew,
   onAccept,
   onDeliver,
-  t
+  t,
+  theme
 }: {
   order: DeliveryOrder;
   column: 'ready' | 'transit' | 'delivered';
@@ -191,31 +201,39 @@ function DeliveryCard({
   onAccept: (id: string) => void;
   onDeliver: (id: string, paymentReceived: boolean) => void;
   t: any;
+  theme: 'dark' | 'light';
 }) {
   const [paymentChecked, setPaymentChecked] = useState(false);
   const isCOD = order.payment_method === 'cash' && order.payment_status !== 'paid';
   const fullAddress = getFullAddress(order);
   const distance = formatDistance(order.delivery_distance_car_meters);
   const driveTime = formatDriveTime(order.delivery_duration_car_seconds);
+  const isLight = theme === 'light';
 
-  // Card theme per column
+  // Theme styles based on current selected theme
   const cardStyles = {
-    ready: 'border-l-4 border-l-amber-500 bg-[#0D1225]/90 hover:bg-[#111838]/90',
-    transit: 'border-l-4 border-l-blue-500 bg-[#0D1225]/90 hover:bg-[#111838]/90',
-    delivered: 'border-l-4 border-l-emerald-500 bg-[#0D1225]/60',
+    ready: isLight
+      ? 'border-l-4 border-l-amber-500 bg-white hover:bg-slate-50/85 border-slate-200 text-slate-800'
+      : 'border-l-4 border-l-amber-500 bg-[#0D1225]/90 hover:bg-[#111838]/90 border-white/[0.06] text-white',
+    transit: isLight
+      ? 'border-l-4 border-l-blue-500 bg-white hover:bg-slate-50/85 border-slate-200 text-slate-800'
+      : 'border-l-4 border-l-blue-500 bg-[#0D1225]/90 hover:bg-[#111838]/90 border-white/[0.06] text-white',
+    delivered: isLight
+      ? 'border-l-4 border-l-emerald-500 bg-white/70 border-slate-200 text-slate-600'
+      : 'border-l-4 border-l-emerald-500 bg-[#0D1225]/60 border-white/[0.06] text-white/90',
   };
 
   return (
-    <div className={`rounded-xl border border-white/[0.06] shadow-lg backdrop-blur-sm transition-all duration-300 ${cardStyles[column]} ${
+    <div className={`rounded-xl shadow-md backdrop-blur-sm transition-all duration-300 ${cardStyles[column]} ${
       isNew ? 'ring-2 ring-amber-400/60 shadow-[0_0_20px_rgba(251,191,36,0.15)] animate-pulse-once' : ''
     }`}>
       {/* Card Header */}
       <div className="flex items-center justify-between px-4 pt-3.5 pb-2">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-mono font-bold text-white/90">{getOrderRef(order.id)}</span>
-          {column === 'transit' && <DeliveryTimer dispatchedAt={order.dispatched_at} />}
+          <span className={`text-sm font-mono font-bold ${isLight ? 'text-slate-850' : 'text-white/90'}`}>{getOrderRef(order.id)}</span>
+          {column === 'transit' && <DeliveryTimer dispatchedAt={order.dispatched_at} theme={theme} />}
         </div>
-        <span className="text-[11px] text-white/40 font-medium tabular-nums">
+        <span className={`text-[11px] font-medium tabular-nums ${isLight ? 'text-slate-400' : 'text-white/40'}`}>
           {formatTime(order.created_at)}
         </span>
       </div>
@@ -226,13 +244,17 @@ function DeliveryCard({
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <User className="w-3.5 h-3.5 text-white/30" />
-              <span className="text-sm font-semibold text-white/90">{order.customer_name}</span>
+              <User className={`w-3.5 h-3.5 ${isLight ? 'text-slate-400' : 'text-white/30'}`} />
+              <span className={`text-sm font-semibold ${isLight ? 'text-slate-855' : 'text-white/90'}`}>{order.customer_name}</span>
             </div>
             {order.customer_phone && (
               <a
                 href={`tel:${order.customer_phone}`}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 transition-colors text-xs font-semibold active:scale-95"
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold active:scale-95 transition-colors ${
+                  isLight 
+                    ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100/70 border border-emerald-250/30'
+                    : 'bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25'
+                }`}
                 aria-label={`${t('actions.call')} ${order.customer_name}`}
               >
                 <Phone className="w-3 h-3" />
@@ -247,46 +269,66 @@ function DeliveryCard({
             href={getGoogleMapsUrl(order)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-start gap-2 group p-2 -mx-2 rounded-lg hover:bg-white/[0.04] transition-colors"
+            className={`flex items-start gap-2 group p-2 -mx-2 rounded-lg transition-colors ${
+              isLight ? 'hover:bg-slate-100/60' : 'hover:bg-white/[0.04]'
+            }`}
           >
-            <MapPin className="w-3.5 h-3.5 text-blue-400/70 mt-0.5 shrink-0" />
+            <MapPin className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${isLight ? 'text-blue-600/80' : 'text-blue-400/70'}`} />
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-white/70 group-hover:text-blue-400 transition-colors leading-relaxed break-words">
+              <p className={`text-xs leading-relaxed break-words transition-colors ${
+                isLight ? 'text-slate-600 group-hover:text-blue-700' : 'text-white/70 group-hover:text-blue-400'
+              }`}>
                 {fullAddress}
               </p>
               {(distance || driveTime) && (
                 <div className="flex items-center gap-2 mt-1">
                   {distance && (
-                    <span className="text-[10px] font-bold text-blue-400/80 bg-blue-500/10 px-1.5 py-0.5 rounded">
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                      isLight
+                        ? 'bg-blue-50 text-blue-700 border-blue-200/50'
+                        : 'bg-blue-500/10 text-blue-400/80 border-blue-500/20'
+                    }`}>
                       {distance}
                     </span>
                   )}
                   {driveTime && (
-                    <span className="text-[10px] font-bold text-blue-400/80 bg-blue-500/10 px-1.5 py-0.5 rounded">
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                      isLight
+                        ? 'bg-blue-50 text-blue-700 border-blue-200/50'
+                        : 'bg-blue-500/10 text-blue-400/80 border-blue-500/20'
+                    }`}>
                       🚗 {driveTime}
                     </span>
                   )}
                 </div>
               )}
             </div>
-            <Navigation className="w-4 h-4 text-blue-400/50 group-hover:text-blue-400 transition-colors shrink-0 mt-0.5" />
+            <Navigation className={`w-4 h-4 transition-colors shrink-0 mt-0.5 ${
+              isLight ? 'text-blue-500/40 group-hover:text-blue-650' : 'text-blue-400/50 group-hover:text-blue-400'
+            }`} />
           </a>
         </div>
 
         {/* Payment & Amount */}
-        <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+        <div className={`flex items-center justify-between py-2 px-3 rounded-lg border ${
+          isLight 
+            ? 'bg-slate-50 border-slate-150' 
+            : 'bg-white/[0.03] border-white/[0.06]'
+        }`}>
           <div className="flex items-center gap-2">
             {order.payment_method === 'cash' ? (
-              <Banknote className="w-3.5 h-3.5 text-amber-400/70" />
+              <Banknote className={`w-3.5 h-3.5 ${isLight ? 'text-amber-600/80' : 'text-amber-400/70'}`} />
             ) : (
-              <CreditCard className="w-3.5 h-3.5 text-blue-400/70" />
+              <CreditCard className={`w-3.5 h-3.5 ${isLight ? 'text-blue-600/80' : 'text-blue-400/70'}`} />
             )}
-            <span className="text-[11px] font-semibold text-white/60">
+            <span className={`text-[11px] font-semibold ${isLight ? 'text-slate-500' : 'text-white/60'}`}>
               {getPaymentLabel(order.payment_method, t)}
             </span>
           </div>
           <span className={`text-sm font-bold tabular-nums ${
-            isCOD ? 'text-amber-400' : 'text-emerald-400'
+            isCOD 
+              ? (isLight ? 'text-amber-700' : 'text-amber-400')
+              : (isLight ? 'text-emerald-700' : 'text-emerald-400')
           }`}>
             {formatCurrency(order.total_amount)}
           </span>
@@ -295,15 +337,17 @@ function DeliveryCard({
         {/* Items List */}
         {order.items.length > 0 && (
           <div className="space-y-1">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold text-white/30 uppercase tracking-wider">
+            <div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${
+              isLight ? 'text-slate-400' : 'text-white/30'
+            }`}>
               <Package className="w-3 h-3" />
               {t('card.items')} ({order.items.reduce((sum, i) => sum + i.quantity, 0)})
             </div>
             <div className="space-y-0.5">
               {order.items.map(item => (
                 <div key={item.id} className="flex items-baseline gap-2 text-xs">
-                  <span className="text-white/40 font-mono font-bold shrink-0">{item.quantity}×</span>
-                  <span className="text-white/70 break-words">{item.item_name_en || item.item_name_pl}</span>
+                  <span className={`font-mono font-bold shrink-0 ${isLight ? 'text-slate-400' : 'text-white/40'}`}>{item.quantity}×</span>
+                  <span className={`break-words ${isLight ? 'text-slate-650' : 'text-white/70'}`}>{item.item_name_en || item.item_name_pl}</span>
                 </div>
               ))}
             </div>
@@ -312,13 +356,17 @@ function DeliveryCard({
 
         {/* Notes / Allergies */}
         {order.customer_notes && (
-          <div className="text-[11px] text-amber-400/80 bg-amber-500/8 border border-amber-500/15 rounded-lg px-2.5 py-1.5 leading-relaxed">
-            <span className="font-bold text-amber-400/60">{t('card.notes')}:</span> {order.customer_notes}
+          <div className={`text-[11px] border rounded-lg px-2.5 py-1.5 leading-relaxed ${
+            isLight
+              ? 'text-amber-800 bg-amber-50/50 border-amber-250/50'
+              : 'text-amber-400/80 bg-amber-500/8 border-amber-500/15'
+          }`}>
+            <span className={`font-bold ${isLight ? 'text-amber-800/60' : 'text-amber-400/60'}`}>{t('card.notes')}:</span> {order.customer_notes}
           </div>
         )}
 
         {/* Timestamps Row */}
-        <div className="flex items-center gap-3 text-[10px] text-white/30 pt-1">
+        <div className={`flex items-center gap-3 text-[10px] pt-1 ${isLight ? 'text-slate-400' : 'text-white/30'}`}>
           {column === 'ready' && order.ready_at && (
             <span>⏰ {t('card.readyAt')} {formatTime(order.ready_at)}</span>
           )}
@@ -345,14 +393,18 @@ function DeliveryCard({
         {column === 'transit' && (
           <div className="space-y-2 mt-1">
             {isCOD && (
-              <label className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
+              <label className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-colors ${
+                isLight
+                  ? 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                  : 'bg-white/[0.04] border-white/[0.06] text-white/70 hover:bg-white/[0.06]'
+              }`}>
                 <input
                   type="checkbox"
                   checked={paymentChecked}
                   onChange={(e) => setPaymentChecked(e.target.checked)}
-                  className="w-4 h-4 rounded accent-emerald-500"
+                  className="w-4 h-4 rounded accent-emerald-600"
                 />
-                <span className="text-xs font-semibold text-white/70">
+                <span className="text-xs font-semibold">
                   {t('actions.confirmPayment')} — {formatCurrency(order.total_amount)}
                 </span>
               </label>
@@ -372,8 +424,8 @@ function DeliveryCard({
           <div className="flex items-center gap-2 mt-1">
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
               order.payment_status === 'paid'
-                ? 'bg-emerald-500/20 text-emerald-400'
-                : 'bg-amber-500/20 text-amber-400'
+                ? 'bg-emerald-500/20 text-emerald-650 dark:text-emerald-400'
+                : 'bg-amber-500/20 text-amber-750 dark:text-amber-400'
             }`}>
               {order.payment_status === 'paid' ? `✓ ${t('card.paid')}` : t('card.toCollect')}
             </span>
@@ -385,17 +437,28 @@ function DeliveryCard({
 }
 
 // ─── Stats Card Component ────────────────────────────────────────────────
-function StatCard({ label, value, icon: Icon, color }: {
+function StatCard({ label, value, icon: Icon, color, theme }: {
   label: string;
   value: string | number;
   icon: any;
   color: 'amber' | 'blue' | 'emerald' | 'slate';
+  theme: 'dark' | 'light';
 }) {
+  const isLight = theme === 'light';
+
   const colors = {
-    amber: 'from-amber-500/20 to-orange-500/10 border-amber-500/20 text-amber-400',
-    blue: 'from-blue-500/20 to-cyan-500/10 border-blue-500/20 text-blue-400',
-    emerald: 'from-emerald-500/20 to-green-500/10 border-emerald-500/20 text-emerald-400',
-    slate: 'from-slate-500/20 to-gray-500/10 border-slate-500/20 text-slate-400',
+    amber: isLight
+      ? 'from-amber-50/80 to-orange-50/40 border-amber-200/80 text-amber-800 shadow-sm'
+      : 'from-amber-500/20 to-orange-500/10 border-amber-500/20 text-amber-400',
+    blue: isLight
+      ? 'from-blue-50/80 to-cyan-50/40 border-blue-200/80 text-blue-800 shadow-sm'
+      : 'from-blue-500/20 to-cyan-500/10 border-blue-500/20 text-blue-400',
+    emerald: isLight
+      ? 'from-emerald-50/80 to-green-50/40 border-emerald-200/80 text-emerald-800 shadow-sm'
+      : 'from-emerald-500/20 to-green-500/10 border-emerald-500/20 text-emerald-400',
+    slate: isLight
+      ? 'from-slate-50/80 to-gray-50/40 border-slate-200/80 text-slate-800 shadow-sm'
+      : 'from-slate-500/20 to-gray-500/10 border-slate-500/20 text-slate-400',
   };
 
   return (
@@ -405,14 +468,13 @@ function StatCard({ label, value, icon: Icon, color }: {
           <p className="text-[10px] font-bold uppercase tracking-wider opacity-70">{label}</p>
           <p className="text-2xl font-bold font-mono mt-1 tabular-nums">{value}</p>
         </div>
-        <Icon className="w-8 h-8 opacity-20" />
+        <Icon className={`w-8 h-8 ${isLight ? 'opacity-30 text-slate-500' : 'opacity-20'}`} />
       </div>
     </div>
   );
 }
 
 // ─── Main Delivery Dispatch Board ────────────────────────────────────────
-const DELIVERY_STATUSES = ['ready_for_pickup', 'out_for_delivery', 'completed'];
 const POLL_INTERVAL = 15000; // 15 second fallback
 
 export default function DeliveryDispatchBoard({
@@ -428,11 +490,22 @@ export default function DeliveryDispatchBoard({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [mobileTab, setMobileTab] = useState<'ready' | 'transit' | 'delivered'>('ready');
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   // Track new order arrivals for highlight animation
   const knownOrderIdsRef = useRef<Set<string>>(new Set(initialOrders.map(o => o.id)));
   const [newOrderIds, setNewOrderIds] = useState<Set<string>>(new Set());
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Initialize theme from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedTheme = localStorage.getItem('delivery_theme') as 'dark' | 'light';
+      if (storedTheme) {
+        setTheme(storedTheme);
+      }
+    }
+  }, []);
 
   // Initialize audio for new order alerts
   useEffect(() => {
@@ -441,6 +514,17 @@ export default function DeliveryDispatchBoard({
       audioRef.current.volume = 0.6;
     }
   }, []);
+
+  // Toggle theme handler
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('delivery_theme', next);
+      return next;
+    });
+  }, []);
+
+  const isLight = theme === 'light';
 
   // ─── Data Fetching ──────────────────────────────────────────────────
   const fetchOrders = useCallback(async () => {
@@ -621,125 +705,153 @@ export default function DeliveryDispatchBoard({
 
   // ─── Render ────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#070B1E] text-white pb-20 md:pb-6">
-      {/* ═══ Header ═══ */}
-      <div className="sticky top-0 z-40 bg-[#070B1E]/95 backdrop-blur-xl border-b border-white/[0.06] px-4 sm:px-6 py-3">
-        <div className="flex items-center justify-between max-w-[1800px] mx-auto">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/20">
-              <Truck className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">{t('title')}</h1>
-              <p className="text-[10px] text-white/40 font-medium hidden sm:block">{t('subtitle')}</p>
-            </div>
+    <div className={`min-h-screen transition-colors duration-300 pb-20 md:pb-6 -m-4 sm:-m-8 p-4 sm:p-8 ${
+      isLight ? 'bg-slate-50 text-slate-800' : 'bg-[#070B1E] text-white'
+    }`}>
+      {/* ═══ Page Header ═══ */}
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-6 border-b transition-colors duration-300 ${
+        isLight ? 'border-slate-200' : 'border-white/[0.06]'
+      }`}>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-md shadow-amber-500/20">
+            <Truck className="w-5 h-5 text-white" />
           </div>
+          <div>
+            <h1 className={`text-xl sm:text-2xl font-serif font-bold tracking-wide ${isLight ? 'text-slate-800' : 'text-white'}`}>
+              {t('title')}
+            </h1>
+            <p className={`text-xs ${isLight ? 'text-slate-400' : 'text-white/40'}`}>{t('subtitle')}</p>
+          </div>
+        </div>
 
-          <div className="flex items-center gap-3">
-            {/* Sound Toggle */}
-            <button
-              onClick={() => setSoundEnabled(!soundEnabled)}
-              className={`p-2 rounded-lg transition-colors ${
-                soundEnabled ? 'bg-emerald-500/15 text-emerald-400' : 'bg-white/[0.05] text-white/30'
-              }`}
-              aria-label="Toggle sound"
-            >
-              {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-            </button>
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className={`p-2.5 rounded-lg transition-colors border ${
+              isLight 
+                ? 'bg-white border-slate-200 text-slate-500 hover:bg-slate-100 shadow-sm' 
+                : 'bg-white/[0.04] border-white/[0.06] text-white/40 hover:bg-white/[0.08]'
+            }`}
+            aria-label={isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            title={isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+          >
+            {isLight ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4 text-amber-400" />}
+          </button>
 
-            {/* Connection Status */}
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-              isConnected
-                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                : 'border-amber-500/30 bg-amber-500/10 text-amber-400'
-            }`}>
-              {isConnected ? (
-                <>
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                  </span>
-                  {t('live')}
-                </>
-              ) : (
-                <>
-                  <WifiOff className="w-3 h-3" />
-                  {t('reconnecting')}
-                </>
-              )}
-            </div>
+          {/* Sound Toggle */}
+          <button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className={`p-2.5 rounded-lg transition-colors border ${
+              soundEnabled
+                ? (isLight ? 'bg-emerald-50 border-emerald-200/50 text-emerald-700 shadow-sm' : 'bg-emerald-500/15 border-emerald-500/20 text-emerald-400')
+                : (isLight ? 'bg-white border-slate-200 text-slate-400 hover:bg-slate-100 shadow-sm' : 'bg-white/[0.04] border-white/[0.06] text-white/30 hover:bg-white/[0.08]')
+            }`}
+            aria-label="Toggle sound"
+          >
+            {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+          </button>
 
-            {/* Last Updated */}
-            {lastUpdated && (
-              <span className="text-[10px] text-white/30 font-mono tabular-nums hidden md:block">
-                {lastUpdated.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Europe/Warsaw' })}
-              </span>
+          {/* Connection Status */}
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${
+            isConnected
+              ? (isLight ? 'border-emerald-250 bg-emerald-50 text-emerald-800' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400')
+              : (isLight ? 'border-amber-250 bg-amber-50 text-amber-850' : 'border-amber-500/30 bg-amber-500/10 text-amber-400')
+          }`}>
+            {isConnected ? (
+              <>
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+                {t('live')}
+              </>
+            ) : (
+              <>
+                <WifiOff className="w-3 h-3" />
+                {t('reconnecting')}
+              </>
             )}
           </div>
+
+          {/* Last Updated */}
+          {lastUpdated && (
+            <span className={`text-[10px] font-mono tabular-nums hidden md:block ${isLight ? 'text-slate-400' : 'text-white/30'}`}>
+              {t('lastUpdated')}: {lastUpdated.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Europe/Warsaw' })}
+            </span>
+          )}
         </div>
       </div>
 
       {/* ═══ Error Banner ═══ */}
       {errorMessage && (
-        <div className="mx-4 sm:mx-6 mt-3 max-w-[1800px] lg:mx-auto flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-500/15 border border-red-500/20 text-red-400 text-xs font-semibold">
+        <div className="mb-4 max-w-[1800px] flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-500/15 border border-red-500/20 text-red-650 dark:text-red-400 text-xs font-semibold shadow-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           {errorMessage}
-          <button onClick={() => setErrorMessage(null)} className="ml-auto text-red-400/60 hover:text-red-400">✕</button>
+          <button onClick={() => setErrorMessage(null)} className="ml-auto opacity-60 hover:opacity-100">✕</button>
         </div>
       )}
 
       {/* ═══ Stats Bar ═══ */}
-      <div className="px-4 sm:px-6 pt-4 pb-2 max-w-[1800px] mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="mb-6 max-w-[1800px]">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
           <StatCard
             label={t('stats.ready')}
             value={readyOrders.length}
             icon={Package}
             color="amber"
+            theme={theme}
           />
           <StatCard
             label={t('stats.inTransit')}
             value={transitOrders.length}
             icon={Truck}
             color="blue"
+            theme={theme}
           />
           <StatCard
             label={t('stats.deliveredToday')}
             value={deliveredOrders.length}
             icon={CheckCircle2}
             color="emerald"
+            theme={theme}
           />
           <StatCard
             label={t('stats.avgTime')}
             value={avgDeliveryTime === '—' ? '—' : `${avgDeliveryTime} ${t('stats.minutes')}`}
             icon={Clock}
             color="slate"
+            theme={theme}
           />
         </div>
       </div>
 
       {/* ═══ Desktop: 3-Column Layout ═══ */}
-      <div className="hidden md:block px-4 sm:px-6 pt-4 max-w-[1800px] mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div className="hidden md:block max-w-[1800px]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           {/* Column 1: Ready for Pickup */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 border-b-2 border-amber-500/30 pb-2">
+          <div className="space-y-4">
+            <div className={`flex items-center gap-2 border-b-2 pb-2 transition-colors duration-300 ${
+              isLight ? 'border-amber-500/20' : 'border-amber-500/30'
+            }`}>
               <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-              <h2 className="text-sm font-bold text-amber-400 uppercase tracking-widest">
+              <h2 className={`text-sm font-bold uppercase tracking-widest ${isLight ? 'text-amber-700' : 'text-amber-400'}`}>
                 {t('columns.readyForPickup')}
               </h2>
-              <span className="ml-auto bg-amber-500/15 text-amber-400 text-xs font-mono font-bold px-2 py-0.5 rounded-full">
+              <span className={`ml-auto text-xs font-mono font-bold px-2 py-0.5 rounded-full ${
+                isLight ? 'bg-amber-100 text-amber-800' : 'bg-amber-500/15 text-amber-400'
+              }`}>
                 {readyOrders.length}
               </span>
             </div>
 
             {readyOrders.length === 0 ? (
-              <div className="text-center py-16 text-white/15">
+              <div className={`text-center py-16 ${isLight ? 'text-slate-350' : 'text-white/15'}`}>
                 <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
                 <p className="text-xs font-medium">{t('empty.ready')}</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {readyOrders.map(order => (
                   <DeliveryCard
                     key={order.id}
@@ -750,6 +862,7 @@ export default function DeliveryDispatchBoard({
                     onAccept={handleAcceptDelivery}
                     onDeliver={handleMarkDelivered}
                     t={t}
+                    theme={theme}
                   />
                 ))}
               </div>
@@ -757,24 +870,28 @@ export default function DeliveryDispatchBoard({
           </div>
 
           {/* Column 2: In Transit */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 border-b-2 border-blue-500/30 pb-2">
+          <div className="space-y-4">
+            <div className={`flex items-center gap-2 border-b-2 pb-2 transition-colors duration-300 ${
+              isLight ? 'border-blue-500/20' : 'border-blue-500/30'
+            }`}>
               <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-              <h2 className="text-sm font-bold text-blue-400 uppercase tracking-widest">
+              <h2 className={`text-sm font-bold uppercase tracking-widest ${isLight ? 'text-blue-700' : 'text-blue-400'}`}>
                 {t('columns.inTransit')}
               </h2>
-              <span className="ml-auto bg-blue-500/15 text-blue-400 text-xs font-mono font-bold px-2 py-0.5 rounded-full">
+              <span className={`ml-auto text-xs font-mono font-bold px-2 py-0.5 rounded-full ${
+                isLight ? 'bg-blue-100 text-blue-800' : 'bg-blue-500/15 text-blue-400'
+              }`}>
                 {transitOrders.length}
               </span>
             </div>
 
             {transitOrders.length === 0 ? (
-              <div className="text-center py-16 text-white/15">
+              <div className={`text-center py-16 ${isLight ? 'text-slate-350' : 'text-white/15'}`}>
                 <Truck className="w-12 h-12 mx-auto mb-3 opacity-30" />
                 <p className="text-xs font-medium">{t('empty.transit')}</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {transitOrders.map(order => (
                   <DeliveryCard
                     key={order.id}
@@ -784,6 +901,7 @@ export default function DeliveryDispatchBoard({
                     onAccept={handleAcceptDelivery}
                     onDeliver={handleMarkDelivered}
                     t={t}
+                    theme={theme}
                   />
                 ))}
               </div>
@@ -791,24 +909,28 @@ export default function DeliveryDispatchBoard({
           </div>
 
           {/* Column 3: Delivered */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 border-b-2 border-emerald-500/30 pb-2">
+          <div className="space-y-4">
+            <div className={`flex items-center gap-2 border-b-2 pb-2 transition-colors duration-300 ${
+              isLight ? 'border-emerald-500/20' : 'border-emerald-500/30'
+            }`}>
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-              <h2 className="text-sm font-bold text-emerald-400 uppercase tracking-widest">
+              <h2 className={`text-sm font-bold uppercase tracking-widest ${isLight ? 'text-emerald-700' : 'text-emerald-400'}`}>
                 {t('columns.delivered')}
               </h2>
-              <span className="ml-auto bg-emerald-500/15 text-emerald-400 text-xs font-mono font-bold px-2 py-0.5 rounded-full">
+              <span className={`ml-auto text-xs font-mono font-bold px-2 py-0.5 rounded-full ${
+                isLight ? 'bg-emerald-100 text-emerald-800' : 'bg-emerald-500/15 text-emerald-400'
+              }`}>
                 {deliveredOrders.length}
               </span>
             </div>
 
             {deliveredOrders.length === 0 ? (
-              <div className="text-center py-16 text-white/15">
+              <div className={`text-center py-16 ${isLight ? 'text-slate-350' : 'text-white/15'}`}>
                 <CheckCircle2 className="w-12 h-12 mx-auto mb-3 opacity-30" />
                 <p className="text-xs font-medium">{t('empty.delivered')}</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {deliveredOrders.map(order => (
                   <DeliveryCard
                     key={order.id}
@@ -818,6 +940,7 @@ export default function DeliveryDispatchBoard({
                     onAccept={handleAcceptDelivery}
                     onDeliver={handleMarkDelivered}
                     t={t}
+                    theme={theme}
                   />
                 ))}
               </div>
@@ -827,22 +950,24 @@ export default function DeliveryDispatchBoard({
       </div>
 
       {/* ═══ Mobile: Tabbed Single-Column Layout ═══ */}
-      <div className="md:hidden px-4 pt-4">
+      <div className="md:hidden">
         {/* Active Tab Content */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           {mobileTab === 'ready' && (
             <>
-              <div className="flex items-center gap-2 border-b-2 border-amber-500/30 pb-2">
+              <div className={`flex items-center gap-2 border-b pb-2 ${isLight ? 'border-amber-500/25' : 'border-amber-500/30'}`}>
                 <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                <h2 className="text-sm font-bold text-amber-400 uppercase tracking-widest">
+                <h2 className={`text-sm font-bold uppercase tracking-widest ${isLight ? 'text-amber-700' : 'text-amber-400'}`}>
                   {t('columns.readyForPickup')}
                 </h2>
-                <span className="ml-auto bg-amber-500/15 text-amber-400 text-xs font-mono font-bold px-2 py-0.5 rounded-full">
+                <span className={`ml-auto text-xs font-mono font-bold px-2 py-0.5 rounded-full ${
+                  isLight ? 'bg-amber-100 text-amber-800' : 'bg-amber-50/15 text-amber-400'
+                }`}>
                   {readyOrders.length}
                 </span>
               </div>
               {readyOrders.length === 0 ? (
-                <div className="text-center py-16 text-white/15">
+                <div className={`text-center py-16 ${isLight ? 'text-slate-350' : 'text-white/15'}`}>
                   <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
                   <p className="text-xs font-medium">{t('empty.ready')}</p>
                 </div>
@@ -857,6 +982,7 @@ export default function DeliveryDispatchBoard({
                     onAccept={handleAcceptDelivery}
                     onDeliver={handleMarkDelivered}
                     t={t}
+                    theme={theme}
                   />
                 ))
               )}
@@ -865,17 +991,19 @@ export default function DeliveryDispatchBoard({
 
           {mobileTab === 'transit' && (
             <>
-              <div className="flex items-center gap-2 border-b-2 border-blue-500/30 pb-2">
+              <div className={`flex items-center gap-2 border-b pb-2 ${isLight ? 'border-blue-500/25' : 'border-blue-500/30'}`}>
                 <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                <h2 className="text-sm font-bold text-blue-400 uppercase tracking-widest">
+                <h2 className={`text-sm font-bold uppercase tracking-widest ${isLight ? 'text-blue-700' : 'text-blue-400'}`}>
                   {t('columns.inTransit')}
                 </h2>
-                <span className="ml-auto bg-blue-500/15 text-blue-400 text-xs font-mono font-bold px-2 py-0.5 rounded-full">
+                <span className={`ml-auto text-xs font-mono font-bold px-2 py-0.5 rounded-full ${
+                  isLight ? 'bg-blue-100 text-blue-800' : 'bg-blue-50/15 text-blue-400'
+                }`}>
                   {transitOrders.length}
                 </span>
               </div>
               {transitOrders.length === 0 ? (
-                <div className="text-center py-16 text-white/15">
+                <div className={`text-center py-16 ${isLight ? 'text-slate-350' : 'text-white/15'}`}>
                   <Truck className="w-12 h-12 mx-auto mb-3 opacity-30" />
                   <p className="text-xs font-medium">{t('empty.transit')}</p>
                 </div>
@@ -889,6 +1017,7 @@ export default function DeliveryDispatchBoard({
                     onAccept={handleAcceptDelivery}
                     onDeliver={handleMarkDelivered}
                     t={t}
+                    theme={theme}
                   />
                 ))
               )}
@@ -897,17 +1026,19 @@ export default function DeliveryDispatchBoard({
 
           {mobileTab === 'delivered' && (
             <>
-              <div className="flex items-center gap-2 border-b-2 border-emerald-500/30 pb-2">
+              <div className={`flex items-center gap-2 border-b pb-2 ${isLight ? 'border-emerald-500/25' : 'border-emerald-500/30'}`}>
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                <h2 className="text-sm font-bold text-emerald-400 uppercase tracking-widest">
+                <h2 className={`text-sm font-bold uppercase tracking-widest ${isLight ? 'text-emerald-700' : 'text-emerald-400'}`}>
                   {t('columns.delivered')}
                 </h2>
-                <span className="ml-auto bg-emerald-500/15 text-emerald-400 text-xs font-mono font-bold px-2 py-0.5 rounded-full">
+                <span className={`ml-auto text-xs font-mono font-bold px-2 py-0.5 rounded-full ${
+                  isLight ? 'bg-emerald-100 text-emerald-800' : 'bg-emerald-50/15 text-emerald-400'
+                }`}>
                   {deliveredOrders.length}
                 </span>
               </div>
               {deliveredOrders.length === 0 ? (
-                <div className="text-center py-16 text-white/15">
+                <div className={`text-center py-16 ${isLight ? 'text-slate-350' : 'text-white/15'}`}>
                   <CheckCircle2 className="w-12 h-12 mx-auto mb-3 opacity-30" />
                   <p className="text-xs font-medium">{t('empty.delivered')}</p>
                 </div>
@@ -921,6 +1052,7 @@ export default function DeliveryDispatchBoard({
                     onAccept={handleAcceptDelivery}
                     onDeliver={handleMarkDelivered}
                     t={t}
+                    theme={theme}
                   />
                 ))
               )}
@@ -930,18 +1062,22 @@ export default function DeliveryDispatchBoard({
       </div>
 
       {/* ═══ Mobile Bottom Navigation ═══ */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0A0F24]/95 backdrop-blur-xl border-t border-white/[0.06] safe-area-bottom">
+      <div className={`md:hidden fixed bottom-0 left-0 right-0 z-50 border-t safe-area-bottom backdrop-blur-xl ${
+        isLight ? 'bg-white/95 border-slate-200' : 'bg-[#0A0F24]/95 border-white/[0.06]'
+      }`}>
         <div className="grid grid-cols-3 gap-0">
           <button
             onClick={() => setMobileTab('ready')}
             className={`flex flex-col items-center gap-1 py-3 transition-colors relative ${
-              mobileTab === 'ready' ? 'text-amber-400' : 'text-white/30 hover:text-white/50'
+              mobileTab === 'ready' 
+                ? 'text-amber-500 font-bold' 
+                : (isLight ? 'text-slate-400 hover:text-slate-600' : 'text-white/30 hover:text-white/50')
             }`}
           >
             <Package className="w-5 h-5" />
             <span className="text-[10px] font-bold uppercase tracking-wider">{t('mobile.ready')}</span>
             {readyOrders.length > 0 && (
-              <span className="absolute top-1.5 right-1/4 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 text-[9px] font-black text-white px-1 shadow-lg shadow-amber-500/30">
+              <span className="absolute top-1.5 right-1/4 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 text-[9px] font-black text-white px-1 shadow-md shadow-amber-500/30">
                 {readyOrders.length}
               </span>
             )}
@@ -949,13 +1085,15 @@ export default function DeliveryDispatchBoard({
           <button
             onClick={() => setMobileTab('transit')}
             className={`flex flex-col items-center gap-1 py-3 transition-colors relative ${
-              mobileTab === 'transit' ? 'text-blue-400' : 'text-white/30 hover:text-white/50'
+              mobileTab === 'transit' 
+                ? 'text-blue-500 font-bold' 
+                : (isLight ? 'text-slate-400 hover:text-slate-600' : 'text-white/30 hover:text-white/50')
             }`}
           >
             <Truck className="w-5 h-5" />
             <span className="text-[10px] font-bold uppercase tracking-wider">{t('mobile.transit')}</span>
             {transitOrders.length > 0 && (
-              <span className="absolute top-1.5 right-1/4 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500 text-[9px] font-black text-white px-1 shadow-lg shadow-blue-500/30">
+              <span className="absolute top-1.5 right-1/4 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500 text-[9px] font-black text-white px-1 shadow-md shadow-blue-500/30">
                 {transitOrders.length}
               </span>
             )}
@@ -963,13 +1101,15 @@ export default function DeliveryDispatchBoard({
           <button
             onClick={() => setMobileTab('delivered')}
             className={`flex flex-col items-center gap-1 py-3 transition-colors relative ${
-              mobileTab === 'delivered' ? 'text-emerald-400' : 'text-white/30 hover:text-white/50'
+              mobileTab === 'delivered' 
+                ? 'text-emerald-500 font-bold' 
+                : (isLight ? 'text-slate-400 hover:text-slate-600' : 'text-white/30 hover:text-white/50')
             }`}
           >
             <CheckCircle2 className="w-5 h-5" />
             <span className="text-[10px] font-bold uppercase tracking-wider">{t('mobile.delivered')}</span>
             {deliveredOrders.length > 0 && (
-              <span className="absolute top-1.5 right-1/4 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 text-[9px] font-black text-white px-1 shadow-lg shadow-emerald-500/30">
+              <span className="absolute top-1.5 right-1/4 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 text-[9px] font-black text-white px-1 shadow-md shadow-emerald-500/30">
                 {deliveredOrders.length}
               </span>
             )}
