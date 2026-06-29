@@ -581,6 +581,7 @@
       "reservations": "Siatka Rezerwacji",
       "kds": "Ekran Kuchenny (KDS)",
       "delivery": "Dostawy",
+      "inquiries": "Wiadomości od Klientów",
       "menu": "CMS Menu i Kategorii",
       "settings": "Ustawienia",
       "users": "Użytkownicy i Role",
@@ -784,6 +785,43 @@
       "via": "przez",
       "selectedSubtitle": "Zoptymalizowana kolejność dla wybranych przystanków",
       "clearSelection": "Wyczyść wybór"
+    }
+  },
+  "adminInquiries": {
+    "title": "Zapytania Klientów",
+    "subtitle": "Czytaj, zarządzaj i odpowiadaj na wiadomości z formularza kontaktowego w czasie rzeczywistym",
+    "searchPlaceholder": "Szukaj po nazwisku, e-mailu, temacie, treści...",
+    "emptyState": "Brak wiadomości spełniających kryteria wyszukiwania.",
+    "metrics": {
+      "new": "Nowe wiadomości",
+      "replied": "Odpowiedziane",
+      "archived": "Zarchiwizowane",
+      "total": "Suma zapytań"
+    },
+    "filters": {
+      "new": "Nowe",
+      "read": "Przeczytane",
+      "replied": "Odpowiedziane",
+      "archived": "Zarchiwizowane",
+      "all": "Wszystkie wiadomości"
+    },
+    "table": {
+      "customer": "Klient",
+      "subject": "Temat",
+      "message": "Podgląd wiadomości",
+      "status": "Status",
+      "date": "Wysłano o",
+      "actions": "Opcje"
+    },
+    "modal": {
+      "detailsTitle": "Szczegóły wiadomości",
+      "replyTitle": "Odpowiedz klientowi"
+    },
+    "notifications": {
+      "archivedSuccess": "Wiadomość została zarchiwizowana.",
+      "archiveFailed": "Nie udało się zarchiwizować wiadomości.",
+      "replySentSuccess": "Odpowiedź została wysłana na e-mail klienta.",
+      "replyFailed": "Nie udało się wysłać odpowiedzi."
     }
   }
 }

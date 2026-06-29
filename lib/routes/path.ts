@@ -44,5 +44,6 @@ export const ROUTES = {
     kds: '/admin/kds',
     delivery: '/admin/delivery',
     orderSummary: '/admin/order-summary',
+    inquiries: '/admin/inquiries',
   }
 } as const;

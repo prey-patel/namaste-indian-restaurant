@@ -581,6 +581,7 @@
       "reservations": "Reservations Grid",
       "kds": "Kitchen Display (KDS)",
       "delivery": "Delivery Dispatch",
+      "inquiries": "Customer Inquiries",
       "menu": "Menu & Category CMS",
       "settings": "Settings",
       "users": "Users & Roles",
@@ -784,6 +785,43 @@
       "via": "via",
       "selectedSubtitle": "Optimized sequence for selected stops",
       "clearSelection": "Clear selection"
+    }
+  },
+  "adminInquiries": {
+    "title": "Customer Inquiries",
+    "subtitle": "Read, manage, and reply to customer contact form messages in real-time",
+    "searchPlaceholder": "Search by name, email, subject, message...",
+    "emptyState": "No contact inquiries found matching the filters.",
+    "metrics": {
+      "new": "New Messages",
+      "replied": "Replied",
+      "archived": "Archived",
+      "total": "Total Inquiries"
+    },
+    "filters": {
+      "new": "New",
+      "read": "Read",
+      "replied": "Replied",
+      "archived": "Archived",
+      "all": "All Inquiries"
+    },
+    "table": {
+      "customer": "Customer",
+      "subject": "Subject",
+      "message": "Message Preview",
+      "status": "Status",
+      "date": "Submitted At",
+      "actions": "Actions"
+    },
+    "modal": {
+      "detailsTitle": "Inquiry Details",
+      "replyTitle": "Reply to Customer"
+    },
+    "notifications": {
+      "archivedSuccess": "Inquiry archived successfully.",
+      "archiveFailed": "Failed to archive inquiry.",
+      "replySentSuccess": "Reply email sent to customer successfully.",
+      "replyFailed": "Failed to send reply email."
     }
   }
 }

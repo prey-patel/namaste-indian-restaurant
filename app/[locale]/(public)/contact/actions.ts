@@ -5,6 +5,8 @@ import crypto from 'crypto';
 import { contactInquirySchema } from '@/lib/validation/schemas';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isRateLimited } from '@/lib/security/rate-limit';
+import { sendEmailViaBrevo } from '@/lib/email/brevo';
+import { getPublicSystemSettings } from '@/lib/supabase/settings';
 
 /**
  * Strips HTML tags and trims whitespace from a string to sanitize it.
@@ -118,6 +120,41 @@ export async function submitContactInquiry(
     if (insertError) {
       console.error('DB Insert failed for contact inquiry:', insertError);
       return { success: false, error: 'server-error' };
+    }
+
+    // 7. Try sending notification email to admin
+    try {
+      const settings = await getPublicSystemSettings();
+      const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || settings.restaurant_email || 'namasteadmin.pl@gmail.com';
+
+      const emailSubject = `🔔 New Contact Message: ${sanitizedSubject}`;
+      const emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 12px; background-color: #fafafa;">
+          <h2 style="color: #d4af37; border-bottom: 2px solid #d4af37; padding-bottom: 10px; margin-top: 0;">New Contact Form Submission</h2>
+          <p style="margin: 15px 0;"><strong>Name:</strong> ${sanitizedName}</p>
+          <p style="margin: 15px 0;"><strong>Email:</strong> <a href="mailto:${validatedData.email}" style="color: #3b82f6; text-decoration: none;">${validatedData.email}</a></p>
+          <p style="margin: 15px 0;"><strong>Phone:</strong> ${validatedData.phone ? `<a href="tel:${validatedData.phone}" style="color: #3b82f6; text-decoration: none;">${validatedData.phone}</a>` : 'N/A'}</p>
+          <p style="margin: 15px 0;"><strong>Subject:</strong> ${sanitizedSubject}</p>
+          <p style="margin: 15px 0; font-weight: bold; color: #555;">Message:</p>
+          <blockquote style="background: #ffffff; padding: 15px; border-left: 4px solid #d4af37; margin: 10px 0; border-radius: 4px; line-height: 1.6; color: #333; font-style: italic;">
+            ${sanitizedMessage.replace(/\n/g, '<br />')}
+          </blockquote>
+          <div style="margin-top: 25px; text-align: center;">
+            <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/admin/inquiries" style="display: inline-block; padding: 12px 24px; background-color: #d4af37; color: #040815; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px;">
+              View and Reply in Dashboard
+            </a>
+          </div>
+        </div>
+      `;
+
+      await sendEmailViaBrevo({
+        toEmail: adminEmail,
+        subject: emailSubject,
+        htmlContent: emailHtml,
+        toName: 'Restaurant Admin'
+      });
+    } catch (emailErr) {
+      console.error('Failed to send admin contact notification email:', emailErr);
     }
 
     return { success: true };

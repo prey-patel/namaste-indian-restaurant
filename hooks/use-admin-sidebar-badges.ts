@@ -14,10 +14,12 @@ export function useAdminSidebarBadges() {
   const [kdsCount, setKdsCount] = useState<number>(0);
   const [reservationsCount, setReservationsCount] = useState<number>(0);
   const [deliveryCount, setDeliveryCount] = useState<number>(0);
+  const [inquiriesCount, setInquiriesCount] = useState<number>(0);
 
   const channelStatusRef = useRef<string>('INITIAL');
   const ordersDebounceRef = useRef<NodeJS.Timeout | null>(null);
   const reservationsDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const inquiriesDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const supabase = createClient();
 
@@ -134,6 +136,21 @@ export function useAdminSidebarBadges() {
     }
   }, [supabase]);
 
+  const fetchInquiriesCount = useCallback(async () => {
+    try {
+      const { count, error } = await supabase
+        .from('contact_inquiries')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'new');
+
+      if (!error && count !== null) {
+        setInquiriesCount(count);
+      }
+    } catch (err) {
+      console.error('[Sidebar Badges] Error fetching inquiries count:', err);
+    }
+  }, [supabase]);
+
   // 3. Debounced Refetch triggers
   const triggerOrdersRefetch = useCallback(() => {
     if (ordersDebounceRef.current) clearTimeout(ordersDebounceRef.current);
@@ -159,6 +176,15 @@ export function useAdminSidebarBadges() {
     }, 300);
   }, [role, fetchReservationsCount]);
 
+  const triggerInquiriesRefetch = useCallback(() => {
+    if (inquiriesDebounceRef.current) clearTimeout(inquiriesDebounceRef.current);
+    inquiriesDebounceRef.current = setTimeout(() => {
+      if (role === 'owner' || role === 'manager') {
+        fetchInquiriesCount();
+      }
+    }, 300);
+  }, [role, fetchInquiriesCount]);
+
   // 4. Set up Realtime listener & Polling fallback
   useEffect(() => {
     if (loading || !isActive || !role) return;
@@ -169,6 +195,7 @@ export function useAdminSidebarBadges() {
       fetchKdsCount();
       fetchReservationsCount();
       fetchDeliveryCount();
+      fetchInquiriesCount();
     } else if (role === 'kitchen') {
       fetchKdsCount();
     } else if (role === 'staff') {
@@ -202,6 +229,18 @@ export function useAdminSidebarBadges() {
       );
     }
 
+    const canSeeInquiries = ['owner', 'manager'].includes(role);
+    if (canSeeInquiries) {
+      channel.on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'contact_inquiries' },
+        (payload) => {
+          console.log('[Sidebar Badges Realtime] contact_inquiries change detected:', payload.eventType);
+          triggerInquiriesRefetch();
+        }
+      );
+    }
+
     channel.subscribe((status) => {
       console.log('[Sidebar Badges Realtime] Channel status update:', status);
       channelStatusRef.current = status;
@@ -216,6 +255,7 @@ export function useAdminSidebarBadges() {
           fetchKdsCount();
           fetchReservationsCount();
           fetchDeliveryCount();
+          fetchInquiriesCount();
         } else if (role === 'kitchen') {
           fetchKdsCount();
         } else if (role === 'staff') {
@@ -227,6 +267,7 @@ export function useAdminSidebarBadges() {
     return () => {
       if (ordersDebounceRef.current) clearTimeout(ordersDebounceRef.current);
       if (reservationsDebounceRef.current) clearTimeout(reservationsDebounceRef.current);
+      if (inquiriesDebounceRef.current) clearTimeout(inquiriesDebounceRef.current);
       clearInterval(interval);
       supabase.removeChannel(channel);
     };
@@ -238,8 +279,10 @@ export function useAdminSidebarBadges() {
     fetchKdsCount,
     fetchDeliveryCount,
     fetchReservationsCount,
+    fetchInquiriesCount,
     triggerOrdersRefetch,
-    triggerReservationsRefetch
+    triggerReservationsRefetch,
+    triggerInquiriesRefetch
   ]);
 
   return {
@@ -247,6 +290,7 @@ export function useAdminSidebarBadges() {
     kdsCount: ['owner', 'manager', 'kitchen'].includes(role || '') ? kdsCount : 0,
     reservationsCount: (role === 'owner' || role === 'manager') ? reservationsCount : 0,
     deliveryCount: ['owner', 'manager', 'staff'].includes(role || '') ? deliveryCount : 0,
+    inquiriesCount: (role === 'owner' || role === 'manager') ? inquiriesCount : 0,
     role,
     loading
   };
