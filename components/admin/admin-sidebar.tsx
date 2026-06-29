@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ROUTES } from '@/lib/routes/path';
-import { LayoutDashboard, ShoppingCart, CalendarDays, ChefHat, BookOpen, Settings, Users, BarChart3, Activity, ClipboardList, Truck } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, CalendarDays, ChefHat, BookOpen, Settings, Users, BarChart3, Activity, ClipboardList } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useAdminSidebarBadges } from '@/hooks/use-admin-sidebar-badges';
 
@@ -29,7 +29,6 @@ export default function AdminSidebar({ isOpen = false, onClose }: AdminSidebarPr
   const operationsItems = [
     { href: ROUTES.admin.dashboard, key: 'dashboard', icon: LayoutDashboard },
     { href: ROUTES.admin.orders, key: 'orders', icon: ShoppingCart },
-    { href: ROUTES.admin.delivery, key: 'delivery', icon: Truck },
     { href: ROUTES.admin.orderSummary, key: 'orderSummary', icon: ClipboardList },
     { href: ROUTES.admin.reservations, key: 'reservations', icon: CalendarDays },
     { href: ROUTES.admin.kds, key: 'kds', icon: ChefHat },

@@ -577,7 +577,6 @@
     "links": {
       "dashboard": "Dashboard Overview",
       "orders": "Orders Approval",
-      "delivery": "Delivery Dashboard",
       "orderSummary": "Order Summary",
       "reservations": "Reservations Grid",
       "kds": "Kitchen Display (KDS)",
@@ -597,37 +596,6 @@
     "statusConnected": "Live Connected",
     "roleOwner": "Owner",
     "logoutButton": "Logout"
-  },
-  "deliveryDashboard": {
-    "title": "Delivery & Logistics",
-    "subtitle": "Track ready orders, route navigation, and delivery statuses.",
-    "columns": {
-      "customer": "Customer",
-      "type": "Type",
-      "payment": "Payment",
-      "total": "Total",
-      "status": "Status",
-      "eta": "ETA",
-      "actions": "Actions",
-      "address": "Delivery Address"
-    },
-    "buttons": {
-      "readyForPickup": "Ready for Pickup",
-      "startDelivery": "Start Delivery",
-      "completeDelivery": "Complete Delivery",
-      "mapRoute": "Map Route",
-      "openInGoogleMaps": "Open in Google Maps",
-      "refresh": "Refresh",
-      "toggleFullscreen": "Toggle Fullscreen",
-      "backToRestaurant": "Back to Restaurant"
-    },
-    "messages": {
-      "noDeliveryOrders": "No orders currently out for delivery or ready for pickup.",
-      "connected": "Live Connected",
-      "disconnected": "Connection Lost",
-      "loading": "Loading delivery orders...",
-      "updating": "Updating..."
-    }
   },
   "adminDashboard": {
     "title": "Dashboard Overview",

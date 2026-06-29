@@ -577,7 +577,6 @@
     "links": {
       "dashboard": "Dashboard Overview",
       "orders": "Zatwierdzanie Zamówień",
-      "delivery": "Panel Dostaw",
       "orderSummary": "Podsumowanie Zamówień",
       "reservations": "Siatka Rezerwacji",
       "kds": "Ekran Kuchenny (KDS)",
@@ -597,37 +596,6 @@
     "statusConnected": "Połączono / Live Connected",
     "roleOwner": "Właściciel",
     "logoutButton": "Wyloguj"
-  },
-  "deliveryDashboard": {
-    "title": "Dostawy i Logistyka",
-    "subtitle": "Śledź gotowe zamówienia, nawigację tras i statusy dostaw.",
-    "columns": {
-      "customer": "Klient",
-      "type": "Typ",
-      "payment": "Płatność",
-      "total": "Suma",
-      "status": "Status",
-      "eta": "ETA",
-      "actions": "Akcje",
-      "address": "Adres dostawy"
-    },
-    "buttons": {
-      "readyForPickup": "Gotowe do odbioru",
-      "startDelivery": "Rozpocznij dostawę",
-      "completeDelivery": "Zakończ dostawę",
-      "mapRoute": "Pokaż trasę",
-      "openInGoogleMaps": "Otwórz w Mapach Google",
-      "refresh": "Odśwież",
-      "toggleFullscreen": "Pełny ekran",
-      "backToRestaurant": "Powrót do restauracji"
-    },
-    "messages": {
-      "noDeliveryOrders": "Brak zamówień w trakcie dostawy lub gotowych do odbioru.",
-      "connected": "Połączono",
-      "disconnected": "Utracono połączenie",
-      "loading": "Ładowanie zamówień dostawy...",
-      "updating": "Aktualizacja..."
-    }
   },
   "adminDashboard": {
     "title": "Przegląd Dashboard",

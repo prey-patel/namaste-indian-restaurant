@@ -43,40 +43,6 @@ async function validateAdminAccess() {
 }
 
 /**
- * Checks if the current request is authenticated and has owner, manager, or staff roles.
- */
-async function validateStaffAccess() {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    throw new Error('Unauthorized: Unauthenticated user');
-  }
-
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('role, is_active')
-    .eq('id', user.id)
-    .single();
-
-  if (profileError || !profile) {
-    throw new Error('Unauthorized: Profile not found');
-  }
-
-  if (!profile.is_active) {
-    throw new Error('Unauthorized: Account is inactive');
-  }
-
-  const allowedRoles = ['owner', 'manager', 'staff'];
-  if (!allowedRoles.includes(profile.role)) {
-    throw new Error('Unauthorized: Insufficient permissions');
-  }
-
-  return user.id;
-}
-
-
-/**
  * Helper to fetch an order by ID.
  */
 async function getOrder(supabase: any, id: string) {
@@ -246,7 +212,7 @@ export async function cancelOrderAction(id: string, reason?: string | null) {
 
 export async function markOrderReadyAction(id: string) {
   try {
-    await validateStaffAccess();
+    await validateAdminAccess();
     const supabase = await createClient();
 
     const order = await getOrder(supabase, id);
@@ -301,7 +267,7 @@ export async function markOrderReadyAction(id: string) {
 
 export async function completeOrderAction(id: string, paymentReceived: boolean) {
   try {
-    await validateStaffAccess();
+    await validateAdminAccess();
     const supabase = await createClient();
 
     const order = await getOrder(supabase, id);
@@ -393,7 +359,7 @@ export async function updateOrderEtaAction(id: string, etaMinutes: number) {
 
 export async function startPreparingOrderAction(id: string) {
   try {
-    await validateStaffAccess();
+    await validateAdminAccess();
     const supabase = await createClient();
 
     const order = await getOrder(supabase, id);

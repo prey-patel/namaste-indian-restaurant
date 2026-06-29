@@ -42,7 +42,6 @@ export const ROUTES = {
     logs: '/admin/logs',
     notifications: '/admin/notifications',
     kds: '/admin/kds',
-    delivery: '/admin/delivery',
     orderSummary: '/admin/order-summary',
   }
 } as const;
