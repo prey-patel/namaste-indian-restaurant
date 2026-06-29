@@ -1,15 +1,21 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback, useTransition } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useTransition, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import {
   Truck, Phone, MapPin, Clock, Package, CheckCircle2, Navigation,
   Wifi, WifiOff, AlertTriangle, CreditCard, Banknote, Timer,
-  Home, User, Bell, Volume2, VolumeX, Sun, Moon
+  Home, User, Bell, Volume2, VolumeX, Sun, Moon, Route
 } from 'lucide-react';
 import { acceptDeliveryAction, completeOrderAction } from '@/app/admin/orders/actions';
+import {
+  optimizeRoute,
+  formatRouteDistance,
+  type RouteBatch,
+  type Coordinate,
+} from '@/lib/delivery/route-optimizer';
 
 // ─── Types ────────────────────────────────────────────────────────────────
 type DeliveryOrderItem = {
@@ -46,6 +52,8 @@ type DeliveryOrder = {
   estimated_time: string | null;
   delivery_distance_car_meters: number | null;
   delivery_duration_car_seconds: number | null;
+  delivery_latitude: number | null;
+  delivery_longitude: number | null;
   created_at: string;
   updated_at: string;
   approved_at: string | null;
@@ -61,6 +69,7 @@ type Props = {
   userRole: string;
   userName: string;
   restaurantAddress: string;
+  restaurantCoordinates: { latitude: number; longitude: number } | null;
 };
 
 // ─── Elapsed Timer Hook ──────────────────────────────────────────────────
@@ -189,6 +198,7 @@ function DeliveryCard({
   column,
   isPending,
   isNew,
+  stopNumber,
   onAccept,
   onDeliver,
   t,
@@ -198,6 +208,7 @@ function DeliveryCard({
   column: 'ready' | 'transit' | 'delivered';
   isPending: boolean;
   isNew?: boolean;
+  stopNumber?: number;
   onAccept: (id: string) => void;
   onDeliver: (id: string, paymentReceived: boolean) => void;
   t: any;
@@ -230,6 +241,15 @@ function DeliveryCard({
       {/* Card Header */}
       <div className="flex items-center justify-between px-4 pt-3.5 pb-2">
         <div className="flex items-center gap-2">
+          {stopNumber != null && (
+            <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-black shrink-0 ${
+              isLight
+                ? 'bg-gradient-to-br from-indigo-500 to-blue-500 text-white shadow-sm shadow-indigo-500/25'
+                : 'bg-gradient-to-br from-indigo-500 to-blue-500 text-white shadow-md shadow-indigo-500/30'
+            }`}>
+              {stopNumber}
+            </span>
+          )}
           <span className={`text-sm font-mono font-bold ${isLight ? 'text-slate-850' : 'text-white/90'}`}>{getOrderRef(order.id)}</span>
           {column === 'transit' && <DeliveryTimer dispatchedAt={order.dispatched_at} theme={theme} />}
         </div>
@@ -478,7 +498,7 @@ function StatCard({ label, value, icon: Icon, color, theme }: {
 const POLL_INTERVAL = 15000; // 15 second fallback
 
 export default function DeliveryDispatchBoard({
-  initialOrders, userRole, userName, restaurantAddress
+  initialOrders, userRole, userName, restaurantAddress, restaurantCoordinates
 }: Props) {
   const router = useRouter();
   const t = useTranslations('deliveryDashboard');
@@ -544,6 +564,7 @@ export default function DeliveryDispatchBoard({
           payment_method, payment_status, token,
           estimated_time,
           delivery_distance_car_meters, delivery_duration_car_seconds,
+          delivery_latitude, delivery_longitude,
           created_at, updated_at, approved_at, preparing_at, ready_at, dispatched_at, completed_at
         `)
         .in('status', ['ready_for_pickup', 'out_for_delivery'])
@@ -564,6 +585,7 @@ export default function DeliveryDispatchBoard({
           payment_method, payment_status, token,
           estimated_time,
           delivery_distance_car_meters, delivery_duration_car_seconds,
+          delivery_latitude, delivery_longitude,
           created_at, updated_at, approved_at, preparing_at, ready_at, dispatched_at, completed_at
         `)
         .eq('status', 'completed')
@@ -703,6 +725,41 @@ export default function DeliveryDispatchBoard({
     return `${avgMin}`;
   })();
 
+  // ─── Route Optimization ─────────────────────────────────────────────
+  const routeBatches: RouteBatch[] = useMemo(() => {
+    if (!restaurantCoordinates) return [];
+    const origin: Coordinate = { lat: restaurantCoordinates.latitude, lng: restaurantCoordinates.longitude };
+    const routeOrders = readyOrders
+      .filter(o => o.delivery_latitude != null && o.delivery_longitude != null)
+      .map(o => ({
+        id: o.id,
+        lat: o.delivery_latitude!,
+        lng: o.delivery_longitude!,
+        customerName: o.customer_name,
+        address: getFullAddress(o),
+      }));
+    if (routeOrders.length < 2) return [];
+    return optimizeRoute(origin, routeOrders);
+  }, [readyOrders, restaurantCoordinates]);
+
+  // Map orderId → stop number for badge rendering
+  const stopNumberMap: Map<string, number> = useMemo(() => {
+    const map = new Map<string, number>();
+    if (routeBatches.length === 1) {
+      routeBatches[0].route.stops.forEach(s => map.set(s.order.id, s.stopNumber));
+    } else {
+      // Multi-batch: use batch prefix (e.g., 1.1, 1.2, 2.1)
+      // For simplicity, flatten with a running counter
+      let counter = 1;
+      routeBatches.forEach(batch => {
+        batch.route.stops.forEach(s => {
+          map.set(s.order.id, counter++);
+        });
+      });
+    }
+    return map;
+  }, [routeBatches]);
+
   // ─── Render ────────────────────────────────────────────────────────
   return (
     <div className={`min-h-screen transition-colors duration-300 pb-20 md:pb-6 -m-4 sm:-m-8 p-4 sm:p-8 ${
@@ -826,6 +883,119 @@ export default function DeliveryDispatchBoard({
         </div>
       </div>
 
+      {/* ═══ Smart Route Panel ═══ */}
+      {routeBatches.length > 0 && (
+        <div className={`mb-6 max-w-[1800px] ${mobileTab !== 'ready' ? 'hidden md:block' : ''}`}>
+          {routeBatches.map((batch) => (
+            <div
+              key={batch.batchNumber}
+              className={`rounded-2xl border p-4 sm:p-5 transition-colors duration-300 ${
+                routeBatches.length > 1 ? 'mb-3' : ''
+              } ${
+                isLight
+                  ? 'bg-gradient-to-r from-indigo-50/80 via-blue-50/60 to-cyan-50/40 border-indigo-200/60 shadow-sm'
+                  : 'bg-gradient-to-r from-indigo-500/[0.08] via-blue-500/[0.06] to-cyan-500/[0.04] border-indigo-500/20'
+              }`}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                    isLight
+                      ? 'bg-gradient-to-br from-indigo-500 to-blue-500 shadow-sm shadow-indigo-500/25'
+                      : 'bg-gradient-to-br from-indigo-500 to-blue-500 shadow-md shadow-indigo-500/30'
+                  }`}>
+                    <Route className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <h3 className={`text-sm font-bold ${
+                      isLight ? 'text-indigo-800' : 'text-indigo-300'
+                    }`}>
+                      {routeBatches.length > 1
+                        ? `${t('route.title')} · ${t('route.batch')} ${batch.batchNumber}`
+                        : t('route.title')
+                      }
+                    </h3>
+                    <p className={`text-[11px] ${
+                      isLight ? 'text-indigo-500/70' : 'text-indigo-400/60'
+                    }`}>
+                      {t('route.subtitle')}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Distance & Time Badges */}
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${
+                    isLight
+                      ? 'bg-indigo-100/80 text-indigo-700'
+                      : 'bg-indigo-500/15 text-indigo-300'
+                  }`}>
+                    {formatRouteDistance(batch.route.totalDistanceMeters)}
+                  </span>
+                  <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${
+                    isLight
+                      ? 'bg-blue-100/80 text-blue-700'
+                      : 'bg-blue-500/15 text-blue-300'
+                  }`}>
+                    ~{batch.route.estimatedMinutes} min
+                  </span>
+                </div>
+              </div>
+
+              {/* Route Sequence */}
+              <div className={`flex items-center gap-1.5 flex-wrap text-xs mb-4 px-1 ${
+                isLight ? 'text-indigo-700/80' : 'text-indigo-300/70'
+              }`}>
+                <span className={`inline-flex items-center gap-1 font-semibold ${
+                  isLight ? 'text-indigo-600' : 'text-indigo-400'
+                }`}>
+                  <Home className="w-3.5 h-3.5" />
+                  Restaurant
+                </span>
+                {batch.route.stops.map((stop) => (
+                  <React.Fragment key={stop.order.id}>
+                    <span className={`${isLight ? 'text-indigo-300' : 'text-indigo-500/50'}`}>→</span>
+                    <span className="inline-flex items-center gap-1">
+                      <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-black ${
+                        isLight
+                          ? 'bg-indigo-500 text-white'
+                          : 'bg-indigo-500 text-white'
+                      }`}>
+                        {stop.stopNumber}
+                      </span>
+                      <span className="font-medium truncate max-w-[120px]">
+                        {stop.order.customerName}
+                      </span>
+                      <span className={`text-[10px] font-mono ${
+                        isLight ? 'text-indigo-400/60' : 'text-indigo-500/50'
+                      }`}>
+                        ({formatRouteDistance(stop.distanceFromPrevious)})
+                      </span>
+                    </span>
+                  </React.Fragment>
+                ))}
+              </div>
+
+              {/* Start Route Button */}
+              <a
+                href={batch.route.googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`w-full flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl font-bold text-sm transition-all duration-200 active:scale-[0.97] ${
+                  isLight
+                    ? 'bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white shadow-lg shadow-indigo-500/25'
+                    : 'bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-400 hover:to-blue-400 text-white shadow-lg shadow-indigo-500/30'
+                }`}
+              >
+                <Navigation className="w-4 h-4" />
+                {t('route.startRoute')} ({batch.route.stops.length} {t('route.stops')})
+              </a>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* ═══ Desktop: 3-Column Layout ═══ */}
       <div className="hidden md:block max-w-[1800px]">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
@@ -859,6 +1029,7 @@ export default function DeliveryDispatchBoard({
                     column="ready"
                     isPending={isPending}
                     isNew={newOrderIds.has(order.id)}
+                    stopNumber={stopNumberMap.get(order.id)}
                     onAccept={handleAcceptDelivery}
                     onDeliver={handleMarkDelivered}
                     t={t}
@@ -979,6 +1150,7 @@ export default function DeliveryDispatchBoard({
                     column="ready"
                     isPending={isPending}
                     isNew={newOrderIds.has(order.id)}
+                    stopNumber={stopNumberMap.get(order.id)}
                     onAccept={handleAcceptDelivery}
                     onDeliver={handleMarkDelivered}
                     t={t}

@@ -769,6 +769,19 @@
       "transit": "W drodze",
       "delivered": "Gotowe",
       "home": "Start"
+    },
+    "route": {
+      "title": "Inteligentna Trasa",
+      "subtitle": "Zoptymalizowana kolejność dostaw",
+      "startRoute": "Rozpocznij Trasę",
+      "stops": "przystanków",
+      "stop": "Przystanek",
+      "totalDistance": "Łącznie",
+      "estimatedTime": "Szac. czas",
+      "batch": "Partia",
+      "noCoordinates": "Niektóre zamówienia nie mają danych lokalizacji",
+      "singleOrder": "Nawiguj do dostawy",
+      "via": "przez"
     }
   }
 }

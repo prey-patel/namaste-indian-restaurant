@@ -769,6 +769,19 @@
       "transit": "Transit",
       "delivered": "Done",
       "home": "Home"
+    },
+    "route": {
+      "title": "Smart Route",
+      "subtitle": "Optimized delivery sequence",
+      "startRoute": "Start Route",
+      "stops": "stops",
+      "stop": "Stop",
+      "totalDistance": "Total",
+      "estimatedTime": "Est. Time",
+      "batch": "Batch",
+      "noCoordinates": "Some orders are missing location data",
+      "singleOrder": "Navigate to delivery",
+      "via": "via"
     }
   }
 }

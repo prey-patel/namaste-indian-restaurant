@@ -54,6 +54,7 @@ export default async function DeliveryPage() {
       payment_method, payment_status, token,
       estimated_time,
       delivery_distance_car_meters, delivery_duration_car_seconds,
+      delivery_latitude, delivery_longitude,
       created_at, updated_at, approved_at, preparing_at, ready_at, dispatched_at, completed_at
     `)
     .in('status', ['ready_for_pickup', 'out_for_delivery'])
@@ -76,6 +77,7 @@ export default async function DeliveryPage() {
       payment_method, payment_status, token,
       estimated_time,
       delivery_distance_car_meters, delivery_duration_car_seconds,
+      delivery_latitude, delivery_longitude,
       created_at, updated_at, approved_at, preparing_at, ready_at, dispatched_at, completed_at
     `)
     .eq('status', 'completed')
@@ -122,9 +124,13 @@ export default async function DeliveryPage() {
   const { data: settings } = await supabase
     .from('system_settings')
     .select('key, value')
-    .in('key', ['restaurant_coordinates', 'restaurant_address']);
+    .in('key', ['coordinates', 'restaurant_address']);
 
   const restaurantAddress = settings?.find(s => s.key === 'restaurant_address')?.value || '';
+  const coordinatesData = settings?.find(s => s.key === 'coordinates')?.value;
+  const restaurantCoordinates = coordinatesData?.status === 'verified' && coordinatesData?.latitude && coordinatesData?.longitude
+    ? { latitude: Number(coordinatesData.latitude), longitude: Number(coordinatesData.longitude) }
+    : null;
 
   // 6. Assemble order data with items
   const deliveryOrders = allOrders.map(order => ({
@@ -138,6 +144,7 @@ export default async function DeliveryPage() {
       userRole={profile.role}
       userName={profile.full_name || 'Driver'}
       restaurantAddress={typeof restaurantAddress === 'string' ? restaurantAddress : ''}
+      restaurantCoordinates={restaurantCoordinates}
     />
   );
 }
