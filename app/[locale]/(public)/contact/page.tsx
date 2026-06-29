@@ -93,7 +93,12 @@ export default async function ContactPage({ params }: Props) {
                   <Phone className="w-5 h-5 text-primary animate-pulse" />
                 </div>
                 <h3 className="font-bold text-foreground uppercase tracking-widest text-xs">{locale === 'pl' ? 'Zadzwoń do nas' : 'Call Us'}</h3>
-                <p className="text-primary font-extrabold text-sm tracking-wide">{phone}</p>
+                <a
+                  href={`tel:${phone}`}
+                  className="block text-primary font-extrabold text-sm tracking-wide hover:underline hover:text-primary/80 transition-colors cursor-pointer"
+                >
+                  {phone}
+                </a>
                 <p className="text-[10px] text-muted-foreground/60 font-light font-sans">{locale === 'pl' ? 'Rezerwacje i zamówienia' : 'Reservations & orders'}</p>
               </div>
             </div>
@@ -129,7 +134,12 @@ export default async function ContactPage({ params }: Props) {
                   <Mail className="w-5 h-5 text-primary" />
                 </div>
                 <h3 className="font-bold text-foreground uppercase tracking-widest text-xs">{locale === 'pl' ? 'Napisz do nas' : 'Email Us'}</h3>
-                <p className="text-muted-foreground text-xs leading-relaxed font-light break-all">{email}</p>
+                <a
+                  href={`mailto:${email}`}
+                  className="block text-muted-foreground text-xs leading-relaxed font-light break-all hover:text-primary hover:underline transition-colors cursor-pointer"
+                >
+                  {email}
+                </a>
               </div>
             </div>
           </ThreeDTiltCard>
