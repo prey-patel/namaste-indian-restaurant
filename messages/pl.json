@@ -781,7 +781,9 @@
       "batch": "Partia",
       "noCoordinates": "Niektóre zamówienia nie mają danych lokalizacji",
       "singleOrder": "Nawiguj do dostawy",
-      "via": "przez"
+      "via": "przez",
+      "selectedSubtitle": "Zoptymalizowana kolejność dla wybranych przystanków",
+      "clearSelection": "Wyczyść wybór"
     }
   }
 }

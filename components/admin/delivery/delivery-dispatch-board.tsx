@@ -199,6 +199,8 @@ function DeliveryCard({
   isPending,
   isNew,
   stopNumber,
+  isSelected,
+  onToggleSelect,
   onAccept,
   onDeliver,
   t,
@@ -209,6 +211,8 @@ function DeliveryCard({
   isPending: boolean;
   isNew?: boolean;
   stopNumber?: number;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
   onAccept: (id: string) => void;
   onDeliver: (id: string, paymentReceived: boolean) => void;
   t: any;
@@ -235,12 +239,30 @@ function DeliveryCard({
   };
 
   return (
-    <div className={`rounded-xl shadow-md backdrop-blur-sm transition-all duration-300 ${cardStyles[column]} ${
+    <div className={`rounded-xl shadow-md backdrop-blur-sm border transition-all duration-300 ${cardStyles[column]} ${
       isNew ? 'ring-2 ring-amber-400/60 shadow-[0_0_20px_rgba(251,191,36,0.15)] animate-pulse-once' : ''
+    } ${
+      isSelected
+        ? (isLight
+            ? 'ring-2 ring-indigo-500/50 bg-indigo-50/15 border-indigo-200 shadow-lg shadow-indigo-500/5'
+            : 'ring-2 ring-indigo-500/40 bg-indigo-500/[0.04] border-indigo-500/30 shadow-lg shadow-indigo-500/10')
+        : (isLight ? 'border-slate-200' : 'border-white/[0.06]')
     }`}>
       {/* Card Header */}
       <div className="flex items-center justify-between px-4 pt-3.5 pb-2">
         <div className="flex items-center gap-2">
+          {column === 'ready' && onToggleSelect && (
+            <input
+              type="checkbox"
+              checked={!!isSelected}
+              onChange={onToggleSelect}
+              className={`w-4.5 h-4.5 rounded cursor-pointer accent-indigo-650 focus:ring-indigo-500 focus:ring-2 border transition-all duration-200 ${
+                isLight
+                  ? 'border-slate-350 bg-white text-indigo-600 focus:ring-indigo-500/40'
+                  : 'border-white/20 bg-slate-900 text-indigo-500 focus:ring-indigo-500/30'
+              }`}
+            />
+          )}
           {stopNumber != null && (
             <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-black shrink-0 ${
               isLight
@@ -511,6 +533,20 @@ export default function DeliveryDispatchBoard({
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [mobileTab, setMobileTab] = useState<'ready' | 'transit' | 'delivered'>('ready');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
+
+  // Toggle selection of a specific order
+  const handleToggleSelectOrder = useCallback((orderId: string) => {
+    setSelectedOrderIds(prev => {
+      const next = new Set(prev);
+      if (next.has(orderId)) {
+        next.delete(orderId);
+      } else {
+        next.add(orderId);
+      }
+      return next;
+    });
+  }, []);
 
   // Track new order arrivals for highlight animation
   const knownOrderIdsRef = useRef<Set<string>>(new Set(initialOrders.map(o => o.id)));
@@ -729,7 +765,13 @@ export default function DeliveryDispatchBoard({
   const routeBatches: RouteBatch[] = useMemo(() => {
     if (!restaurantCoordinates) return [];
     const origin: Coordinate = { lat: restaurantCoordinates.latitude, lng: restaurantCoordinates.longitude };
-    const routeOrders = readyOrders
+    
+    // Optimize selected orders if checked, otherwise optimize all ready orders
+    const sourceOrders = selectedOrderIds.size > 0
+      ? readyOrders.filter(o => selectedOrderIds.has(o.id))
+      : readyOrders;
+
+    const routeOrders = sourceOrders
       .filter(o => o.delivery_latitude != null && o.delivery_longitude != null)
       .map(o => ({
         id: o.id,
@@ -738,9 +780,29 @@ export default function DeliveryDispatchBoard({
         customerName: o.customer_name,
         address: getFullAddress(o),
       }));
-    if (routeOrders.length < 2) return [];
+
+    if (selectedOrderIds.size === 0 && routeOrders.length < 2) return [];
+    if (routeOrders.length === 0) return [];
+    
     return optimizeRoute(origin, routeOrders);
-  }, [readyOrders, restaurantCoordinates]);
+  }, [readyOrders, selectedOrderIds, restaurantCoordinates]);
+
+  // Synchronise selected order IDs with current ready orders
+  useEffect(() => {
+    const readyIds = new Set(readyOrders.map(o => o.id));
+    setSelectedOrderIds(prev => {
+      let changed = false;
+      const next = new Set<string>();
+      prev.forEach(id => {
+        if (readyIds.has(id)) {
+          next.add(id);
+        } else {
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [readyOrders]);
 
   // Map orderId → stop number for badge rendering
   const stopNumberMap: Map<string, number> = useMemo(() => {
@@ -919,13 +981,25 @@ export default function DeliveryDispatchBoard({
                     <p className={`text-[11px] ${
                       isLight ? 'text-indigo-500/70' : 'text-indigo-400/60'
                     }`}>
-                      {t('route.subtitle')}
+                      {selectedOrderIds.size > 0 ? t('route.selectedSubtitle') : t('route.subtitle')}
                     </p>
                   </div>
                 </div>
 
                 {/* Distance & Time Badges */}
                 <div className="flex items-center gap-2">
+                  {selectedOrderIds.size > 0 && (
+                    <button
+                      onClick={() => setSelectedOrderIds(new Set())}
+                      className={`text-[10px] font-bold px-2 py-1 rounded transition-colors mr-2 ${
+                        isLight
+                          ? 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+                          : 'bg-white/10 hover:bg-white/15 text-white/70'
+                      }`}
+                    >
+                      {t('route.clearSelection')}
+                    </button>
+                  )}
                   <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${
                     isLight
                       ? 'bg-indigo-100/80 text-indigo-700'
@@ -1030,6 +1104,8 @@ export default function DeliveryDispatchBoard({
                     isPending={isPending}
                     isNew={newOrderIds.has(order.id)}
                     stopNumber={stopNumberMap.get(order.id)}
+                    isSelected={selectedOrderIds.has(order.id)}
+                    onToggleSelect={() => handleToggleSelectOrder(order.id)}
                     onAccept={handleAcceptDelivery}
                     onDeliver={handleMarkDelivered}
                     t={t}
@@ -1151,6 +1227,8 @@ export default function DeliveryDispatchBoard({
                     isPending={isPending}
                     isNew={newOrderIds.has(order.id)}
                     stopNumber={stopNumberMap.get(order.id)}
+                    isSelected={selectedOrderIds.has(order.id)}
+                    onToggleSelect={() => handleToggleSelectOrder(order.id)}
                     onAccept={handleAcceptDelivery}
                     onDeliver={handleMarkDelivered}
                     t={t}
