@@ -13,6 +13,7 @@ export function useAdminSidebarBadges() {
   const [ordersApprovalCount, setOrdersApprovalCount] = useState<number>(0);
   const [kdsCount, setKdsCount] = useState<number>(0);
   const [reservationsCount, setReservationsCount] = useState<number>(0);
+  const [deliveryCount, setDeliveryCount] = useState<number>(0);
 
   const channelStatusRef = useRef<string>('INITIAL');
   const ordersDebounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -102,6 +103,22 @@ export function useAdminSidebarBadges() {
     }
   }, [supabase]);
 
+  const fetchDeliveryCount = useCallback(async () => {
+    try {
+      const { count, error } = await supabase
+        .from('orders')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'ready_for_pickup')
+        .eq('order_type', 'delivery');
+
+      if (!error && count !== null) {
+        setDeliveryCount(count);
+      }
+    } catch (err) {
+      console.error('[Sidebar Badges] Error fetching delivery count:', err);
+    }
+  }, [supabase]);
+
   const fetchReservationsCount = useCallback(async () => {
     try {
       const { count, error } = await supabase
@@ -124,11 +141,14 @@ export function useAdminSidebarBadges() {
       if (role === 'owner' || role === 'manager') {
         fetchOrdersApprovalCount();
         fetchKdsCount();
+        fetchDeliveryCount();
       } else if (role === 'kitchen') {
         fetchKdsCount();
+      } else if (role === 'staff') {
+        fetchDeliveryCount();
       }
     }, 300);
-  }, [role, fetchOrdersApprovalCount, fetchKdsCount]);
+  }, [role, fetchOrdersApprovalCount, fetchKdsCount, fetchDeliveryCount]);
 
   const triggerReservationsRefetch = useCallback(() => {
     if (reservationsDebounceRef.current) clearTimeout(reservationsDebounceRef.current);
@@ -148,8 +168,11 @@ export function useAdminSidebarBadges() {
       fetchOrdersApprovalCount();
       fetchKdsCount();
       fetchReservationsCount();
+      fetchDeliveryCount();
     } else if (role === 'kitchen') {
       fetchKdsCount();
+    } else if (role === 'staff') {
+      fetchDeliveryCount();
     }
 
     const channel = supabase.channel('admin-sidebar-badges-channel');
@@ -192,8 +215,11 @@ export function useAdminSidebarBadges() {
           fetchOrdersApprovalCount();
           fetchKdsCount();
           fetchReservationsCount();
+          fetchDeliveryCount();
         } else if (role === 'kitchen') {
           fetchKdsCount();
+        } else if (role === 'staff') {
+          fetchDeliveryCount();
         }
       }
     }, 20000); // 20 seconds polling fallback
@@ -210,6 +236,7 @@ export function useAdminSidebarBadges() {
     loading,
     fetchOrdersApprovalCount,
     fetchKdsCount,
+    fetchDeliveryCount,
     fetchReservationsCount,
     triggerOrdersRefetch,
     triggerReservationsRefetch
@@ -219,6 +246,7 @@ export function useAdminSidebarBadges() {
     ordersApprovalCount: (role === 'owner' || role === 'manager') ? ordersApprovalCount : 0,
     kdsCount: ['owner', 'manager', 'kitchen'].includes(role || '') ? kdsCount : 0,
     reservationsCount: (role === 'owner' || role === 'manager') ? reservationsCount : 0,
+    deliveryCount: ['owner', 'manager', 'staff'].includes(role || '') ? deliveryCount : 0,
     role,
     loading
   };

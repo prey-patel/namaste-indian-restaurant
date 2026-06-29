@@ -43,6 +43,40 @@ async function validateAdminAccess() {
 }
 
 /**
+ * Checks if the current request is authenticated and has owner, manager, or staff roles.
+ * Used for delivery-related actions that staff (delivery drivers) can perform.
+ */
+async function validateDeliveryAccess() {
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    throw new Error('Unauthorized: Unauthenticated user');
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('role, is_active')
+    .eq('id', user.id)
+    .single();
+
+  if (profileError || !profile) {
+    throw new Error('Unauthorized: Profile not found');
+  }
+
+  if (!profile.is_active) {
+    throw new Error('Unauthorized: Account is inactive');
+  }
+
+  const allowedRoles = ['owner', 'manager', 'staff'];
+  if (!allowedRoles.includes(profile.role)) {
+    throw new Error('Unauthorized: Insufficient permissions');
+  }
+
+  return user.id;
+}
+
+/**
  * Helper to fetch an order by ID.
  */
 async function getOrder(supabase: any, id: string) {
@@ -217,8 +251,9 @@ export async function markOrderReadyAction(id: string) {
 
     const order = await getOrder(supabase, id);
 
-    const targetStatus = order.order_type === 'takeaway' ? 'ready_for_pickup' : 'out_for_delivery';
-    if (order.status === targetStatus) {
+    // Both takeaway and delivery orders go to ready_for_pickup
+    // Delivery orders will be transitioned to out_for_delivery via acceptDeliveryAction
+    if (order.status === 'ready_for_pickup') {
       return { success: true };
     }
 
@@ -228,22 +263,14 @@ export async function markOrderReadyAction(id: string) {
     }
 
     const now = new Date().toISOString();
-    const updatePayload: Record<string, any> = {
-      updated_at: now
-    };
-
-    if (order.order_type === 'takeaway') {
-      updatePayload.status = 'ready_for_pickup';
-      updatePayload.ready_at = now;
-    } else {
-      // order.order_type === 'delivery'
-      updatePayload.status = 'out_for_delivery';
-      updatePayload.dispatched_at = now;
-    }
 
     const { error: updateError } = await supabase
       .from('orders')
-      .update(updatePayload)
+      .update({
+        status: 'ready_for_pickup',
+        ready_at: now,
+        updated_at: now
+      })
       .eq('id', id);
 
     if (updateError) {
@@ -257,6 +284,7 @@ export async function markOrderReadyAction(id: string) {
 
     revalidatePath('/[locale]/order/status', 'layout');
     revalidatePath('/admin/orders', 'layout');
+    revalidatePath('/admin/delivery', 'layout');
     return { success: true };
   } catch (err: any) {
     console.error('Failed to mark order ready:', err);
@@ -265,9 +293,60 @@ export async function markOrderReadyAction(id: string) {
 }
 
 
+/**
+ * Accept a delivery order for dispatch.
+ * Transition: ready_for_pickup → out_for_delivery
+ * Only for delivery order_type. Used by delivery drivers/staff.
+ */
+export async function acceptDeliveryAction(id: string) {
+  try {
+    await validateDeliveryAccess();
+    const supabase = await createClient();
+
+    const order = await getOrder(supabase, id);
+
+    if (order.status === 'out_for_delivery') {
+      return { success: true };
+    }
+
+    if (order.status !== 'ready_for_pickup') {
+      return { success: false, error: `Cannot dispatch order from status: ${order.status}. Order must be ready for pickup first.` };
+    }
+
+    if (order.order_type !== 'delivery') {
+      return { success: false, error: 'Only delivery orders can be dispatched.' };
+    }
+
+    const now = new Date().toISOString();
+
+    const { error: updateError } = await supabase
+      .from('orders')
+      .update({
+        status: 'out_for_delivery',
+        dispatched_at: now,
+        updated_at: now
+      })
+      .eq('id', id);
+
+    if (updateError) {
+      console.error('Database update failed in acceptDeliveryAction:', updateError);
+      return { success: false, error: 'Failed to dispatch order.' };
+    }
+
+    revalidatePath('/[locale]/order/status', 'layout');
+    revalidatePath('/admin/orders', 'layout');
+    revalidatePath('/admin/delivery', 'layout');
+    return { success: true };
+  } catch (err: any) {
+    console.error('Failed to accept delivery:', err);
+    return { success: false, error: err.message || 'Server error occurred.' };
+  }
+}
+
+
 export async function completeOrderAction(id: string, paymentReceived: boolean) {
   try {
-    await validateAdminAccess();
+    await validateDeliveryAccess();
     const supabase = await createClient();
 
     const order = await getOrder(supabase, id);
@@ -308,6 +387,7 @@ export async function completeOrderAction(id: string, paymentReceived: boolean) 
 
     revalidatePath('/[locale]/order/status', 'layout');
     revalidatePath('/admin/orders', 'layout');
+    revalidatePath('/admin/delivery', 'layout');
     return { success: true };
   } catch (err: any) {
     console.error('Failed to complete order:', err);

@@ -39,8 +39,8 @@ export default async function KdsPage() {
     redirect('/admin');
   }
 
-  // 3. Load kitchen-relevant orders (approved, preparing, ready_for_pickup, out_for_delivery)
-  const kitchenStatuses = ['approved', 'preparing', 'ready_for_pickup', 'out_for_delivery'];
+  // 3. Load kitchen-relevant orders (approved, preparing only - ready orders go to delivery dashboard)
+  const kitchenStatuses = ['approved', 'preparing'];
 
   const { data: orders, error: ordersError } = await supabase
     .from('orders')

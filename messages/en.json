@@ -580,6 +580,7 @@
       "orderSummary": "Order Summary",
       "reservations": "Reservations Grid",
       "kds": "Kitchen Display (KDS)",
+      "delivery": "Delivery Dispatch",
       "menu": "Menu & Category CMS",
       "settings": "Settings",
       "users": "Users & Roles",
@@ -701,5 +702,73 @@
     },
     "empty": "No images available in this category.",
     "backToHome": "Back to Home"
+  },
+  "deliveryDashboard": {
+    "title": "Delivery Dispatch",
+    "subtitle": "Track and manage delivery orders in real-time",
+    "live": "LIVE",
+    "reconnecting": "Reconnecting...",
+    "lastUpdated": "Last updated",
+    "stats": {
+      "ready": "Ready",
+      "inTransit": "In Transit",
+      "deliveredToday": "Delivered Today",
+      "avgTime": "Avg Delivery Time",
+      "minutes": "min"
+    },
+    "columns": {
+      "readyForPickup": "Ready for Pickup",
+      "inTransit": "In Transit",
+      "delivered": "Delivered"
+    },
+    "card": {
+      "order": "Order",
+      "customer": "Customer",
+      "phone": "Phone",
+      "address": "Address",
+      "distance": "Distance",
+      "driveTime": "drive",
+      "payment": "Payment",
+      "items": "Items",
+      "notes": "Notes",
+      "allergies": "Allergies",
+      "readyAt": "Ready at",
+      "dispatchedAt": "Dispatched",
+      "deliveredAt": "Delivered at",
+      "driver": "Driver",
+      "cashOnDelivery": "Cash on Delivery",
+      "onlinePayment": "Paid Online",
+      "cardPayment": "Card Payment",
+      "toCollect": "To Collect",
+      "paid": "Paid",
+      "amountCollected": "Collected"
+    },
+    "actions": {
+      "acceptDelivery": "Accept Delivery",
+      "markDelivered": "Mark Delivered",
+      "navigate": "Navigate",
+      "call": "Call",
+      "confirmPayment": "Payment received",
+      "planRoute": "Plan Route"
+    },
+    "empty": {
+      "ready": "No orders waiting for pickup",
+      "transit": "No active deliveries",
+      "delivered": "No deliveries completed today"
+    },
+    "timer": {
+      "delivering": "Delivering"
+    },
+    "errors": {
+      "acceptFailed": "Failed to accept delivery",
+      "deliverFailed": "Failed to mark as delivered",
+      "loadFailed": "Failed to load orders"
+    },
+    "mobile": {
+      "ready": "Ready",
+      "transit": "Transit",
+      "delivered": "Done",
+      "home": "Home"
+    }
   }
 }

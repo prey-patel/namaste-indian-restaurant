@@ -580,6 +580,7 @@
       "orderSummary": "Podsumowanie Zamówień",
       "reservations": "Siatka Rezerwacji",
       "kds": "Ekran Kuchenny (KDS)",
+      "delivery": "Dostawy",
       "menu": "CMS Menu i Kategorii",
       "settings": "Ustawienia",
       "users": "Użytkownicy i Role",
@@ -701,5 +702,73 @@
     },
     "empty": "Brak zdjęć w tej kategorii.",
     "backToHome": "Powrót do Strony Głównej"
+  },
+  "deliveryDashboard": {
+    "title": "Centrum Dostaw",
+    "subtitle": "Śledź i zarządzaj zamówieniami dostawy w czasie rzeczywistym",
+    "live": "NA ŻYWO",
+    "reconnecting": "Łączenie...",
+    "lastUpdated": "Ostatnia aktualizacja",
+    "stats": {
+      "ready": "Gotowe",
+      "inTransit": "W drodze",
+      "deliveredToday": "Dostarczone dziś",
+      "avgTime": "Średni czas dostawy",
+      "minutes": "min"
+    },
+    "columns": {
+      "readyForPickup": "Gotowe do odbioru",
+      "inTransit": "W drodze",
+      "delivered": "Dostarczone"
+    },
+    "card": {
+      "order": "Zamówienie",
+      "customer": "Klient",
+      "phone": "Telefon",
+      "address": "Adres",
+      "distance": "Odległość",
+      "driveTime": "jazdy",
+      "payment": "Płatność",
+      "items": "Pozycje",
+      "notes": "Uwagi",
+      "allergies": "Alergie",
+      "readyAt": "Gotowe o",
+      "dispatchedAt": "Wysłano",
+      "deliveredAt": "Dostarczono o",
+      "driver": "Kierowca",
+      "cashOnDelivery": "Płatność przy odbiorze",
+      "onlinePayment": "Zapłacono online",
+      "cardPayment": "Karta płatnicza",
+      "toCollect": "Do pobrania",
+      "paid": "Zapłacono",
+      "amountCollected": "Pobrano"
+    },
+    "actions": {
+      "acceptDelivery": "Przyjmij dostawę",
+      "markDelivered": "Oznacz jako dostarczone",
+      "navigate": "Nawiguj",
+      "call": "Zadzwoń",
+      "confirmPayment": "Płatność otrzymana",
+      "planRoute": "Zaplanuj trasę"
+    },
+    "empty": {
+      "ready": "Brak zamówień czekających na odbiór",
+      "transit": "Brak aktywnych dostaw",
+      "delivered": "Brak dostaw ukończonych dzisiaj"
+    },
+    "timer": {
+      "delivering": "Dostawa"
+    },
+    "errors": {
+      "acceptFailed": "Nie udało się przyjąć dostawy",
+      "deliverFailed": "Nie udało się oznaczyć jako dostarczone",
+      "loadFailed": "Nie udało się załadować zamówień"
+    },
+    "mobile": {
+      "ready": "Gotowe",
+      "transit": "W drodze",
+      "delivered": "Gotowe",
+      "home": "Start"
+    }
   }
 }

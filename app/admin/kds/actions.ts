@@ -88,6 +88,7 @@ export async function kdsStartPreparingAction(orderId: string) {
 
     revalidatePath('/admin/kds', 'layout');
     revalidatePath('/admin/orders', 'layout');
+    revalidatePath('/admin/delivery', 'layout');
     revalidatePath('/[locale]/order/status', 'layout');
     return { success: true };
   } catch (err: any) {
@@ -97,13 +98,13 @@ export async function kdsStartPreparingAction(orderId: string) {
 }
 
 /**
- * Kitchen action: Mark order as ready / handed to courier.
- * Transition for takeaway: approved|preparing → ready_for_pickup
- * Transition for delivery: approved|preparing → out_for_delivery
- * Whitelist: only status, ready_at (takeaway), dispatched_at (delivery), updated_at
+ * Kitchen action: Mark order as ready for pickup/handoff.
+ * Transition: approved|preparing → ready_for_pickup (both takeaway and delivery)
+ * Whitelist: only status, ready_at, updated_at
  *
- * For delivery orders, this means the food has been handed to the courier
- * or is leaving the restaurant. Do NOT use ready_for_pickup for delivery.
+ * For delivery orders, this means the food is ready and waiting for a driver
+ * to accept it via the Delivery Dispatch Dashboard. The driver will transition
+ * the order to out_for_delivery via acceptDeliveryAction.
  */
 export async function kdsMarkReadyAction(orderId: string) {
   try {
@@ -121,8 +122,8 @@ export async function kdsMarkReadyAction(orderId: string) {
       return { success: false, error: 'Order not found.' };
     }
 
-    const targetStatus = order.order_type === 'takeaway' ? 'ready_for_pickup' : 'out_for_delivery';
-    if (order.status === targetStatus) {
+    // Both takeaway and delivery orders go to ready_for_pickup
+    if (order.status === 'ready_for_pickup') {
       return { success: true };
     }
 
@@ -136,41 +137,24 @@ export async function kdsMarkReadyAction(orderId: string) {
 
     const now = new Date().toISOString();
 
-    // Strict field whitelist: only status, ready_at/dispatched_at, updated_at
-    // NEVER use ready_for_pickup for delivery orders
-    if (order.order_type === 'takeaway') {
-      const { error: updateError } = await supabase
-        .from('orders')
-        .update({
-          status: 'ready_for_pickup' as any,
-          ready_at: now,
-          updated_at: now
-        })
-        .eq('id', orderId);
+    // Strict field whitelist: only status, ready_at, updated_at
+    const { error: updateError } = await supabase
+      .from('orders')
+      .update({
+        status: 'ready_for_pickup' as any,
+        ready_at: now,
+        updated_at: now
+      })
+      .eq('id', orderId);
 
-      if (updateError) {
-        console.error('KDS mark ready (takeaway) failed:', updateError);
-        return { success: false, error: 'Failed to update order status.' };
-      }
-    } else {
-      // delivery → out_for_delivery (handed to courier)
-      const { error: updateError } = await supabase
-        .from('orders')
-        .update({
-          status: 'out_for_delivery' as any,
-          dispatched_at: now,
-          updated_at: now
-        })
-        .eq('id', orderId);
-
-      if (updateError) {
-        console.error('KDS mark ready (delivery) failed:', updateError);
-        return { success: false, error: 'Failed to update order status.' };
-      }
+    if (updateError) {
+      console.error('KDS mark ready failed:', updateError);
+      return { success: false, error: 'Failed to update order status.' };
     }
 
     revalidatePath('/admin/kds', 'layout');
     revalidatePath('/admin/orders', 'layout');
+    revalidatePath('/admin/delivery', 'layout');
     revalidatePath('/[locale]/order/status', 'layout');
     return { success: true };
   } catch (err: any) {
