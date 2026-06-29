@@ -257,18 +257,6 @@ export default function ContactForm({ locale }: ContactFormProps) {
             )}
           </div>
 
-          {/* Turnstile Verification Placeholder */}
-          <div className="border border-primary/10 bg-[#040815]/60 p-3 rounded-xl text-center">
-            <div className="inline-flex items-center space-x-2 text-[10px] uppercase tracking-wider text-muted-foreground/60 font-mono">
-              <svg className="w-4 h-4 animate-spin text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeDasharray="4, 4" />
-              </svg>
-              <span>Cloudflare Turnstile Protected (Placeholder)</span>
-            </div>
-            <span className="block text-[8px] text-muted-foreground/45 mt-1">
-              Token validation will be integrated here upon production deployment.
-            </span>
-          </div>
 
           {/* Submit Button */}
           <div className="pt-2">
