@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { sendEmailViaBrevo } from '@/lib/email/brevo';
 
 /**
@@ -135,7 +136,8 @@ export async function replyToInquiryAction(id: string, replyText: string) {
 
     // 4. Log in email_logs
     try {
-      await supabase
+      const adminClient = createAdminClient();
+      await adminClient
         .from('email_logs')
         .insert({
           entity_type: 'system',

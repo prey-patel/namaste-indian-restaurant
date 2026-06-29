@@ -6,6 +6,10 @@ export interface SendEmailPayload {
   subject: string;
   htmlContent: string;
   textContent?: string;
+  replyTo?: {
+    email: string;
+    name?: string;
+  };
 }
 
 export interface SendEmailResult {
@@ -55,6 +59,12 @@ export async function sendEmailViaBrevo(payload: SendEmailPayload): Promise<Send
             name: payload.toName || payload.toEmail
           }
         ],
+        ...(payload.replyTo ? {
+          replyTo: {
+            email: payload.replyTo.email,
+            name: payload.replyTo.name || payload.replyTo.email
+          }
+        } : {}),
         subject: payload.subject,
         htmlContent: payload.htmlContent,
         ...(payload.textContent ? { textContent: payload.textContent } : {})

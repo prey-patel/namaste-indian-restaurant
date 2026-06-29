@@ -156,7 +156,11 @@ export async function submitContactInquiry(
         toEmail: adminEmail,
         subject: emailSubject,
         htmlContent: emailHtml,
-        toName: 'Restaurant Admin'
+        toName: 'Restaurant Admin',
+        replyTo: {
+          email: validatedData.email,
+          name: sanitizedName
+        }
       });
     } catch (emailErr) {
       console.error('Failed to send admin contact notification email:', emailErr);
