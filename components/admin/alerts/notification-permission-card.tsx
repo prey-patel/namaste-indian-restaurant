@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Bell, BellOff, AlertTriangle, ShieldCheck, Send } from 'lucide-react';
-import { subscribeToPushAction, unsubscribeFromPushAction, sendTestPushAction } from '@/app/admin/notifications/actions';
+import { Volume2, VolumeX, Bell, BellOff, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { subscribeToPushAction, unsubscribeFromPushAction } from '@/app/admin/notifications/actions';
 
 interface Props {
   soundEnabled: boolean;
@@ -33,28 +33,6 @@ export default function NotificationPermissionCard({
   const [permissionState, setPermissionState] = useState<NotificationPermission>('default');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isTestingPush, setIsTestingPush] = useState(false);
-  const [testSuccess, setTestSuccess] = useState<string | null>(null);
-
-  const handleTestPush = async () => {
-    if (isTestingPush) return;
-    setIsTestingPush(true);
-    setErrorMessage(null);
-    setTestSuccess(null);
-    try {
-      const res = await sendTestPushAction();
-      if (!res.success) {
-        setErrorMessage(res.error || 'Failed to trigger test push.');
-      } else {
-        setTestSuccess('Test push sent! Check your device lockscreen/banners.');
-        setTimeout(() => setTestSuccess(null), 5000);
-      }
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Failed to send test push.');
-    } finally {
-      setIsTestingPush(false);
-    }
-  };
 
   // 1. Detect push notification support and current subscription status on mount
   useEffect(() => {
@@ -213,28 +191,9 @@ export default function NotificationPermissionCard({
         </div>
       )}
 
-      {testSuccess && (
-        <div className="mt-4 p-3.5 bg-green-500/10 border border-green-500/20 text-green-600 [.admin-theme_&]:text-green-800 dark:text-green-400 rounded text-xs font-bold leading-relaxed">
-          {testSuccess}
-        </div>
-      )}
-
       {errorMessage && (
         <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded text-xs font-mono">
           Error: {errorMessage}
-        </div>
-      )}
-
-      {pushEnabled && (
-        <div className="mt-4 pt-4 border-t border-border flex justify-end">
-          <button
-            onClick={handleTestPush}
-            disabled={isTestingPush}
-            className="flex items-center gap-2 px-4 py-2 rounded text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-all duration-300"
-          >
-            <Send className="w-3.5 h-3.5" />
-            {isTestingPush ? 'Sending Test...' : 'Send Test Notification'}
-          </button>
         </div>
       )}
     </div>
