@@ -676,3 +676,29 @@ export async function deleteGalleryImageAction(id: string, filePath: string) {
   }
 }
 
+const NotificationSettingsSchema = z.object({
+  admin_notification_sound: z.string().min(1).max(100)
+});
+
+export async function updateNotificationSettingsAction(rawData: unknown) {
+  try {
+    const { supabase } = await verifyAuth();
+    const data = NotificationSettingsSchema.parse(rawData);
+
+    const { error } = await supabase
+      .from('system_settings')
+      .upsert({ key: 'admin_notification_sound', value: data.admin_notification_sound });
+
+    if (error) {
+      console.error('Failed to update notification sound setting:', error);
+      return { success: false, error: 'Database update failed' };
+    }
+
+    revalidateAllPaths();
+    return { success: true };
+  } catch (err: any) {
+    console.error('updateNotificationSettingsAction error:', err);
+    return { success: false, error: err.message || 'Server error' };
+  }
+}
+

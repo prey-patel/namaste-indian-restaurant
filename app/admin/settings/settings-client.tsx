@@ -32,7 +32,8 @@ import {
   updateHolidayClosureAction,
   deleteHolidayClosureAction,
   uploadGalleryImagesAction,
-  deleteGalleryImageAction
+  deleteGalleryImageAction,
+  updateNotificationSettingsAction
 } from './actions';
 
 type TabType = 'profile' | 'hours' | 'status' | 'reservations' | 'delivery' | 'fees' | 'holidays' | 'region' | 'security' | 'gallery';
@@ -90,6 +91,11 @@ export default function SettingsClient({
     google_maps_link: systemSettings.google_maps_link || '',
     short_description: systemSettings.short_description || ''
   });
+
+  const [notificationSound, setNotificationSound] = useState<string>(
+    systemSettings.admin_notification_sound || 'alarm-drum-bass'
+  );
+  const [isSavingSound, setIsSavingSound] = useState(false);
 
   // Operational Status Form State
   const [opStatusForm, setOpStatusForm] = useState({
@@ -152,6 +158,18 @@ export default function SettingsClient({
       showFeedback('success', 'Restaurant profile details saved successfully.');
     } else {
       showFeedback('error', res.error || 'Failed to save profile details.');
+    }
+  };
+
+  const handleSaveNotificationSound = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingSound(true);
+    const res = await updateNotificationSettingsAction({ admin_notification_sound: notificationSound });
+    setIsSavingSound(false);
+    if (res.success) {
+      showFeedback('success', 'Admin alert notification sound updated successfully.');
+    } else {
+      showFeedback('error', res.error || 'Failed to update notification sound.');
     }
   };
 
@@ -455,7 +473,8 @@ export default function SettingsClient({
           
           {/* TAB 1: RESTAURANT PROFILE */}
           {activeTab === 'profile' && (
-            <form onSubmit={handleSaveProfile} className="space-y-6">
+            <div className="space-y-12">
+              <form onSubmit={handleSaveProfile} className="space-y-6">
               <div className="flex items-center justify-between border-b border-primary/10 pb-4">
                 <div>
                   <h2 className="text-xl font-serif font-bold text-primary">Restaurant Profile</h2>
@@ -593,7 +612,120 @@ export default function SettingsClient({
                 </button>
               </div>
             </form>
-          )}
+
+            <form onSubmit={handleSaveNotificationSound} className="mt-12 bg-[#FAF9F5] border border-border p-6 rounded-lg shadow-sm space-y-6">
+              <div className="border-b border-primary/10 pb-4">
+                <h2 className="text-xl font-serif font-bold text-primary">Admin Alert Sound Settings</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Select the notification sound that will play on all admin panels when a new order is received.</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-end">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Notification Sound</label>
+                  <select
+                    value={notificationSound}
+                    onChange={e => setNotificationSound(e.target.value)}
+                    className="w-full bg-[#FAF9F5] border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded px-3 py-2.5 text-sm outline-none transition-all"
+                  >
+                    <option value="alarm-drum-bass">Drum & Bass Alarm (Loud & Persistent)</option>
+                    <option value="digital-beeps">Digital Beeps (Retro Watch Style)</option>
+                    <option value="high-chime">High-pitched Chime (Double Service Bell)</option>
+                    <option value="modulating-siren">Emergency Siren (Modulating Sawtooth)</option>
+                  </select>
+                </div>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+                      const now = ctx.currentTime;
+                      
+                      if (notificationSound === 'alarm-drum-bass') {
+                        fetch('/alarm.mp3')
+                          .then(res => res.arrayBuffer())
+                          .then(buf => ctx.decodeAudioData(buf))
+                          .then(decoded => {
+                            const source = ctx.createBufferSource();
+                            source.buffer = decoded;
+                            const gain = ctx.createGain();
+                            source.connect(gain);
+                            gain.connect(ctx.destination);
+                            gain.gain.setValueAtTime(0.5, now);
+                            source.start(now);
+                            source.stop(now + 2.5);
+                          })
+                          .catch(err => console.error('Preview error:', err));
+                      } else if (notificationSound === 'digital-beeps') {
+                        for (let i = 0; i < 3; i++) {
+                          const beepTime = now + (i * 0.15);
+                          const osc = ctx.createOscillator();
+                          const gain = ctx.createGain();
+                          osc.connect(gain);
+                          gain.connect(ctx.destination);
+                          osc.type = 'square';
+                          osc.frequency.setValueAtTime(987.77, beepTime);
+                          gain.gain.setValueAtTime(0.2, beepTime);
+                          gain.gain.exponentialRampToValueAtTime(0.0001, beepTime + 0.12);
+                          osc.start(beepTime);
+                          osc.stop(beepTime + 0.12);
+                        }
+                      } else if (notificationSound === 'high-chime') {
+                        const osc1 = ctx.createOscillator();
+                        const gain1 = ctx.createGain();
+                        osc1.connect(gain1);
+                        gain1.connect(ctx.destination);
+                        osc1.frequency.setValueAtTime(880, now);
+                        osc1.type = 'sine';
+                        gain1.gain.setValueAtTime(0.3, now);
+                        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                        osc1.start(now);
+                        osc1.stop(now + 0.4);
+
+                        const osc2 = ctx.createOscillator();
+                        const gain2 = ctx.createGain();
+                        osc2.connect(gain2);
+                        gain2.connect(ctx.destination);
+                        osc2.frequency.setValueAtTime(1100, now + 0.1);
+                        osc2.type = 'sine';
+                        gain2.gain.setValueAtTime(0.3, now + 0.1);
+                        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                        osc2.start(now + 0.1);
+                        osc2.stop(now + 0.5);
+                      } else if (notificationSound === 'modulating-siren') {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(440, now);
+                        osc.frequency.exponentialRampToValueAtTime(880, now + 0.3);
+                        osc.frequency.exponentialRampToValueAtTime(440, now + 0.6);
+                        gain.gain.setValueAtTime(0.2, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                        osc.start(now);
+                        osc.stop(now + 0.6);
+                      }
+                    }}
+                    className="w-full sm:w-auto bg-muted hover:bg-muted/80 text-foreground text-xs font-bold uppercase tracking-wider px-5 py-3.5 rounded transition-all"
+                  >
+                    🔊 Preview Sound
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4 border-t border-primary/10">
+                <button
+                  type="submit"
+                  disabled={isSavingSound}
+                  className="inline-flex items-center gap-2 bg-[#0A192F] hover:bg-[#122A4E] text-white text-xs font-bold uppercase tracking-wider px-6 py-3 rounded-lg transition-all"
+                >
+                  <Save className="w-4 h-4" />
+                  {isSavingSound ? 'Saving...' : 'Save Sound Setting'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
 
           {/* TAB 2: OPENING HOURS */}
           {activeTab === 'hours' && (
