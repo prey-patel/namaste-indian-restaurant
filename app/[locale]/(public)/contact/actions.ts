@@ -124,6 +124,11 @@ export async function submitContactInquiry(
 
     // 7. Try sending notification email to admin
     try {
+      const headersList = await headers();
+      const host = headersList.get('host') || 'localhost:3000';
+      const protocol = host.includes('localhost') ? 'http' : 'https';
+      const baseUrl = `${protocol}://${host}`;
+
       const settings = await getPublicSystemSettings();
       const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || settings.restaurant_email || 'namasteadmin.pl@gmail.com';
 
@@ -140,7 +145,7 @@ export async function submitContactInquiry(
             ${sanitizedMessage.replace(/\n/g, '<br />')}
           </blockquote>
           <div style="margin-top: 25px; text-align: center;">
-            <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/admin/inquiries" style="display: inline-block; padding: 12px 24px; background-color: #d4af37; color: #040815; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px;">
+            <a href="${baseUrl}/admin/inquiries" style="display: inline-block; padding: 12px 24px; background-color: #d4af37; color: #040815; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px;">
               View and Reply in Dashboard
             </a>
           </div>
