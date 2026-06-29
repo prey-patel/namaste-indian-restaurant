@@ -15,7 +15,8 @@ const AdminAlertsContext = createContext<AdminAlertsContextType | undefined>(und
 
 export function AdminAlertsProvider({ children }: { children: ReactNode }) {
   const [pendingCount, setPendingCount] = useState(0);
-  const { soundEnabled, toggleSound, unlockAudio } = useAdminOrderAlerts(pendingCount);
+  const [soundSetting, setSoundSetting] = useState<string>('alarm-drum-bass');
+  const { soundEnabled, toggleSound, unlockAudio } = useAdminOrderAlerts(pendingCount, soundSetting);
 
   useEffect(() => {
     const supabase = createClient();
@@ -34,11 +35,27 @@ export function AdminAlertsProvider({ children }: { children: ReactNode }) {
       }
     };
 
+    const fetchSoundSetting = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('system_settings')
+          .select('value')
+          .eq('key', 'admin_notification_sound')
+          .single();
+        if (!error && data && data.value) {
+          setSoundSetting(data.value);
+        }
+      } catch (err) {
+        console.error('[Admin Alerts Context] Failed to fetch sound setting:', err);
+      }
+    };
+
     // Initial fetch
     fetchPendingCount();
+    fetchSoundSetting();
 
     // Subscribe to realtime orders changes
-    const channel = supabase
+    const ordersChannel = supabase
       .channel('admin-global-orders-alert')
       .on(
         'postgres_changes',
@@ -49,8 +66,23 @@ export function AdminAlertsProvider({ children }: { children: ReactNode }) {
       )
       .subscribe();
 
+    // Subscribe to settings changes
+    const settingsChannel = supabase
+      .channel('admin-global-settings-alert')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'system_settings', filter: 'key=eq.admin_notification_sound' },
+        (payload) => {
+          if (payload.new && (payload.new as any).value) {
+            setSoundSetting((payload.new as any).value);
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
-      channel.unsubscribe();
+      ordersChannel.unsubscribe();
+      settingsChannel.unsubscribe();
     };
   }, []);
 

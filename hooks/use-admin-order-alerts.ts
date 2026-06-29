@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { getAlertSoundSignedUrlAction } from '@/app/admin/settings/actions';
 
 // Background Web Worker code to bypass browser background tab throttling
 const createWorkerBlobUrl = () => {
@@ -40,7 +41,7 @@ const createWorkerBlobUrl = () => {
  * - Dynamic 3-stage escalating alarm based on order age.
  * - Blinking tab title when new orders are pending and tab is hidden.
  */
-export function useAdminOrderAlerts(pendingCount: number) {
+export function useAdminOrderAlerts(pendingCount: number, soundSetting: string = 'alarm-drum-bass') {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isLeader, setIsLeader] = useState(true);
   const [isVisible, setIsVisible] = useState(true);
@@ -88,7 +89,16 @@ export function useAdminOrderAlerts(pendingCount: number) {
       document.removeEventListener('click', handleGlobalInteraction);
       document.removeEventListener('touchstart', handleGlobalInteraction);
     };
-  }, []);
+  }, [soundSetting]);
+
+  // Reset/reload audio buffer when soundSetting changes
+  useEffect(() => {
+    decodedBufferRef.current = null;
+    isLoadingSoundRef.current = false;
+    if (soundEnabled && pendingCount > 0 && isLeader) {
+      unlockAudio();
+    }
+  }, [soundSetting]);
 
   // 2. Web Worker Initialization
   useEffect(() => {
@@ -196,43 +206,103 @@ export function useAdminOrderAlerts(pendingCount: number) {
     return () => stopBlinking();
   }, [pendingCount, isVisible]);
 
-  // 6. Play tone based on dynamic stages using decoded MP3 file
+  // 6. Play tone based on dynamic stages using decoded sound files or synthesis
   const playTone = (stage: number) => {
-    if (!audioContextRef.current || !decodedBufferRef.current) {
-      console.warn('[Audio Alerts] Cannot play sound: context or buffer not ready.');
-      return;
-    }
+    if (!audioContextRef.current) return;
     const ctx = audioContextRef.current;
     if (ctx.state === 'suspended') return;
 
     try {
-      const source = ctx.createBufferSource();
-      source.buffer = decodedBufferRef.current;
-
-      const gain = ctx.createGain();
-      source.connect(gain);
-      gain.connect(ctx.destination);
-
       const now = ctx.currentTime;
 
-      // Adjust volume based on stage
-      let volume = 0.25;
-      if (stage === 1) {
-        volume = 0.25; // Quiet
-      } else if (stage === 2) {
-        volume = 0.6;  // Medium
+      if (soundSetting === 'digital-beeps') {
+        // Digital Beeps (synthesis)
+        const repeats = stage === 3 ? 4 : stage === 2 ? 3 : 2;
+        for (let i = 0; i < repeats; i++) {
+          const beepTime = now + (i * 0.15);
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(987.77, beepTime);
+          
+          const volume = stage === 1 ? 0.08 : stage === 2 ? 0.18 : 0.3;
+          gain.gain.setValueAtTime(volume, beepTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, beepTime + 0.12);
+          osc.start(beepTime);
+          osc.stop(beepTime + 0.15);
+        }
+      } else if (soundSetting === 'high-chime') {
+        // High chime (synthesis)
+        const volume = stage === 1 ? 0.15 : stage === 2 ? 0.25 : 0.45;
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc1.frequency.setValueAtTime(880, now);
+        osc1.type = 'sine';
+        gain1.gain.setValueAtTime(volume, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+        osc1.start(now);
+        osc1.stop(now + 0.4);
+
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.frequency.setValueAtTime(1100, now + 0.1);
+        osc2.type = 'sine';
+        gain2.gain.setValueAtTime(volume, now + 0.1);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+        osc2.start(now + 0.1);
+        osc2.stop(now + 0.5);
+      } else if (soundSetting === 'modulating-siren') {
+        // Emergency siren (synthesis)
+        const volume = stage === 1 ? 0.08 : stage === 2 ? 0.18 : 0.3;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.35);
+        osc.frequency.exponentialRampToValueAtTime(440, now + 0.7);
+        gain.gain.setValueAtTime(volume, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+        osc.start(now);
+        osc.stop(now + 0.7);
       } else {
-        volume = 1.0;  // Loud
+        // Load buffer play (Drum & Bass, or custom uploaded file)
+        if (!decodedBufferRef.current) {
+          console.warn('[Audio Alerts] Cannot play sound: context or buffer not ready for sound setting:', soundSetting);
+          return;
+        }
+        const source = ctx.createBufferSource();
+        source.buffer = decodedBufferRef.current;
+
+        const gain = ctx.createGain();
+        source.connect(gain);
+        gain.connect(ctx.destination);
+
+        // Adjust volume based on stage
+        let volume = 0.25;
+        if (stage === 1) {
+          volume = 0.25;
+        } else if (stage === 2) {
+          volume = 0.6;
+        } else {
+          volume = 1.0;
+        }
+
+        gain.gain.setValueAtTime(volume, now);
+
+        if (stage === 3) {
+          source.playbackRate.setValueAtTime(1.15, now);
+        }
+
+        source.start(now);
       }
-
-      gain.gain.setValueAtTime(volume, now);
-
-      // Increase pitch/speed slightly in Stage 3 for urgency
-      if (stage === 3) {
-        source.playbackRate.setValueAtTime(1.15, now);
-      }
-
-      source.start(now);
     } catch (err) {
       console.warn('[Audio Alerts] Sound playback error:', err);
     }
@@ -306,7 +376,7 @@ export function useAdminOrderAlerts(pendingCount: number) {
       clearInterval(checkStageInterval);
       stopSound();
     };
-  }, [soundEnabled, pendingCount, isLeader]);
+  }, [soundEnabled, pendingCount, isLeader, soundSetting]);
 
   const toggleSound = () => {
     setSoundEnabled((prev) => {
@@ -319,7 +389,7 @@ export function useAdminOrderAlerts(pendingCount: number) {
     });
   };
 
-  const unlockAudio = () => {
+  const unlockAudio = async () => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
@@ -328,30 +398,45 @@ export function useAdminOrderAlerts(pendingCount: number) {
       ctx.resume();
     }
 
-    // Trigger load and decode of the alarm sound file
-    if (!decodedBufferRef.current && !isLoadingSoundRef.current) {
+    // Trigger load and decode of the sound setting if needed
+    if (
+      soundSetting !== 'digital-beeps' &&
+      soundSetting !== 'high-chime' &&
+      soundSetting !== 'modulating-siren' &&
+      !decodedBufferRef.current &&
+      !isLoadingSoundRef.current
+    ) {
       isLoadingSoundRef.current = true;
-      fetch('/alarm.mp3')
-        .then((res) => res.arrayBuffer())
-        .then((arrayBuffer) => ctx.decodeAudioData(arrayBuffer))
-        .then((decodedBuffer) => {
-          decodedBufferRef.current = decodedBuffer;
-          console.log('[Audio Alerts] Alarm sound loaded and decoded successfully.');
-          
-          // Play a tiny 100ms silent beep to finalize AudioContext activation
-          const source = ctx.createBufferSource();
-          source.buffer = decodedBuffer;
-          const gain = ctx.createGain();
-          source.connect(gain);
-          gain.connect(ctx.destination);
-          gain.gain.setValueAtTime(0.01, ctx.currentTime);
-          source.start(ctx.currentTime);
-          source.stop(ctx.currentTime + 0.1);
-        })
-        .catch((err) => {
-          console.error('[Audio Alerts] Failed to load/decode alarm sound:', err);
-          isLoadingSoundRef.current = false;
-        });
+      try {
+        let audioUrl = '/alarm.mp3';
+        if (soundSetting.startsWith('alert-sounds/')) {
+          const res = await getAlertSoundSignedUrlAction(soundSetting);
+          if (res.success && res.signedUrl) {
+            audioUrl = res.signedUrl;
+          }
+        }
+        
+        console.log('[Audio Alerts] Loading alert audio from:', audioUrl);
+        const fetchRes = await fetch(audioUrl);
+        const arrayBuffer = await fetchRes.arrayBuffer();
+        const decodedBuffer = await ctx.decodeAudioData(arrayBuffer);
+        decodedBufferRef.current = decodedBuffer;
+        console.log('[Audio Alerts] Custom sound loaded and decoded successfully.');
+        
+        // Play a tiny silent tone to wake AudioContext on iOS/safari
+        const source = ctx.createBufferSource();
+        source.buffer = decodedBuffer;
+        const gain = ctx.createGain();
+        source.connect(gain);
+        gain.connect(ctx.destination);
+        gain.gain.setValueAtTime(0.01, ctx.currentTime);
+        source.start(ctx.currentTime);
+        source.stop(ctx.currentTime + 0.1);
+      } catch (err) {
+        console.error('[Audio Alerts] Failed to load/decode alarm sound:', err);
+      } finally {
+        isLoadingSoundRef.current = false;
+      }
     }
   };
 

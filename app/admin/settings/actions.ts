@@ -677,7 +677,7 @@ export async function deleteGalleryImageAction(id: string, filePath: string) {
 }
 
 const NotificationSettingsSchema = z.object({
-  admin_notification_sound: z.string().min(1).max(100)
+  admin_notification_sound: z.string().min(1).max(500)
 });
 
 export async function updateNotificationSettingsAction(rawData: unknown) {
@@ -698,6 +698,111 @@ export async function updateNotificationSettingsAction(rawData: unknown) {
     return { success: true };
   } catch (err: any) {
     console.error('updateNotificationSettingsAction error:', err);
+    return { success: false, error: err.message || 'Server error' };
+  }
+}
+
+export async function uploadAlertSoundAction(formData: FormData) {
+  try {
+    const { supabase, userId } = await verifyAuth();
+    const file = formData.get('file') as File;
+    if (!file) {
+      return { success: false, error: 'No file uploaded' };
+    }
+
+    // 1. File type and size validations
+    const allowedTypes = [
+      'audio/mpeg',
+      'audio/mp3',
+      'audio/wav',
+      'audio/wave',
+      'audio/x-wav',
+      'audio/ogg',
+      'audio/aac',
+      'audio/m4a',
+      'audio/x-m4a',
+      'audio/mp4'
+    ];
+    const fileExt = file.name.split('.').pop()?.toLowerCase();
+    const allowedExts = ['mp3', 'wav', 'ogg', 'aac', 'm4a', 'mp4'];
+    
+    if (!allowedTypes.includes(file.type) && !allowedExts.includes(fileExt || '')) {
+      return { success: false, error: 'Invalid file type. Only MP3, WAV, OGG, AAC, and M4A audio files are allowed.' };
+    }
+
+    const maxSize = 10 * 1024 * 1024; // 10 MB
+    if (file.size > maxSize) {
+      return { success: false, error: 'File size exceeds the 10MB limit.' };
+    }
+
+    // Convert file to buffer for Supabase Storage Node upload
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    // 2. Generate a secure, unique path to prevent path traversal
+    const safeUuid = crypto.randomUUID();
+    const safePath = `alert-sounds/${safeUuid}/${Date.now()}.${fileExt}`;
+
+    // 3. Upload to private 'site-images' bucket using the authenticated user's client
+    const { error: uploadError } = await supabase.storage
+      .from('site-images')
+      .upload(safePath, buffer, {
+        contentType: file.type || 'audio/mpeg',
+        duplex: 'half',
+      });
+
+    if (uploadError) {
+      console.error('Storage upload error in uploadAlertSoundAction:', uploadError);
+      return { success: false, error: 'Failed to upload to storage bucket' };
+    }
+
+    // 4. Log the uploaded asset inside 'media_assets' table (sets as approved & public)
+    const { data: assetRecord, error: assetError } = await supabase
+      .from('media_assets')
+      .insert({
+        bucket: 'site-images',
+        file_path: safePath,
+        file_type: file.type || 'audio/mpeg',
+        file_size: file.size,
+        is_public: true,
+        is_approved: true,
+        uploaded_by: userId,
+      })
+      .select('id, file_path')
+      .single();
+
+    if (assetError) {
+      console.error('Media asset logging error in uploadAlertSoundAction:', assetError);
+      // Attempt to clean up orphaned storage object
+      await supabase.storage.from('site-images').remove([safePath]);
+      return { success: false, error: 'Failed to log media asset metadata' };
+    }
+
+    return { success: true, filePath: assetRecord.file_path };
+  } catch (err: any) {
+    console.error('Failed to upload alert sound:', err);
+    return { success: false, error: err.message || 'Server error' };
+  }
+}
+
+export async function getAlertSoundSignedUrlAction(filePath: string) {
+  try {
+    const { supabase } = await verifyAuth();
+    
+    // Create secure admin client to sign the private storage URL
+    const adminClient = createAdminClient();
+    const { data, error } = await adminClient.storage
+      .from('site-images')
+      .createSignedUrl(filePath, 3600); // 1 hour expiration
+
+    if (error || !data) {
+      console.error(`Failed to create signed URL for path "${filePath}":`, error);
+      return { success: false, error: 'Failed to sign audio URL' };
+    }
+
+    return { success: true, signedUrl: data.signedUrl };
+  } catch (err: any) {
+    console.error(`Error resolving signed URL for path "${filePath}":`, err);
     return { success: false, error: err.message || 'Server error' };
   }
 }

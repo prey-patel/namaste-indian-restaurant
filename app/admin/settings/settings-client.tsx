@@ -33,7 +33,9 @@ import {
   deleteHolidayClosureAction,
   uploadGalleryImagesAction,
   deleteGalleryImageAction,
-  updateNotificationSettingsAction
+  updateNotificationSettingsAction,
+  uploadAlertSoundAction,
+  getAlertSoundSignedUrlAction
 } from './actions';
 
 type TabType = 'profile' | 'hours' | 'status' | 'reservations' | 'delivery' | 'fees' | 'holidays' | 'region' | 'security' | 'gallery';
@@ -96,6 +98,8 @@ export default function SettingsClient({
     systemSettings.admin_notification_sound || 'alarm-drum-bass'
   );
   const [isSavingSound, setIsSavingSound] = useState(false);
+  const [customSoundFile, setCustomSoundFile] = useState<File | null>(null);
+  const [uploadingSound, setUploadingSound] = useState(false);
 
   // Operational Status Form State
   const [opStatusForm, setOpStatusForm] = useState({
@@ -170,6 +174,40 @@ export default function SettingsClient({
       showFeedback('success', 'Admin alert notification sound updated successfully.');
     } else {
       showFeedback('error', res.error || 'Failed to update notification sound.');
+    }
+  };
+
+  const handleCustomSoundFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        showFeedback('error', 'Alert sound file must be under 5MB.');
+        return;
+      }
+      setCustomSoundFile(file);
+    }
+  };
+
+  const handleUploadCustomSound = async () => {
+    if (!customSoundFile) return;
+    setUploadingSound(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', customSoundFile);
+
+      const res = await uploadAlertSoundAction(formData);
+      if (res.success && res.filePath) {
+        setNotificationSound(res.filePath);
+        setCustomSoundFile(null);
+        showFeedback('success', 'Custom sound uploaded! Make sure to click "Save Sound Setting" below to save changes.');
+      } else {
+        showFeedback('error', res.error || 'Failed to upload custom sound.');
+      }
+    } catch (err: any) {
+      showFeedback('error', err.message || 'An error occurred during upload.');
+    } finally {
+      setUploadingSound(false);
     }
   };
 
@@ -616,100 +654,177 @@ export default function SettingsClient({
             <form onSubmit={handleSaveNotificationSound} className="mt-12 bg-[#FAF9F5] border border-border p-6 rounded-lg shadow-sm space-y-6">
               <div className="border-b border-primary/10 pb-4">
                 <h2 className="text-xl font-serif font-bold text-primary">Admin Alert Sound Settings</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">Select the notification sound that will play on all admin panels when a new order is received.</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Select or upload a notification sound that will play on all admin panels when a new order is received.</p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-end">
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Notification Sound</label>
-                  <select
-                    value={notificationSound}
-                    onChange={e => setNotificationSound(e.target.value)}
-                    className="w-full bg-[#FAF9F5] border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded px-3 py-2.5 text-sm outline-none transition-all"
-                  >
-                    <option value="alarm-drum-bass">Drum & Bass Alarm (Loud & Persistent)</option>
-                    <option value="digital-beeps">Digital Beeps (Retro Watch Style)</option>
-                    <option value="high-chime">High-pitched Chime (Double Service Bell)</option>
-                    <option value="modulating-siren">Emergency Siren (Modulating Sawtooth)</option>
-                  </select>
-                </div>
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-                      const now = ctx.currentTime;
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Pre-set Sound Selector */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Notification Sound</label>
+                    <select
+                      value={notificationSound}
+                      onChange={e => setNotificationSound(e.target.value)}
+                      className="w-full bg-[#FAF9F5] border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded px-3 py-2.5 text-sm outline-none transition-all"
+                    >
+                      <option value="alarm-drum-bass">Drum & Bass Alarm (Loud & Persistent)</option>
+                      <option value="digital-beeps">Digital Beeps (Retro Watch Style)</option>
+                      <option value="high-chime">High-pitched Chime (Double Service Bell)</option>
+                      <option value="modulating-siren">Emergency Siren (Modulating Sawtooth)</option>
                       
-                      if (notificationSound === 'alarm-drum-bass') {
-                        fetch('/alarm.mp3')
-                          .then(res => res.arrayBuffer())
-                          .then(buf => ctx.decodeAudioData(buf))
-                          .then(decoded => {
-                            const source = ctx.createBufferSource();
-                            source.buffer = decoded;
+                      {/* Show custom option if current sound is custom */}
+                      {!['alarm-drum-bass', 'digital-beeps', 'high-chime', 'modulating-siren'].includes(notificationSound) && (
+                        <option value={notificationSound}>
+                          Custom Uploaded Sound ({notificationSound.split('/').pop() || 'custom.mp3'})
+                        </option>
+                      )}
+                    </select>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+                        const now = ctx.currentTime;
+                        
+                        if (!['alarm-drum-bass', 'digital-beeps', 'high-chime', 'modulating-siren'].includes(notificationSound)) {
+                          // Custom sound preview
+                          const playCustom = async () => {
+                            try {
+                              const res = await getAlertSoundSignedUrlAction(notificationSound);
+                              if (res.success && res.signedUrl) {
+                                const audioRes = await fetch(res.signedUrl);
+                                const buf = await audioRes.arrayBuffer();
+                                const decoded = await ctx.decodeAudioData(buf);
+                                const source = ctx.createBufferSource();
+                                source.buffer = decoded;
+                                const gain = ctx.createGain();
+                                source.connect(gain);
+                                gain.connect(ctx.destination);
+                                gain.gain.setValueAtTime(0.5, now);
+                                source.start(now);
+                                // Set a long stop time for custom files just in case
+                                source.stop(now + 10.0);
+                              } else {
+                                alert(res.error || 'Failed to get signed URL for preview.');
+                              }
+                            } catch (err: any) {
+                              console.error('Preview error:', err);
+                              alert(err.message || 'Error playing custom preview.');
+                            }
+                          };
+                          playCustom();
+                        } else if (notificationSound === 'alarm-drum-bass') {
+                          fetch('/alarm.mp3')
+                            .then(res => res.arrayBuffer())
+                            .then(buf => ctx.decodeAudioData(buf))
+                            .then(decoded => {
+                              const source = ctx.createBufferSource();
+                              source.buffer = decoded;
+                              const gain = ctx.createGain();
+                              source.connect(gain);
+                              gain.connect(ctx.destination);
+                              gain.gain.setValueAtTime(0.5, now);
+                              source.start(now);
+                              source.stop(now + 2.5);
+                            })
+                            .catch(err => console.error('Preview error:', err));
+                        } else if (notificationSound === 'digital-beeps') {
+                          for (let i = 0; i < 3; i++) {
+                            const beepTime = now + (i * 0.15);
+                            const osc = ctx.createOscillator();
                             const gain = ctx.createGain();
-                            source.connect(gain);
+                            osc.connect(gain);
                             gain.connect(ctx.destination);
-                            gain.gain.setValueAtTime(0.5, now);
-                            source.start(now);
-                            source.stop(now + 2.5);
-                          })
-                          .catch(err => console.error('Preview error:', err));
-                      } else if (notificationSound === 'digital-beeps') {
-                        for (let i = 0; i < 3; i++) {
-                          const beepTime = now + (i * 0.15);
+                            osc.type = 'square';
+                            osc.frequency.setValueAtTime(987.77, beepTime);
+                            gain.gain.setValueAtTime(0.2, beepTime);
+                            gain.gain.exponentialRampToValueAtTime(0.0001, beepTime + 0.12);
+                            osc.start(beepTime);
+                            osc.stop(beepTime + 0.12);
+                          }
+                        } else if (notificationSound === 'high-chime') {
+                          const osc1 = ctx.createOscillator();
+                          const gain1 = ctx.createGain();
+                          osc1.connect(gain1);
+                          gain1.connect(ctx.destination);
+                          osc1.frequency.setValueAtTime(880, now);
+                          osc1.type = 'sine';
+                          gain1.gain.setValueAtTime(0.3, now);
+                          gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                          osc1.start(now);
+                          osc1.stop(now + 0.4);
+
+                          const osc2 = ctx.createOscillator();
+                          const gain2 = ctx.createGain();
+                          osc2.connect(gain2);
+                          gain2.connect(ctx.destination);
+                          osc2.frequency.setValueAtTime(1100, now + 0.1);
+                          osc2.type = 'sine';
+                          gain2.gain.setValueAtTime(0.3, now + 0.1);
+                          gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                          osc2.start(now + 0.1);
+                          osc2.stop(now + 0.5);
+                        } else if (notificationSound === 'modulating-siren') {
                           const osc = ctx.createOscillator();
                           const gain = ctx.createGain();
                           osc.connect(gain);
                           gain.connect(ctx.destination);
-                          osc.type = 'square';
-                          osc.frequency.setValueAtTime(987.77, beepTime);
-                          gain.gain.setValueAtTime(0.2, beepTime);
-                          gain.gain.exponentialRampToValueAtTime(0.0001, beepTime + 0.12);
-                          osc.start(beepTime);
-                          osc.stop(beepTime + 0.12);
+                          osc.type = 'sawtooth';
+                          osc.frequency.setValueAtTime(440, now);
+                          osc.frequency.exponentialRampToValueAtTime(880, now + 0.3);
+                          osc.frequency.exponentialRampToValueAtTime(440, now + 0.6);
+                          gain.gain.setValueAtTime(0.2, now);
+                          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                          osc.start(now);
+                          osc.stop(now + 0.6);
                         }
-                      } else if (notificationSound === 'high-chime') {
-                        const osc1 = ctx.createOscillator();
-                        const gain1 = ctx.createGain();
-                        osc1.connect(gain1);
-                        gain1.connect(ctx.destination);
-                        osc1.frequency.setValueAtTime(880, now);
-                        osc1.type = 'sine';
-                        gain1.gain.setValueAtTime(0.3, now);
-                        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-                        osc1.start(now);
-                        osc1.stop(now + 0.4);
+                      }}
+                      className="w-full sm:w-auto bg-muted hover:bg-muted/80 text-foreground text-xs font-bold uppercase tracking-wider px-5 py-3.5 rounded transition-all"
+                    >
+                      🔊 Preview Sound
+                    </button>
+                  </div>
+                </div>
 
-                        const osc2 = ctx.createOscillator();
-                        const gain2 = ctx.createGain();
-                        osc2.connect(gain2);
-                        gain2.connect(ctx.destination);
-                        osc2.frequency.setValueAtTime(1100, now + 0.1);
-                        osc2.type = 'sine';
-                        gain2.gain.setValueAtTime(0.3, now + 0.1);
-                        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-                        osc2.start(now + 0.1);
-                        osc2.stop(now + 0.5);
-                      } else if (notificationSound === 'modulating-siren') {
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        osc.connect(gain);
-                        gain.connect(ctx.destination);
-                        osc.type = 'sawtooth';
-                        osc.frequency.setValueAtTime(440, now);
-                        osc.frequency.exponentialRampToValueAtTime(880, now + 0.3);
-                        osc.frequency.exponentialRampToValueAtTime(440, now + 0.6);
-                        gain.gain.setValueAtTime(0.2, now);
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-                        osc.start(now);
-                        osc.stop(now + 0.6);
-                      }
-                    }}
-                    className="w-full sm:w-auto bg-muted hover:bg-muted/80 text-foreground text-xs font-bold uppercase tracking-wider px-5 py-3.5 rounded transition-all"
-                  >
-                    🔊 Preview Sound
-                  </button>
+                {/* Custom Sound Upload Section */}
+                <div className="bg-white border border-border p-4 rounded-lg flex flex-col justify-between">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+                      Upload Custom MP3 Alert Sound
+                    </label>
+                    <input
+                      type="file"
+                      accept=".mp3"
+                      onChange={handleCustomSoundFileChange}
+                      className="text-xs text-muted-foreground w-full file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-2">
+                      Upload a custom audio file (MP3 format, maximum size 5MB).
+                    </p>
+                  </div>
+
+                  {customSoundFile && (
+                    <div className="mt-3 flex items-center justify-between bg-primary/5 p-2 rounded text-xs">
+                      <span className="truncate font-light max-w-[180px]">{customSoundFile.name}</span>
+                      <button
+                        type="button"
+                        disabled={uploadingSound}
+                        onClick={handleUploadCustomSound}
+                        className="inline-flex items-center gap-1.5 bg-primary text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded hover:bg-primary/90 transition-all disabled:opacity-50"
+                      >
+                        {uploadingSound ? (
+                          <>
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          'Upload File'
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
