@@ -329,13 +329,21 @@ export default function KdsOrderCard({
             className={`w-full py-3.5 rounded-lg font-black text-sm uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 ${offsetRingClass} ${
               isDelivery
                 ? 'bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white focus:ring-blue-400'
-                : 'bg-green-500 hover:bg-green-600 active:bg-green-700 text-white focus:ring-green-400'
+                : isDineIn
+                  ? 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white focus:ring-purple-500'
+                  : 'bg-green-500 hover:bg-green-600 active:bg-green-700 text-white focus:ring-green-400'
             }`}
-            aria-label={`${isTakeaway ? t('markReady') : t('handedToCourier')} ${orderRef}`}
+            aria-label={`${isDineIn ? t('readyToServe') : isTakeaway ? t('markReady') : t('handedToCourier')} ${orderRef}`}
           >
             <span className="flex items-center justify-center gap-2">
-              {isDelivery ? <Truck className="w-5 h-5" /> : <ShoppingBag className="w-5 h-5" />}
-              {isTakeaway ? t('markReady') : t('handedToCourier')}
+              {isDelivery ? (
+                <Truck className="w-5 h-5" />
+              ) : isDineIn ? (
+                <ChefHat className="w-5 h-5" />
+              ) : (
+                <ShoppingBag className="w-5 h-5" />
+              )}
+              {isDineIn ? t('readyToServe') : isTakeaway ? t('markReady') : t('handedToCourier')}
             </span>
           </button>
         )}

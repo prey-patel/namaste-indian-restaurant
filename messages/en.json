@@ -530,6 +530,8 @@
     "startPreparing": "Start Preparing",
     "markReady": "Mark Ready",
     "handedToCourier": "Handed to Courier",
+    "dineIn": "Dine-In",
+    "readyToServe": "Ready to Serve",
     "readyForPickup": "Ready for Pickup",
     "outForDelivery": "Out for Delivery",
     "elapsed": "Elapsed",
