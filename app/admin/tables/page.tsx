@@ -1,5 +1,6 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { ROUTES } from '@/lib/routes/path';
 import TablesManagement from '@/components/admin/tables/tables-management';
@@ -8,6 +9,10 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminTablesPage() {
   const supabase = await createClient();
+  const headersList = await headers();
+  const host = headersList.get('host') || 'localhost:3000';
+  const protocol = host.includes('localhost') ? 'http' : 'https';
+  const siteUrl = `${protocol}://${host}`;
 
   // 1. Authenticate user and check permissions
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -43,7 +48,7 @@ export default async function AdminTablesPage() {
     .select('id, table_id, total_amount, status')
     .in('status', ['pending', 'approved', 'preparing', 'ready_for_pickup']);
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
 
   return (
     <div className="space-y-6 text-left">
