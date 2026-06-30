@@ -310,21 +310,21 @@ export default function TablesManagement({
       
       {/* Metrics Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <PremiumCard hoverable={false} className="border-primary/10 bg-[#050B1E]/60 p-5 space-y-1.5">
+        <PremiumCard hoverable={false} className="p-5 space-y-1.5">
           <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Total Tables</span>
           <span className="text-2xl font-bold text-foreground font-mono">{tables.length}</span>
         </PremiumCard>
-        <PremiumCard hoverable={false} className="border-primary/10 bg-[#050B1E]/60 p-5 space-y-1.5">
+        <PremiumCard hoverable={false} className="p-5 space-y-1.5">
           <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Active Tables</span>
           <span className="text-2xl font-bold text-foreground font-mono">{tables.filter(t => t.is_active).length}</span>
         </PremiumCard>
-        <PremiumCard hoverable={false} className="border-primary/10 bg-[#050B1E]/60 p-5 space-y-1.5">
+        <PremiumCard hoverable={false} className="p-5 space-y-1.5">
           <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Occupied Sessions</span>
           <span className="text-2xl font-bold text-primary font-mono">{sessions.length}</span>
         </PremiumCard>
-        <PremiumCard hoverable={false} className="border-primary/10 bg-[#050B1E]/60 p-5 space-y-1.5">
+        <PremiumCard hoverable={false} className="p-5 space-y-1.5">
           <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Active Dine-in Orders</span>
-          <span className="text-2xl font-bold text-green-400 font-mono">{orders.length}</span>
+          <span className="text-2xl font-bold text-green-600 dark:text-green-400 font-mono">{orders.length}</span>
         </PremiumCard>
       </div>
 
@@ -346,7 +346,7 @@ export default function TablesManagement({
         {tables.filter(t => t.is_active).length > 0 && (
           <Button
             onClick={() => setPrintAllMode(true)}
-            className="bg-[#070B1E] border border-primary/20 hover:bg-primary/5 text-muted-foreground hover:text-foreground font-bold text-xs uppercase tracking-wider py-2 px-6"
+            className="bg-background border border-border hover:bg-muted text-muted-foreground hover:text-foreground font-bold text-xs uppercase tracking-wider py-2 px-6"
           >
             <Printer className="w-4 h-4 mr-2" /> Print All QR Codes
           </Button>
@@ -361,7 +361,7 @@ export default function TablesManagement({
           const ordersSubtotal = tableOrders.reduce((sum, o) => sum + Number(o.total_amount), 0);
 
           return (
-            <PremiumCard key={t.id} hoverable={false} className={`bg-[#050B1E]/40 border-primary/10 flex flex-col p-5 justify-between space-y-4 ${!t.is_active ? 'opacity-50' : ''}`}>
+            <PremiumCard key={t.id} hoverable={false} className={`flex flex-col p-5 justify-between space-y-4 ${!t.is_active ? 'opacity-50' : ''}`}>
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
@@ -375,14 +375,14 @@ export default function TablesManagement({
                   </p>
                 </div>
                 {qrCodes[t.id] && (
-                  <div className="w-20 h-20 border border-primary/10 p-0.5 rounded bg-white flex-shrink-0 cursor-pointer" onClick={() => setPrintTable(t)} title="Click to view printable QR Card">
+                  <div className="w-20 h-20 border border-border p-0.5 rounded bg-white flex-shrink-0 cursor-pointer" onClick={() => setPrintTable(t)} title="Click to view printable QR Card">
                     <img src={qrCodes[t.id]} alt={`Table ${t.table_number} QR`} className="w-full h-full" />
                   </div>
                 )}
               </div>
 
               {/* Table Details */}
-              <div className="space-y-2 text-xs border-t border-b border-primary/5 py-3 text-muted-foreground">
+              <div className="space-y-2 text-xs border-t border-b border-border py-3 text-muted-foreground">
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> Capacity:</span>
                   <span className="font-bold text-foreground">{t.capacity} guests</span>
@@ -397,14 +397,14 @@ export default function TablesManagement({
 
               {/* Session / Booking Details */}
               {activeSession ? (
-                <div className="bg-[#050B1E] border border-primary/5 rounded p-3 text-xs space-y-2">
+                <div className="bg-muted/40 border border-border rounded p-3 text-xs space-y-2">
                   <div className="flex justify-between text-muted-foreground font-semibold">
                     <span className="text-primary font-bold">Occupied Session</span>
                     <span>{new Date(activeSession.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                   <div className="text-xs text-foreground font-medium flex justify-between">
                     <span>Guest: {activeSession.customer_name}</span>
-                    <span className="font-mono text-green-400 font-bold">{ordersSubtotal.toFixed(2)} PLN</span>
+                    <span className="font-mono text-green-600 dark:text-green-400 font-bold">{ordersSubtotal.toFixed(2)} PLN</span>
                   </div>
                   {tableOrders.length > 0 && (
                     <div className="flex gap-1.5 flex-wrap pt-1">
@@ -418,7 +418,7 @@ export default function TablesManagement({
                   <Button
                     onClick={() => handleCloseSession(activeSession.id, t.table_number)}
                     disabled={isPending}
-                    className="w-full mt-2 bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500/20 font-bold text-[10px] uppercase tracking-wider py-1.5"
+                    className="w-full mt-2 bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-405 hover:bg-green-500/20 font-bold text-[10px] uppercase tracking-wider py-1.5"
                   >
                     Clear & Vacate Table
                   </Button>
@@ -430,10 +430,10 @@ export default function TablesManagement({
               )}
 
               {/* Action Buttons */}
-              <div className="flex gap-2 pt-2 border-t border-primary/5">
+              <div className="flex gap-2 pt-2 border-t border-border">
                 <Button
                   onClick={() => openEditDialog(t)}
-                  className="flex-1 bg-[#070B1E] border border-primary/10 hover:bg-primary/5 text-muted-foreground hover:text-foreground text-[10px] uppercase tracking-wider py-1.5"
+                  className="flex-1 bg-background border border-border hover:bg-muted text-muted-foreground hover:text-foreground text-[10px] uppercase tracking-wider py-1.5"
                 >
                   <Edit className="w-3.5 h-3.5 mr-1" /> Edit
                 </Button>
@@ -449,7 +449,7 @@ export default function TablesManagement({
                 </Button>
                 <Button
                   onClick={() => handleRegenerateQR(t)}
-                  className="p-2 bg-[#070B1E] border border-primary/10 hover:bg-primary/5 text-muted-foreground hover:text-foreground"
+                  className="p-2 bg-background border border-border hover:bg-muted text-muted-foreground hover:text-foreground"
                   title="Regenerate QR Code"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
@@ -469,9 +469,9 @@ export default function TablesManagement({
 
       {/* Add Table Dialog */}
       {addDialogOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <form onSubmit={handleAddTable} className="w-full max-w-md bg-[#050B1E] border border-primary/20 rounded-lg p-6 space-y-4">
-            <div className="flex justify-between items-center border-b border-primary/10 pb-3">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <form onSubmit={handleAddTable} className="w-full max-w-md bg-card border border-border rounded-lg p-6 space-y-4 shadow-2xl text-left text-foreground">
+            <div className="flex justify-between items-center border-b border-border pb-3">
               <h3 className="text-lg font-serif font-black tracking-wide text-foreground">
                 ADD NEW DINING TABLE
               </h3>
@@ -487,7 +487,7 @@ export default function TablesManagement({
                   min={1}
                   value={tableNumber || ''}
                   onChange={(e) => setTableNumber(parseInt(e.target.value))}
-                  className="w-full bg-[#070B1E] border border-primary/20 text-foreground text-sm rounded px-3 py-2 focus:outline-none focus:border-primary/50"
+                  className="w-full bg-background border border-border text-foreground text-sm rounded px-3 py-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>
 
@@ -499,7 +499,7 @@ export default function TablesManagement({
                   min={1}
                   value={capacity}
                   onChange={(e) => setCapacity(parseInt(e.target.value))}
-                  className="w-full bg-[#070B1E] border border-primary/20 text-foreground text-sm rounded px-3 py-2 focus:outline-none focus:border-primary/50"
+                  className="w-full bg-background border border-border text-foreground text-sm rounded px-3 py-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>
             </div>
@@ -511,7 +511,7 @@ export default function TablesManagement({
                 required
                 value={section}
                 onChange={(e) => setSection(e.target.value)}
-                className="w-full bg-[#070B1E] border border-primary/20 text-foreground text-sm rounded px-3 py-2 focus:outline-none focus:border-primary/50"
+                className="w-full bg-background border border-border text-foreground text-sm rounded px-3 py-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               />
             </div>
 
@@ -520,21 +520,21 @@ export default function TablesManagement({
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full bg-[#070B1E] border border-primary/20 text-foreground text-xs rounded px-3 py-2 h-16 focus:outline-none focus:border-primary/50 resize-none"
+                className="w-full bg-background border border-border text-foreground text-xs rounded px-3 py-2 h-16 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
               />
             </div>
 
             {error && (
-              <div className="p-3 rounded border border-red-500/20 bg-red-500/5 text-xs text-red-400 text-left">
+              <div className="p-3 rounded border border-red-500/20 bg-red-500/5 text-xs text-red-500 dark:text-red-400 text-left">
                 {error}
               </div>
             )}
 
-            <div className="flex justify-end gap-3 border-t border-primary/10 pt-4">
+            <div className="flex justify-end gap-3 border-t border-border pt-4">
               <Button
                 type="button"
                 onClick={() => setAddDialogOpen(false)}
-                className="bg-[#070B1E] border border-primary/10 text-muted-foreground hover:text-foreground text-[10px] uppercase tracking-wider py-1.5 px-4 h-auto"
+                className="bg-background border border-border text-muted-foreground hover:text-foreground text-[10px] uppercase tracking-wider py-1.5 px-4 h-auto"
               >
                 Cancel
               </Button>
@@ -552,9 +552,9 @@ export default function TablesManagement({
 
       {/* Edit Table Dialog */}
       {editDialogOpen && selectedTable && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <form onSubmit={handleEditTable} className="w-full max-w-md bg-[#050B1E] border border-primary/20 rounded-lg p-6 space-y-4">
-            <div className="flex justify-between items-center border-b border-primary/10 pb-3">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <form onSubmit={handleEditTable} className="w-full max-w-md bg-card border border-border rounded-lg p-6 space-y-4 shadow-2xl text-left text-foreground">
+            <div className="flex justify-between items-center border-b border-border pb-3">
               <h3 className="text-lg font-serif font-black tracking-wide text-foreground">
                 EDIT TABLE #{selectedTable.table_number}
               </h3>
@@ -570,7 +570,7 @@ export default function TablesManagement({
                   min={1}
                   value={tableNumber || ''}
                   onChange={(e) => setTableNumber(parseInt(e.target.value))}
-                  className="w-full bg-[#070B1E] border border-primary/20 text-foreground text-sm rounded px-3 py-2 focus:outline-none focus:border-primary/50"
+                  className="w-full bg-background border border-border text-foreground text-sm rounded px-3 py-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>
 
@@ -582,7 +582,7 @@ export default function TablesManagement({
                   min={1}
                   value={capacity}
                   onChange={(e) => setCapacity(parseInt(e.target.value))}
-                  className="w-full bg-[#070B1E] border border-primary/20 text-foreground text-sm rounded px-3 py-2 focus:outline-none focus:border-primary/50"
+                  className="w-full bg-background border border-border text-foreground text-sm rounded px-3 py-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>
             </div>
@@ -594,7 +594,7 @@ export default function TablesManagement({
                 required
                 value={section}
                 onChange={(e) => setSection(e.target.value)}
-                className="w-full bg-[#070B1E] border border-primary/20 text-foreground text-sm rounded px-3 py-2 focus:outline-none focus:border-primary/50"
+                className="w-full bg-background border border-border text-foreground text-sm rounded px-3 py-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               />
             </div>
 
@@ -603,21 +603,21 @@ export default function TablesManagement({
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full bg-[#070B1E] border border-primary/20 text-foreground text-xs rounded px-3 py-2 h-16 focus:outline-none focus:border-primary/50 resize-none"
+                className="w-full bg-background border border-border text-foreground text-xs rounded px-3 py-2 h-16 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
               />
             </div>
 
             {error && (
-              <div className="p-3 rounded border border-red-500/20 bg-red-500/5 text-xs text-red-400 text-left">
+              <div className="p-3 rounded border border-red-500/20 bg-red-500/5 text-xs text-red-500 dark:text-red-400 text-left">
                 {error}
               </div>
             )}
 
-            <div className="flex justify-end gap-3 border-t border-primary/10 pt-4">
+            <div className="flex justify-end gap-3 border-t border-border pt-4">
               <Button
                 type="button"
                 onClick={() => setEditDialogOpen(false)}
-                className="bg-[#070B1E] border border-primary/10 text-muted-foreground hover:text-foreground text-[10px] uppercase tracking-wider py-1.5 px-4 h-auto"
+                className="bg-background border border-border text-muted-foreground hover:text-foreground text-[10px] uppercase tracking-wider py-1.5 px-4 h-auto"
               >
                 Cancel
               </Button>
