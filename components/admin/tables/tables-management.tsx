@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import PremiumCard from '@/components/ui/premium-card';
 import GoldSpinner from '@/components/ui/gold-spinner';
 import StatusPill from '@/components/ui/status-pill';
-import { Plus, Trash2, Printer, RefreshCw, Layers, Users, ShieldAlert, X, Edit, Power, Check } from 'lucide-react';
+import { Plus, Trash2, Printer, RefreshCw, Layers, Users, ShieldAlert, X, Edit, Power, Check, ChefHat } from 'lucide-react';
 import {
   createTableAction,
   updateTableAction,
@@ -46,6 +46,33 @@ type Props = {
   initialOrders: OrderSummaryRecord[];
   siteUrl: string;
 };
+
+function StatCard({ label, value, icon: Icon, color }: {
+  label: string;
+  value: string | number;
+  icon: any;
+  color: 'amber' | 'blue' | 'emerald' | 'slate' | 'purple';
+}) {
+  const colors = {
+    amber: 'from-amber-50/80 to-orange-50/40 border-amber-200/80 text-amber-800 shadow-sm dark:from-amber-500/20 dark:to-orange-500/10 dark:border-amber-500/20 dark:text-amber-400',
+    blue: 'from-blue-50/80 to-cyan-50/40 border-blue-200/80 text-blue-800 shadow-sm dark:from-blue-500/20 dark:to-cyan-500/10 dark:border-blue-500/20 dark:text-blue-400',
+    emerald: 'from-emerald-50/80 to-green-50/40 border-emerald-200/80 text-emerald-800 shadow-sm dark:from-emerald-500/20 dark:to-green-500/10 dark:border-emerald-500/20 dark:text-emerald-400',
+    slate: 'from-slate-50/80 to-gray-50/40 border-slate-200/80 text-slate-800 shadow-sm dark:from-slate-500/20 dark:to-gray-500/10 dark:border-slate-500/20 dark:text-slate-400',
+    purple: 'from-purple-50/80 to-indigo-50/40 border-purple-200/80 text-purple-800 shadow-sm dark:from-purple-500/20 dark:to-indigo-500/10 dark:border-purple-500/20 dark:text-purple-400',
+  };
+
+  return (
+    <div className={`relative overflow-hidden rounded-xl border bg-gradient-to-br p-5 ${colors[color]} backdrop-blur-sm`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider opacity-70">{label}</p>
+          <p className="text-2xl font-bold font-mono mt-1 tabular-nums">{value}</p>
+        </div>
+        <Icon className="w-8 h-8 opacity-30 text-slate-500 dark:opacity-20" />
+      </div>
+    </div>
+  );
+}
 
 export default function TablesManagement({
   initialTables,
@@ -343,22 +370,30 @@ export default function TablesManagement({
       
       {/* Metrics Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <PremiumCard hoverable={false} className="p-5 space-y-1.5">
-          <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Total Tables</span>
-          <span className="text-2xl font-bold text-foreground font-mono">{tables.length}</span>
-        </PremiumCard>
-        <PremiumCard hoverable={false} className="p-5 space-y-1.5">
-          <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Active Tables</span>
-          <span className="text-2xl font-bold text-foreground font-mono">{tables.filter(t => t.is_active).length}</span>
-        </PremiumCard>
-        <PremiumCard hoverable={false} className="p-5 space-y-1.5">
-          <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Occupied Sessions</span>
-          <span className="text-2xl font-bold text-primary font-mono">{sessions.length}</span>
-        </PremiumCard>
-        <PremiumCard hoverable={false} className="p-5 space-y-1.5">
-          <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Active Dine-in Orders</span>
-          <span className="text-2xl font-bold text-green-600 dark:text-green-400 font-mono">{orders.length}</span>
-        </PremiumCard>
+        <StatCard
+          label="Total Tables"
+          value={tables.length}
+          icon={Layers}
+          color="slate"
+        />
+        <StatCard
+          label="Active Tables"
+          value={tables.filter(t => t.is_active).length}
+          icon={Power}
+          color="emerald"
+        />
+        <StatCard
+          label="Occupied Sessions"
+          value={sessions.length}
+          icon={Users}
+          color="amber"
+        />
+        <StatCard
+          label="Active Dine-in Orders"
+          value={orders.length}
+          icon={ChefHat}
+          color="purple"
+        />
       </div>
 
       {/* Action Buttons */}

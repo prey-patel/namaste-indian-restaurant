@@ -42,10 +42,11 @@ export default async function AdminTablesPage() {
     .select('*')
     .eq('status', 'active');
 
-  // 4. Fetch active orders
+  // 4. Fetch active orders (dine-in only)
   const { data: activeOrders } = await supabase
     .from('orders')
     .select('id, table_id, total_amount, status')
+    .eq('order_type', 'dine_in')
     .in('status', ['pending', 'approved', 'preparing', 'ready_for_pickup']);
 
 
