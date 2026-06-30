@@ -11,7 +11,7 @@ interface BaseModalProps {
 
 // 1. Confirm Order Modal (ETA Selection)
 interface ConfirmOrderModalProps extends BaseModalProps {
-  orderType: 'delivery' | 'takeaway';
+  orderType: 'delivery' | 'takeaway' | 'dine_in';
   onSubmit: (etaMinutes: number) => void;
   title?: string;
   order?: any;
@@ -57,7 +57,7 @@ export function ConfirmOrderModal({ isOpen, onClose, orderType, onSubmit, title,
     onSubmit(finalMins);
   };
 
-  const modalTitle = title || (isDelivery ? 'Confirm Delivery Order' : 'Confirm Takeaway Order');
+  const modalTitle = title || (orderType === 'dine_in' ? 'Confirm Dine-In Order' : isDelivery ? 'Confirm Delivery Order' : 'Confirm Takeaway Order');
 
   return (
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
@@ -440,7 +440,7 @@ export function CancelOrderModal({ isOpen, onClose, onSubmit }: CancelOrderModal
 
 // 4. Update ETA Modal
 interface UpdateEtaModalProps extends BaseModalProps {
-  orderType: 'delivery' | 'takeaway';
+  orderType: 'delivery' | 'takeaway' | 'dine_in';
   onSubmit: (etaMinutes: number) => void;
 }
 

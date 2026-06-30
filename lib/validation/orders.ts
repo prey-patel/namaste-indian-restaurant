@@ -8,18 +8,17 @@ export const orderItemSchema = z.object({
 
 export const orderRequestSchema = z.object({
   customer_name: z.string().min(2, 'Name must be at least 2 characters').max(100),
-  customer_email: z.string().email('Please enter a valid email address'),
-  customer_phone: z.string()
-    .min(9, 'Phone number must be at least 9 characters')
-    .max(20, 'Phone number must not exceed 20 characters')
-    .regex(/^[\d\s+\-()]+$/, 'Invalid phone number format'),
-  order_type: z.enum(['delivery', 'takeaway']),
+  customer_email: z.string().max(100).optional().nullable().or(z.literal('')),
+  customer_phone: z.string().max(30).optional().nullable().or(z.literal('')),
+  order_type: z.enum(['delivery', 'takeaway', 'dine_in']),
   customer_notes: z.string().max(500, 'Notes must not exceed 500 characters').optional().nullable(),
   payment_method: z.enum([
     'cash_on_delivery',
     'cash_on_pickup',
     'card_on_delivery',
-    'card_on_pickup'
+    'card_on_pickup',
+    'cash_at_table',
+    'card_at_table'
   ]),
   // Delivery address details
   delivery_address: z.string().max(200, 'Address must not exceed 200 characters').optional().nullable(),
@@ -28,10 +27,40 @@ export const orderRequestSchema = z.object({
     .optional().nullable()
     .or(z.literal('')),
   delivery_city: z.string().max(100, 'City must not exceed 100 characters').optional().nullable(),
+  // Dine-in details
+  table_qr_token: z.string().min(6).max(24).optional().nullable().or(z.literal('')),
+  table_session_id: z.string().uuid().optional().nullable().or(z.literal('')),
   // Items array
   items: z.array(orderItemSchema).min(1, 'At least 1 item must be added to the basket'),
   consent: z.boolean().refine(val => val === true, 'Consent is required to submit an order'),
   source_language: z.enum(['pl', 'en']),
+})
+.refine((data) => {
+  if (data.order_type !== 'dine_in') {
+    return !!data.customer_email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.customer_email);
+  }
+  return true;
+}, {
+  message: 'Please enter a valid email address',
+  path: ['customer_email']
+})
+.refine((data) => {
+  if (data.order_type !== 'dine_in') {
+    return !!data.customer_phone && data.customer_phone.length >= 9 && data.customer_phone.length <= 20 && /^[\d\s+\-()]+$/.test(data.customer_phone);
+  }
+  return true;
+}, {
+  message: 'Phone number must be between 9 and 20 characters',
+  path: ['customer_phone']
+})
+.refine((data) => {
+  if (data.order_type === 'dine_in') {
+    return !!data.table_qr_token && data.table_qr_token.trim().length >= 6;
+  }
+  return true;
+}, {
+  message: 'Table identification token is required',
+  path: ['table_qr_token']
 })
 .refine((data) => {
   // Takeaway payment methods validation
@@ -41,6 +70,10 @@ export const orderRequestSchema = z.object({
   // Delivery payment methods validation
   if (data.order_type === 'delivery') {
     return data.payment_method === 'cash_on_delivery' || data.payment_method === 'card_on_delivery';
+  }
+  // Dine-in payment methods validation
+  if (data.order_type === 'dine_in') {
+    return data.payment_method === 'cash_at_table' || data.payment_method === 'card_at_table';
   }
   return false;
 }, {

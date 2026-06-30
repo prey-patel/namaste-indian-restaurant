@@ -80,7 +80,7 @@ export function useAdminSidebarBadges() {
         .from('orders')
         .select('id', { count: 'exact', head: true })
         .eq('status', 'pending')
-        .in('order_type', ['delivery', 'takeaway']);
+        .in('order_type', ['delivery', 'takeaway', 'dine_in']);
 
       if (!error && count !== null) {
         setOrdersApprovalCount(count);

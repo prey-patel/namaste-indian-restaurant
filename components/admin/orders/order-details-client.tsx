@@ -52,9 +52,9 @@ import {
 type Order = {
   id: string;
   customer_name: string;
-  customer_email: string;
-  customer_phone: string;
-  order_type: 'delivery' | 'takeaway';
+  customer_email: string | null;
+  customer_phone: string | null;
+  order_type: 'delivery' | 'takeaway' | 'dine_in';
   status: string;
   delivery_address: string | null;
   delivery_postal_code: string | null;
@@ -91,6 +91,7 @@ type Order = {
   suggested_delivery_fee_amount?: number | null;
   delivery_latitude?: number | null;
   delivery_longitude?: number | null;
+  table_number?: number | null;
 };
 
 type OrderItem = {
@@ -127,7 +128,7 @@ type Props = {
   pastOrders?: {
     id: string;
     created_at: string;
-    order_type: 'delivery' | 'takeaway';
+    order_type: 'delivery' | 'takeaway' | 'dine_in';
     total_amount: number;
     status: string;
     delivery_fee: number;
@@ -813,7 +814,9 @@ export default function OrderDetailsClient({
                     {t('orderType')}
                   </span>
                   <span className="text-sm font-semibold text-foreground capitalize">
-                    {order.order_type}
+                    {order.order_type === 'dine_in' 
+                      ? `Dine-In (Table #${order.table_number})` 
+                      : order.order_type}
                   </span>
                 </div>
               </div>

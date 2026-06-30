@@ -34,9 +34,9 @@ import OrderAlertBanner from '@/components/admin/alerts/order-alert-banner';
 type Order = {
   id: string;
   customer_name: string;
-  customer_email: string;
-  customer_phone: string;
-  order_type: 'delivery' | 'takeaway';
+  customer_email: string | null;
+  customer_phone: string | null;
+  order_type: 'delivery' | 'takeaway' | 'dine_in';
   status: 'pending' | 'approved' | 'preparing' | 'ready_for_pickup' | 'out_for_delivery' | 'completed' | 'rejected' | 'cancelled';
   delivery_address: string | null;
   delivery_postal_code: string | null;
@@ -60,6 +60,7 @@ type Order = {
   delivery_distance_walk_meters?: number | null;
   delivery_duration_walk_seconds?: number | null;
   delivery_distance_error?: string | null;
+  table_number?: number | null;
 };
 
 type Metrics = {
@@ -506,6 +507,7 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
             <option value="all">All types</option>
             <option value="takeaway">Takeaway</option>
             <option value="delivery">Delivery</option>
+            <option value="dine_in">Dine-In</option>
           </select>
         </div>
 
@@ -677,7 +679,9 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                       {/* Order Type */}
                       <td className="p-4">
                         <span className="font-semibold text-foreground capitalize">
-                          {order.order_type}
+                          {order.order_type === 'dine_in' 
+                            ? `Dine-In (T#${order.table_number})` 
+                            : order.order_type}
                         </span>
                       </td>
 
@@ -871,7 +875,11 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                   <div className="grid grid-cols-2 gap-2 text-[11px] bg-background border border-border p-3 rounded">
                     <div>
                       <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block">Type</span>
-                      <span className="font-semibold text-foreground capitalize">{order.order_type}</span>
+                      <span className="font-semibold text-foreground capitalize">
+                        {order.order_type === 'dine_in' 
+                          ? `Dine-In (T#${order.table_number})` 
+                          : order.order_type}
+                      </span>
                     </div>
                     <div>
                       <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 block">Total</span>

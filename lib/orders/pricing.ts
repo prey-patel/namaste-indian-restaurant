@@ -52,7 +52,7 @@ export interface DeliveryAddressInput {
  */
 export async function calculateOrderTotalServerSide(
   items: PriceCalculationItem[],
-  orderType: 'delivery' | 'takeaway',
+  orderType: 'delivery' | 'takeaway' | 'dine_in',
   deliveryAddress?: DeliveryAddressInput | null
 ): Promise<PriceCalculationResult> {
   const adminClient = createAdminClient();
@@ -125,7 +125,11 @@ export async function calculateOrderTotalServerSide(
         const rule = packagingRules.find(r => r.id === map.packaging_fee_rule_id);
         if (rule) {
           // Check if rule applies to the selected order type
-          const applies = orderType === 'delivery' ? rule.applies_to_delivery : rule.applies_to_takeaway;
+          const applies = orderType === 'delivery' 
+            ? rule.applies_to_delivery 
+            : orderType === 'takeaway' 
+              ? rule.applies_to_takeaway 
+              : rule.applies_to_dine_in;
           if (applies) {
             const ruleAmountGrosz = Math.round(Number(rule.amount) * 100);
             if (rule.fee_type === 'bag') {

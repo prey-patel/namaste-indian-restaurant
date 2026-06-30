@@ -130,7 +130,7 @@ export default function OrderingWorkflowClient({
     packagingTotal?: number;
     deliveryFee?: number;
     totalAmount?: number;
-    orderType?: 'delivery' | 'takeaway';
+    orderType?: 'delivery' | 'takeaway' | 'dine_in';
     deliveryZoneAction?: 'allow' | 'contact' | 'block' | null;
     customerName?: string;
     customerPhone?: string;

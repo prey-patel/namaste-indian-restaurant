@@ -57,7 +57,11 @@ export default async function KdsPage() {
       preparing_at,
       ready_at,
       dispatched_at,
-      updated_at
+      updated_at,
+      table_id,
+      dining_tables (
+        table_number
+      )
     `)
     .in('status', kitchenStatuses)
     .order('approved_at', { ascending: true, nullsFirst: false })
@@ -101,12 +105,16 @@ export default async function KdsPage() {
   }
 
   // 5. Assemble order data with items
-  const kdsOrders = (orders || []).map(order => ({
-    ...order,
-    // Only expose first name for kitchen privacy
-    customer_first_name: order.customer_name ? order.customer_name.split(' ')[0] : '',
-    items: orderItemsMap[order.id] || [],
-  }));
+  const kdsOrders = (orders || []).map(order => {
+    const diningTable = (order as any).dining_tables;
+    return {
+      ...order,
+      // Only expose first name for kitchen privacy
+      customer_first_name: order.customer_name ? order.customer_name.split(' ')[0] : '',
+      items: orderItemsMap[order.id] || [],
+      table_number: diningTable ? diningTable.table_number : null,
+    };
+  });
 
   return (
     <KdsBoard

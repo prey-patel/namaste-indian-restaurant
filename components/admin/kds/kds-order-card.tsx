@@ -28,7 +28,7 @@ export type KdsOrderItem = {
 export type KdsOrder = {
   id: string;
   status: string;
-  order_type: 'delivery' | 'takeaway';
+  order_type: 'delivery' | 'takeaway' | 'dine_in';
   customer_first_name: string;
   customer_notes: string | null;
   estimated_time: string | null;
@@ -39,6 +39,7 @@ export type KdsOrder = {
   ready_at: string | null;
   dispatched_at: string | null;
   items: KdsOrderItem[];
+  table_number?: number | null;
 };
 
 type Props = {
@@ -146,6 +147,7 @@ export default function KdsOrderCard({
 
   const isDelivery = order.order_type === 'delivery';
   const isTakeaway = order.order_type === 'takeaway';
+  const isDineIn = order.order_type === 'dine_in';
 
   // Short order ref (last 6 chars of UUID)
   const orderRef = `#${order.id.slice(-6).toUpperCase()}`;
@@ -182,7 +184,7 @@ export default function KdsOrderCard({
         transition-all duration-300
       `}
       role="article"
-      aria-label={`${t('order')} ${orderRef} — ${isDelivery ? t('delivery') : t('takeaway')}`}
+      aria-label={`${t('order')} ${orderRef} — ${isDineIn ? (order.table_number ? `Table ${order.table_number}` : 'Dine-In') : isDelivery ? t('delivery') : t('takeaway')}`}
     >
       {/* Header */}
       <div className={`p-4 pb-3 flex items-center justify-between gap-2 border-b ${borderClass}`}>
@@ -193,18 +195,25 @@ export default function KdsOrderCard({
           </span>
 
           {/* Type Badge */}
-          <span
-            className={`
-              inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider
-              ${isDelivery
-                ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30'
-                : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
-              }
-            `}
-          >
-            {isDelivery ? <Truck className="w-3.5 h-3.5" /> : <ShoppingBag className="w-3.5 h-3.5" />}
-            {isDelivery ? t('delivery') : t('takeaway')}
-          </span>
+          {isDineIn ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-purple-500/15 text-purple-400 border border-purple-500/30">
+              <ChefHat className="w-3.5 h-3.5" />
+              {order.table_number ? `${t('dineIn') || 'Table'} #${order.table_number}` : t('dineIn') || 'Dine-In'}
+            </span>
+          ) : (
+            <span
+              className={`
+                inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider
+                ${isDelivery
+                  ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30'
+                  : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                }
+              `}
+            >
+              {isDelivery ? <Truck className="w-3.5 h-3.5" /> : <ShoppingBag className="w-3.5 h-3.5" />}
+              {isDelivery ? t('delivery') : t('takeaway')}
+            </span>
+          )}
         </div>
 
         {/* Customer first name */}

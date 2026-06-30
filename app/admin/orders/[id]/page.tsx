@@ -37,7 +37,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
   // 3. Load order
   const { data: order, error: orderError } = await supabase
     .from('orders')
-    .select('*')
+    .select('*, dining_tables(table_number)')
     .eq('id', id)
     .single();
 
@@ -128,9 +128,15 @@ export default async function AdminOrderDetailPage({ params }: Props) {
     }
   }
 
+  const diningTable = (order as any).dining_tables;
+  const formattedOrder = {
+    ...order,
+    table_number: diningTable ? diningTable.table_number : null
+  };
+
   return (
     <OrderDetailsClient
-      order={order}
+      order={formattedOrder}
       items={items || []}
       timeline={timeline || []}
       crmStats={crmStats}

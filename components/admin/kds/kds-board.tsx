@@ -87,7 +87,11 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
         .select(`
           id, status, order_type, customer_name, customer_notes,
           estimated_time, payment_method, created_at, approved_at,
-          preparing_at, ready_at, dispatched_at, updated_at
+          preparing_at, ready_at, dispatched_at, updated_at,
+          table_id,
+          dining_tables (
+            table_number
+          )
         `)
         .in('status', KITCHEN_STATUSES)
         .order('approved_at', { ascending: true, nullsFirst: false })
@@ -119,11 +123,15 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
         });
       }
 
-      const assembled: KdsOrder[] = freshOrders.map(o => ({
-        ...o,
-        customer_first_name: o.customer_name ? o.customer_name.split(' ')[0] : '',
-        items: itemsMap[o.id] || [],
-      }));
+      const assembled: KdsOrder[] = freshOrders.map(o => {
+        const diningTable = (o as any).dining_tables;
+        return {
+          ...o,
+          customer_first_name: o.customer_name ? o.customer_name.split(' ')[0] : '',
+          items: itemsMap[o.id] || [],
+          table_number: diningTable ? diningTable.table_number : null,
+        };
+      });
 
       // Detect new approved orders for sound alert & visual highlight
       const newIds: string[] = [];

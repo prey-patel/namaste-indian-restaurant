@@ -93,7 +93,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
 
   let queryBuilder = supabase
     .from('orders')
-    .select('*')
+    .select('*, dining_tables(table_number)')
     .order('created_at', { ascending: false });
 
   if (status !== 'all') {
@@ -167,9 +167,17 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
     console.error('Error fetching orders list in admin dashboard:', ordersError);
   }
 
+  const formattedOrders = (orders || []).map(order => {
+    const diningTable = (order as any).dining_tables;
+    return {
+      ...order,
+      table_number: diningTable ? diningTable.table_number : null
+    };
+  });
+
   return (
     <OrdersDashboard
-      initialOrders={(orders || []) as any[]}
+      initialOrders={formattedOrders as any[]}
       metrics={metrics}
       filters={{
         status,
