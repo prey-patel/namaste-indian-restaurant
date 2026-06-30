@@ -155,36 +155,69 @@ export default function TablesManagement({
     });
   };
 
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    confirmText?: string;
+    cancelText?: string;
+    variant?: 'danger' | 'warning' | 'primary';
+  } | null>(null);
+
+  const showConfirm = (options: {
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    confirmText?: string;
+    cancelText?: string;
+    variant?: 'danger' | 'warning' | 'primary';
+  }) => {
+    setConfirmModal({
+      isOpen: true,
+      ...options
+    });
+  };
+
   const handleToggleActive = async (table: TableRecord) => {
     startTransition(async () => {
       await updateTableAction(table.id, { is_active: !table.is_active });
     });
   };
 
-  const handleRegenerateQR = async (table: TableRecord) => {
-    if (!confirm(`Are you sure you want to regenerate QR token for Table #${table.table_number}? This will invalidate any existing printed QR cards.`)) {
-      return;
-    }
-    startTransition(async () => {
-      await regenerateQrTokenAction(table.id);
+  const handleRegenerateQR = (table: TableRecord) => {
+    showConfirm({
+      title: 'Regenerate QR Code',
+      message: `Are you sure you want to regenerate the QR token for Table #${table.table_number}? This will invalidate any existing printed QR cards.`,
+      confirmText: 'Regenerate',
+      variant: 'warning',
+      onConfirm: async () => {
+        await regenerateQrTokenAction(table.id);
+      }
     });
   };
 
-  const handleCloseSession = async (sessionId: string, tableNumber: number) => {
-    if (!confirm(`Close active session for Table #${tableNumber}? This will mark all active orders for this session as completed and vacate the table.`)) {
-      return;
-    }
-    startTransition(async () => {
-      await closeTableSessionAction(sessionId);
+  const handleCloseSession = (sessionId: string, tableNumber: number) => {
+    showConfirm({
+      title: 'Close Table Session',
+      message: `Close the active session for Table #${tableNumber}? This will mark all active orders for this session as completed and vacate the table.`,
+      confirmText: 'Close Session',
+      variant: 'primary',
+      onConfirm: async () => {
+        await closeTableSessionAction(sessionId);
+      }
     });
   };
 
-  const handleDeleteTable = async (table: TableRecord) => {
-    if (!confirm(`Are you sure you want to delete Table #${table.table_number}?`)) {
-      return;
-    }
-    startTransition(async () => {
-      await deleteTableAction(table.id);
+  const handleDeleteTable = (table: TableRecord) => {
+    showConfirm({
+      title: 'Delete Table',
+      message: `Are you sure you want to delete Table #${table.table_number}?`,
+      confirmText: 'Delete',
+      variant: 'danger',
+      onConfirm: async () => {
+        await deleteTableAction(table.id);
+      }
     });
   };
 
@@ -630,6 +663,54 @@ export default function TablesManagement({
               </Button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Custom Confirmation Dialog */}
+      {confirmModal && confirmModal.isOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-card border border-border rounded-lg p-6 space-y-4 shadow-2xl text-left text-foreground animate-scale-in">
+            <div className="flex justify-between items-center border-b border-border pb-3">
+              <h3 className="text-lg font-serif font-black tracking-wide text-foreground flex items-center gap-2">
+                {confirmModal.variant === 'danger' && <Trash2 className="w-5 h-5 text-red-500" />}
+                {confirmModal.variant === 'warning' && <RefreshCw className="w-5 h-5 text-amber-500" />}
+                {confirmModal.variant === 'primary' && <Layers className="w-5 h-5 text-primary" />}
+                {confirmModal.title}
+              </h3>
+              <button type="button" onClick={() => setConfirmModal(null)} className="text-muted-foreground hover:text-foreground">✕</button>
+            </div>
+
+            <p className="text-xs text-muted-foreground font-sans leading-relaxed">
+              {confirmModal.message}
+            </p>
+
+            <div className="flex justify-end gap-3 border-t border-border pt-4">
+              <Button
+                type="button"
+                onClick={() => setConfirmModal(null)}
+                className="bg-background border border-border text-muted-foreground hover:text-foreground text-[10px] uppercase tracking-wider py-1.5 px-4 h-auto"
+              >
+                {confirmModal.cancelText || 'Cancel'}
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  const onConf = confirmModal.onConfirm;
+                  setConfirmModal(null);
+                  startTransition(onConf);
+                }}
+                className={`text-white font-bold text-[10px] uppercase tracking-wider py-1.5 px-6 h-auto ${
+                  confirmModal.variant === 'danger'
+                    ? 'bg-red-500 hover:bg-red-650'
+                    : confirmModal.variant === 'warning'
+                      ? 'bg-amber-500 hover:bg-amber-600 text-black'
+                      : 'bg-primary hover:bg-primary/95'
+                }`}
+              >
+                {confirmModal.confirmText || 'Confirm'}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>
