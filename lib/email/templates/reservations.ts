@@ -14,6 +14,7 @@ export interface ReservationEmailData {
   approveUrl?: string;
   rejectUrl?: string;
   viewUrl?: string;
+  referenceCode?: string;
   lang?: "pl" | "en";
   restaurantContact?: {
     name: string;
@@ -182,6 +183,29 @@ function getEmailLayout(
 }
 
 /**
+ * Helper to render tracking details in reservation emails
+ */
+function getTrackingSectionHtml(data: ReservationEmailData): string {
+  if (!data.referenceCode || !data.viewUrl) return "";
+
+  const isPl = data.lang === "pl";
+  return `
+    <div style="background-color: #FAF9F5; border: 1px solid #EAE3D2; border-radius: 8px; padding: 20px; margin: 25px 0; text-align: center;">
+      <p style="margin: 0 0 10px 0; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; color: #D4AF37;">
+        ${isPl ? "Śledzenie statusu" : "Status Tracking"}
+      </p>
+      <p style="margin: 0 0 15px 0; font-size: 13px; color: #4A5568;">
+        ${isPl ? "Twój kod referencyjny:" : "Your reference code:"} <br />
+        <strong style="font-family: monospace; font-size: 14px; background-color: #EDF2F7; padding: 4px 10px; border-radius: 4px; display: inline-block; margin-top: 6px; border: 1px solid #CBD5E0; color: #1A202C;">${data.referenceCode}</strong>
+      </p>
+      <a href="${data.viewUrl}" style="background-color: #D4AF37; color: #000000; font-weight: bold; font-size: 11px; text-decoration: none; padding: 10px 20px; border-radius: 6px; display: inline-block; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 5px;">
+        ${isPl ? "Sprawdź Status Rezerwacji" : "Check Reservation Status"}
+      </a>
+    </div>
+  `;
+}
+
+/**
  * Customer email: Reservation request received.
  */
 export function getReservationRequestReceivedCustomerTemplate(data: ReservationEmailData): { subject: string; html: string } {
@@ -225,6 +249,8 @@ export function getReservationRequestReceivedCustomerTemplate(data: ReservationE
           : "If you need to change or cancel this request, please contact us by phone."
       }
     </p>
+
+    ${getTrackingSectionHtml(data)}
   `;
 
   return { subject, html: getEmailLayout(subject, body, data.restaurantContact) };
@@ -268,6 +294,8 @@ export function getReservationConfirmedCustomerTemplate(data: ReservationEmailDa
     </table>
 
     <p>${isPl ? "Czekamy na Ciebie w naszej restauracji!" : "We look forward to welcoming you to our restaurant!"}</p>
+
+    ${getTrackingSectionHtml(data)}
   `;
 
   return { subject, html: getEmailLayout(subject, body, data.restaurantContact) };
@@ -303,6 +331,8 @@ export function getReservationRejectedCustomerTemplate(data: ReservationEmailDat
         ? "Zachęcamy do spróbowania innego terminu lub kontaktu telefonicznego w celu dopasowania wolnego stolika." 
         : "Please feel free to try another date/time or contact us directly by phone to find an available spot."
     }</p>
+
+    ${getTrackingSectionHtml(data)}
   `;
 
   return { subject, html: getEmailLayout(subject, body, data.restaurantContact) };
@@ -338,6 +368,8 @@ export function getReservationCancelledCustomerTemplate(data: ReservationEmailDa
         ? "W razie pytań prosimy o kontakt telefoniczny z restauracją." 
         : "If you have any questions, please contact the restaurant directly by phone."
     }</p>
+
+    ${getTrackingSectionHtml(data)}
   `;
 
   return { subject, html: getEmailLayout(subject, body, data.restaurantContact) };

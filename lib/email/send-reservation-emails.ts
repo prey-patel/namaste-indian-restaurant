@@ -211,6 +211,7 @@ export async function sendReservationRequestReceivedCustomerEmail(reservationId:
 
     const lang = getLanguageFromNotes(res.admin_notes);
     const restaurantContact = await getRestaurantContactDetails(adminClient);
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
     const { subject, html } = getReservationRequestReceivedCustomerTemplate({
       customerName: res.customer_name,
       customerPhone: res.customer_phone,
@@ -223,6 +224,8 @@ export async function sendReservationRequestReceivedCustomerEmail(reservationId:
       }),
       guestsCount: res.guests_count,
       specialRequests: res.customer_notes,
+      referenceCode: res.token,
+      viewUrl: `${siteUrl}/${lang}/reservations/status?id=${res.id}&token=${res.token}`,
       lang,
       restaurantContact
     });
@@ -348,6 +351,7 @@ export async function sendReservationConfirmedCustomerEmail(reservationId: strin
     const tableNum = res.dining_tables ? String(res.dining_tables.table_number) : null;
     const lang = getLanguageFromNotes(res.admin_notes);
     const restaurantContact = await getRestaurantContactDetails(adminClient);
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
     const { subject, html } = getReservationConfirmedCustomerTemplate({
       customerName: res.customer_name,
       customerPhone: res.customer_phone,
@@ -360,6 +364,8 @@ export async function sendReservationConfirmedCustomerEmail(reservationId: strin
       }),
       guestsCount: res.guests_count,
       tableNumber: tableNum,
+      referenceCode: res.token,
+      viewUrl: `${siteUrl}/${lang}/reservations/status?id=${res.id}&token=${res.token}`,
       lang,
       restaurantContact
     });
@@ -408,6 +414,7 @@ export async function sendReservationRejectedCustomerEmail(reservationId: string
 
     const lang = getLanguageFromNotes(res.admin_notes);
     const restaurantContact = await getRestaurantContactDetails(adminClient);
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
     const { subject, html } = getReservationRejectedCustomerTemplate({
       customerName: res.customer_name,
       customerPhone: res.customer_phone,
@@ -420,6 +427,8 @@ export async function sendReservationRejectedCustomerEmail(reservationId: string
       }),
       guestsCount: res.guests_count,
       rejectionReason: res.rejection_reason,
+      referenceCode: res.token,
+      viewUrl: `${siteUrl}/${lang}/reservations/status?id=${res.id}&token=${res.token}`,
       lang,
       restaurantContact
     });
@@ -468,6 +477,7 @@ export async function sendReservationCancelledCustomerEmail(reservationId: strin
 
     const lang = getLanguageFromNotes(res.admin_notes);
     const restaurantContact = await getRestaurantContactDetails(adminClient);
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
     const { subject, html } = getReservationCancelledCustomerTemplate({
       customerName: res.customer_name,
       customerPhone: res.customer_phone,
@@ -480,6 +490,8 @@ export async function sendReservationCancelledCustomerEmail(reservationId: strin
       }),
       guestsCount: res.guests_count,
       cancellationReason: res.cancellation_reason,
+      referenceCode: res.token,
+      viewUrl: `${siteUrl}/${lang}/reservations/status?id=${res.id}&token=${res.token}`,
       lang,
       restaurantContact
     });
