@@ -119,7 +119,13 @@ export default async function AdminReservationsPage({ searchParams }: Props) {
   }
 
   if (query) {
-    queryBuilder = queryBuilder.or(`customer_name.ilike.%${query}%,customer_email.ilike.%${query}%,customer_phone.ilike.%${query}%`);
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const cleanQuery = query.trim();
+    if (uuidRegex.test(cleanQuery)) {
+      queryBuilder = queryBuilder.or(`id.eq.${cleanQuery},token.eq.${cleanQuery}`);
+    } else {
+      queryBuilder = queryBuilder.or(`customer_name.ilike.%${query}%,customer_email.ilike.%${query}%,customer_phone.ilike.%${query}%`);
+    }
   }
 
   const { data: reservations, error: resError } = await queryBuilder;

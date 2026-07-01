@@ -415,6 +415,7 @@ export default function ReservationsDashboard({ initialReservations, tables, met
             <thead>
               <tr className="border-b border-border bg-muted/50 text-muted-foreground uppercase tracking-widest text-[9px] font-bold">
                 <th className="p-4">Customer</th>
+                <th className="p-4">Reference Code</th>
                 <th className="p-4">Date & Time</th>
                 <th className="p-4 text-center">Guests</th>
                 <th className="p-4">Assigned Table</th>
@@ -425,7 +426,7 @@ export default function ReservationsDashboard({ initialReservations, tables, met
             <tbody className="divide-y divide-border">
               {reservations.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-muted-foreground/60 italic">
+                  <td colSpan={7} className="p-8 text-center text-muted-foreground/60 italic">
                     No reservations found matching active filters.
                   </td>
                 </tr>
@@ -450,6 +451,11 @@ export default function ReservationsDashboard({ initialReservations, tables, met
                             {res.customer_email}
                           </div>
                         )}
+                      </td>
+
+                      {/* Reference Code */}
+                      <td className="p-4 font-mono text-[10px] text-muted-foreground/80 select-all">
+                        {res.token || res.id}
                       </td>
 
                       {/* Date & Time */}
