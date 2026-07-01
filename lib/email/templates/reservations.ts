@@ -209,7 +209,7 @@ function getTrackingSectionHtml(data: ReservationEmailData): string {
       </p>
       <p style="margin: 0 0 15px 0; font-size: 13px; color: #4A5568;">
         ${isPl ? "Twój kod referencyjny:" : "Your reference code:"} <br />
-        <strong style="font-family: monospace; font-size: 14px; background-color: #EDF2F7; padding: 4px 10px; border-radius: 4px; display: inline-block; margin-top: 6px; border: 1px solid #CBD5E0; color: #1A202C;">${data.referenceCode}</strong>
+        <strong style="font-family: monospace; font-size: 14px; background-color: #EDF2F7; padding: 4px 10px; border-radius: 4px; display: inline-block; margin-top: 6px; border: 1px solid #CBD5E0; color: #1A202C;">#${data.referenceCode.substring(0, 8).toUpperCase()}</strong>
       </p>
       <a href="${data.viewUrl}" style="background-color: #D4AF37; color: #000000; font-weight: bold; font-size: 11px; text-decoration: none; padding: 10px 20px; border-radius: 6px; display: inline-block; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 5px;">
         ${isPl ? "Sprawdź Status Rezerwacji" : "Check Reservation Status"}

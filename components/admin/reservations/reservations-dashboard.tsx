@@ -455,7 +455,7 @@ export default function ReservationsDashboard({ initialReservations, tables, met
 
                       {/* Reference Code */}
                       <td className="p-4 font-mono text-[10px] text-muted-foreground/80 select-all">
-                        {res.token || res.id}
+                        #{(res.token || res.id).substring(0, 8).toUpperCase()}
                       </td>
 
                       {/* Date & Time */}

@@ -6,24 +6,33 @@ const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
 
 export async function lookupStatusAction(rawToken: string, locale: 'pl' | 'en') {
   try {
-    const token = rawToken.trim();
-    if (!token || !uuidRegex.test(token)) {
+    const token = rawToken.replace(/^#/, '').trim();
+    const isUuid = uuidRegex.test(token);
+    const isShortCode = /^[0-9a-f]{8}$/i.test(token);
+
+    if (!isUuid && !isShortCode) {
       return {
         success: false,
         error: locale === 'pl' 
-          ? 'Wprowadź poprawny 36-znakowy numer referencyjny (UUID).' 
-          : 'Please enter a valid 36-character reference number (UUID).'
+          ? 'Wprowadź poprawny numer referencyjny (np. #1A1050FE lub pełny identyfikator).' 
+          : 'Please enter a valid reference number (e.g. #1A1050FE or full UUID).'
       };
     }
 
     const adminClient = createAdminClient();
 
     // 1. Search in orders table (id or token)
-    const { data: order, error: orderErr } = await adminClient
+    let orderQuery = adminClient
       .from('orders')
-      .select('id, token')
-      .or(`id.eq.${token},token.eq.${token}`)
-      .maybeSingle();
+      .select('id, token');
+
+    if (isUuid) {
+      orderQuery = orderQuery.or(`id.eq.${token},token.eq.${token}`);
+    } else {
+      orderQuery = orderQuery.or(`id.ilike.${token}%,token.ilike.${token}%`);
+    }
+
+    const { data: order, error: orderErr } = await orderQuery.maybeSingle();
 
     if (!orderErr && order) {
       return {
@@ -35,11 +44,17 @@ export async function lookupStatusAction(rawToken: string, locale: 'pl' | 'en') 
     }
 
     // 2. Search in reservations table (id or token)
-    const { data: reservation, error: resErr } = await adminClient
+    let resQuery = adminClient
       .from('reservations')
-      .select('id, token')
-      .or(`id.eq.${token},token.eq.${token}`)
-      .maybeSingle();
+      .select('id, token');
+
+    if (isUuid) {
+      resQuery = resQuery.or(`id.eq.${token},token.eq.${token}`);
+    } else {
+      resQuery = resQuery.or(`id.ilike.${token}%,token.ilike.${token}%`);
+    }
+
+    const { data: reservation, error: resErr } = await resQuery.maybeSingle();
 
     if (!resErr && reservation) {
       return {
