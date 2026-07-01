@@ -36,6 +36,8 @@ function getEmailLayout(
   const address = contact?.address || "Warszawska 1/3, 06-400 Ciechanów, Poland";
   const phone = contact?.phone || "+48 511 984 331";
   const email = contact?.email || "info@namaste.pl";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://namaste-indian-restaurant.vercel.app";
+  const logoUrl = `${siteUrl}/images/logo.png`;
   return `
 <!DOCTYPE html>
 <html>
@@ -164,9 +166,18 @@ function getEmailLayout(
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>Namaste</h1>
-      <p>Indian Restaurant</p>
+    <div class="header" style="text-align: left; padding: 25px 30px;">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td width="70" valign="middle" style="padding-right: 15px;">
+            <img src="${logoUrl}" alt="Namaste Logo" width="60" height="60" style="display: block; border-radius: 50%; border: 2px solid #BF953F;" />
+          </td>
+          <td valign="middle" style="text-align: left;">
+            <h1 style="color: #BF953F; font-family: 'Georgia', serif; font-size: 24px; font-weight: bold; letter-spacing: 0.15em; margin: 0; text-transform: uppercase; line-height: 1.1;">Namaste</h1>
+            <p style="color: #EAE3D2; font-size: 10px; letter-spacing: 0.2em; margin: 4px 0 0 0; text-transform: uppercase; line-height: 1;">Indian Restaurant</p>
+          </td>
+        </tr>
+      </table>
     </div>
     <div class="content">
       ${bodyContentHtml}
