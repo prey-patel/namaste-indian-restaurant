@@ -1,9 +1,8 @@
 const CACHE_NAME = 'namaste-cache-v1';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/admin',
   '/icon-192.png',
   '/icon-512.png',
+  '/favicon.ico',
 ];
 
 self.addEventListener('install', (event) => {
@@ -37,6 +36,11 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
 
   if (request.method !== 'GET' || url.origin !== self.location.origin) {
+    return;
+  }
+
+  // Bypass service worker for navigation/document requests to allow next-intl redirects to work natively
+  if (request.mode === 'navigate' || request.destination === 'document') {
     return;
   }
 
