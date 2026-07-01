@@ -229,8 +229,8 @@ export default async function OrderStatusPage({ params, searchParams }: Props) {
           <div className="lg:col-span-7 space-y-8 text-left animate-fade-in">
             {['delivered', 'picked_up', 'completed'].includes(order.status) && (
               <OrderReviewForm
-                orderId={order.id}
-                orderToken={order.token}
+                orderId={id!}
+                orderToken={token!}
                 locale={locale}
                 existingReview={review}
               />
