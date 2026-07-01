@@ -106,8 +106,8 @@ export default function GalleryClient({ locale, dbImages }: GalleryClientProps) 
     aspectClass: idx % 3 === 0 ? 'aspect-square' : idx % 3 === 1 ? 'aspect-[16/10]' : 'aspect-[3/4]'
   }));
 
-  // Merge static defaults with dynamic database images
-  const allItems = [...mappedDbItems, ...DEFAULT_ITEMS];
+  // Use database images if any are uploaded; otherwise fallback to default placeholders
+  const allItems = mappedDbItems.length > 0 ? mappedDbItems : DEFAULT_ITEMS;
 
   React.useEffect(() => {
     if (selectedIdx === null) return;
