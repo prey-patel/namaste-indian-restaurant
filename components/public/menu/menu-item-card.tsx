@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import GoldFrame from '@/components/ui/gold-frame';
 import DietaryBadge from './dietary-badge';
+import { X } from 'lucide-react';
 
 export type PublicMenuItem = {
   id: string;
@@ -31,6 +32,30 @@ type MenuItemCardProps = {
 };
 
 export default function MenuItemCard({ item, locale }: MenuItemCardProps) {
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+
+  useEffect(() => {
+    if (isLightboxOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isLightboxOpen]);
+
+  useEffect(() => {
+    if (!isLightboxOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsLightboxOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isLightboxOpen]);
+
   const t = useTranslations('menu');
   const isPl = locale === 'pl';
 
@@ -73,8 +98,9 @@ export default function MenuItemCard({ item, locale }: MenuItemCardProps) {
             <img
               src={item.signed_image_url}
               alt={name}
-              className="object-cover w-full h-full transition-transform duration-500 hover:scale-105"
+              className="object-cover w-full h-full transition-transform duration-500 hover:scale-105 cursor-pointer hover:opacity-90"
               loading="lazy"
+              onClick={() => setIsLightboxOpen(true)}
             />
           ) : (
             /* Premium Navy/Gold Placeholder */
@@ -156,6 +182,36 @@ export default function MenuItemCard({ item, locale }: MenuItemCardProps) {
         </div>
 
       </div>
+
+      {/* Lightbox Modal */}
+      {isLightboxOpen && item.signed_image_url && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 animate-fade-in"
+          onClick={() => setIsLightboxOpen(false)}
+        >
+          {/* Close button */}
+          <button
+            type="button"
+            onClick={() => setIsLightboxOpen(false)}
+            className="absolute top-4 right-4 text-white hover:text-primary transition-colors p-2 bg-black/40 rounded-full border border-white/10 hover:border-primary/40 focus:outline-none z-10"
+            aria-label="Close full screen image"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          
+          {/* Image container */}
+          <div 
+            className="relative max-w-5xl w-full max-h-[85vh] flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking the image itself
+          >
+            <img
+              src={item.signed_image_url}
+              alt={name}
+              className="max-w-full max-h-[85vh] object-contain rounded-md shadow-2xl border border-primary/20 animate-scale-up"
+            />
+          </div>
+        </div>
+      )}
     </GoldFrame>
   );
 }
