@@ -345,3 +345,110 @@ export async function createOrderRequestAction(rawData: any) {
     };
   }
 }
+
+const reviewSchema = z.object({
+  orderId: z.string().uuid(),
+  orderToken: z.string().uuid(),
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().max(1000).optional().or(z.literal('')),
+});
+
+export async function submitOrderReviewAction(rawData: any, lang: 'pl' | 'en') {
+  try {
+    const result = reviewSchema.safeParse(rawData);
+    if (!result.success) {
+      return {
+        success: false,
+        error: lang === 'pl' ? 'Nieprawidłowe dane oceny.' : 'Invalid review data.'
+      };
+    }
+
+    const { orderId, orderToken, rating, comment } = result.data;
+
+    // Rate limiting check using lookup rate limiter
+    const headersList = await headers();
+    const ip = headersList.get('x-forwarded-for')?.split(',')[0] || headersList.get('x-real-ip') || '127.0.0.1';
+    const secret = process.env.ORDER_IP_HASH_SECRET;
+    if (secret) {
+      const ipHash = crypto.createHmac('sha256', secret).update(ip).digest('hex');
+      const rateCheck = await isRateLimited(ipHash, 'order_status_lookup', 15, 60);
+      if (rateCheck.limited) {
+        return {
+          success: false,
+          error: lang === 'pl' 
+            ? `Zbyt wiele żądań. Spróbuj ponownie za ${rateCheck.retryAfterSeconds} sekund.`
+            : `Rate limit exceeded. Please try again in ${rateCheck.retryAfterSeconds} seconds.`
+        };
+      }
+    }
+
+    const adminClient = createAdminClient();
+
+    // Verify order exists, has correct token, and is completed (delivered, picked_up, completed)
+    const { data: order, error: orderErr } = await adminClient
+      .from('orders')
+      .select('id, status')
+      .eq('id', orderId)
+      .eq('token', orderToken)
+      .maybeSingle();
+
+    if (orderErr || !order) {
+      return {
+        success: false,
+        error: lang === 'pl' ? 'Zamówienie nie zostało znalezione.' : 'Order not found.'
+      };
+    }
+
+    const completedStatuses = ['delivered', 'picked_up', 'completed'];
+    if (!completedStatuses.includes(order.status)) {
+      return {
+        success: false,
+        error: lang === 'pl' 
+          ? 'Możesz ocenić tylko dostarczone lub odebrane zamówienia.' 
+          : 'You can only review delivered or completed orders.'
+      };
+    }
+
+    // Check if review already exists
+    const { data: existingReview } = await adminClient
+      .from('reviews')
+      .select('id')
+      .eq('order_id', orderId)
+      .maybeSingle();
+
+    if (existingReview) {
+      return {
+        success: false,
+        error: lang === 'pl' ? 'To zamówienie zostało już ocenione.' : 'This order has already been reviewed.'
+      };
+    }
+
+    // Insert review
+    const { error: insertErr } = await adminClient
+      .from('reviews')
+      .insert({
+        order_id: orderId,
+        rating,
+        comment: comment || null
+      });
+
+    if (insertErr) {
+      console.error('Error inserting review:', insertErr);
+      return {
+        success: false,
+        error: lang === 'pl' ? 'Wystąpił błąd podczas zapisywania oceny.' : 'Failed to save review.'
+      };
+    }
+
+    return {
+      success: true
+    };
+  } catch (err: any) {
+    console.error('Error in submitOrderReviewAction:', err);
+    return {
+      success: false,
+      error: err.message || 'An unexpected error occurred.'
+    };
+  }
+}
+

@@ -14,6 +14,7 @@ import StatusPill from '@/components/ui/status-pill';
 import { Button } from '@/components/ui/button';
 import { ShoppingBag, MapPin, CreditCard, Calendar, Clock, AlertTriangle } from 'lucide-react';
 import OrderStatusRealtimeListener from '@/components/public/order/order-status-realtime-listener';
+import OrderReviewForm from '@/components/public/order/order-review-form';
 
 export const dynamic = 'force-dynamic';
 
@@ -110,6 +111,7 @@ export default async function OrderStatusPage({ params, searchParams }: Props) {
   }
 
   let order: any = null;
+  let review: any = null;
 
   if (isValid) {
     const adminClient = createAdminClient();
@@ -120,6 +122,15 @@ export default async function OrderStatusPage({ params, searchParams }: Props) {
 
     if (!error && data && data.length > 0) {
       order = data[0];
+
+      // Fetch review if it exists
+      const { data: reviewData } = await adminClient
+        .from('reviews')
+        .select('rating, comment')
+        .eq('order_id', id)
+        .maybeSingle();
+      
+      review = reviewData;
     }
   }
 
@@ -216,6 +227,14 @@ export default async function OrderStatusPage({ params, searchParams }: Props) {
           
           {/* Left: Status timeline & Items breakdown (7 cols) */}
           <div className="lg:col-span-7 space-y-8 text-left animate-fade-in">
+            {['delivered', 'picked_up', 'completed'].includes(order.status) && (
+              <OrderReviewForm
+                orderId={order.id}
+                orderToken={order.token}
+                locale={locale}
+                existingReview={review}
+              />
+            )}
             <PremiumCard hoverable={false} className="border-primary/20 bg-[#050B1E]/60 p-6 sm:p-8 space-y-6">
               
               {/* Header Info */}

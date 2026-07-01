@@ -46,7 +46,8 @@ import {
   Timer,
   ShieldCheck,
   Download,
-  X
+  X,
+  Star
 } from 'lucide-react';
 
 type Order = {
@@ -140,6 +141,10 @@ type Props = {
     namePl: string;
     count: number;
   }[];
+  review?: {
+    rating: number;
+    comment: string | null;
+  } | null;
 };
 
 export default function OrderDetailsClient({
@@ -148,7 +153,8 @@ export default function OrderDetailsClient({
   timeline,
   crmStats,
   pastOrders,
-  favoriteDishes
+  favoriteDishes,
+  review
 }: Props) {
   const locale = useLocale();
   const router = useRouter();
@@ -751,6 +757,34 @@ export default function OrderDetailsClient({
         <div className="lg:col-span-7 space-y-6">
           {/* SLA Tracker Card */}
           {renderSlaTrackerCard()}
+
+          {/* Customer Review Card (If available) */}
+          {review && (
+            <PremiumCard hoverable={false} className="border-primary/20 bg-primary/5 p-6 space-y-4">
+              <h3 className="text-sm font-serif font-bold text-primary uppercase tracking-widest border-b border-primary/20 pb-2 flex items-center gap-2">
+                <Star className="w-4 h-4 text-primary fill-current" />
+                Customer Rating
+              </h3>
+              <div className="flex items-center space-x-1.5">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`w-5 h-5 fill-current ${
+                      star <= review.rating ? 'text-primary' : 'text-zinc-700'
+                    }`}
+                  />
+                ))}
+                <span className="text-xs font-mono font-bold text-primary ml-2 uppercase tracking-widest">
+                  {review.rating} / 5 Stars
+                </span>
+              </div>
+              {review.comment && (
+                <div className="p-3 bg-black/40 border border-primary/10 rounded-lg text-xs text-muted-foreground italic leading-relaxed">
+                  &quot;{review.comment}&quot;
+                </div>
+              )}
+            </PremiumCard>
+          )}
 
           {/* Customer Details */}
           <PremiumCard hoverable={false} className="border-border bg-card p-6 space-y-5">

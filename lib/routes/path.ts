@@ -45,5 +45,6 @@ export const ROUTES = {
     delivery: '/admin/delivery',
     orderSummary: '/admin/order-summary',
     inquiries: '/admin/inquiries',
+    reviews: '/admin/reviews',
   }
 } as const;

@@ -134,6 +134,13 @@ export default async function AdminOrderDetailPage({ params }: Props) {
     table_number: diningTable ? diningTable.table_number : null
   };
 
+  // 7. Load review if exists
+  const { data: review } = await supabase
+    .from('reviews')
+    .select('rating, comment')
+    .eq('order_id', id)
+    .maybeSingle();
+
   return (
     <OrderDetailsClient
       order={formattedOrder}
@@ -142,6 +149,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
       crmStats={crmStats}
       pastOrders={pastOrders}
       favoriteDishes={favoriteDishes}
+      review={review}
     />
   );
 }
