@@ -48,7 +48,7 @@ export default async function GalleryPage({ params }: Props) {
       .select('id, bucket, file_path, alt_text_pl, alt_text_en')
       .eq('is_approved', true)
       .eq('is_public', true)
-      .in('bucket', ['gallery-images', 'site-images']);
+      .eq('bucket', 'gallery-images');
 
     if (assets && assets.length > 0) {
       const adminClient = createAdminClient();
