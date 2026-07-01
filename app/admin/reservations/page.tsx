@@ -127,7 +127,10 @@ export default async function AdminReservationsPage({ searchParams }: Props) {
     if (isUuid) {
       queryBuilder = queryBuilder.or(`id.eq.${cleanQuery},token.eq.${cleanQuery}`);
     } else if (isShortCode) {
-      queryBuilder = queryBuilder.or(`id.ilike.${cleanQuery}%,token.ilike.${cleanQuery}%`);
+      const lowerQuery = cleanQuery.toLowerCase();
+      const startUuid = `${lowerQuery}-0000-0000-0000-000000000000`;
+      const endUuid = `${lowerQuery}-ffff-ffff-ffff-ffffffffffff`;
+      queryBuilder = queryBuilder.or(`and(id.gte.${startUuid},id.lte.${endUuid}),and(token.gte.${startUuid},token.lte.${endUuid})`);
     } else {
       queryBuilder = queryBuilder.or(`customer_name.ilike.%${query}%,customer_email.ilike.%${query}%,customer_phone.ilike.%${query}%`);
     }

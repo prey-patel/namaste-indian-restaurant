@@ -29,7 +29,10 @@ export async function lookupStatusAction(rawToken: string, locale: 'pl' | 'en') 
     if (isUuid) {
       orderQuery = orderQuery.or(`id.eq.${token},token.eq.${token}`);
     } else {
-      orderQuery = orderQuery.or(`id.ilike.${token}%,token.ilike.${token}%`);
+      const cleanToken = token.toLowerCase();
+      const startUuid = `${cleanToken}-0000-0000-0000-000000000000`;
+      const endUuid = `${cleanToken}-ffff-ffff-ffff-ffffffffffff`;
+      orderQuery = orderQuery.or(`and(id.gte.${startUuid},id.lte.${endUuid}),and(token.gte.${startUuid},token.lte.${endUuid})`);
     }
 
     const { data: order, error: orderErr } = await orderQuery.maybeSingle();
@@ -51,7 +54,10 @@ export async function lookupStatusAction(rawToken: string, locale: 'pl' | 'en') 
     if (isUuid) {
       resQuery = resQuery.or(`id.eq.${token},token.eq.${token}`);
     } else {
-      resQuery = resQuery.or(`id.ilike.${token}%,token.ilike.${token}%`);
+      const cleanToken = token.toLowerCase();
+      const startUuid = `${cleanToken}-0000-0000-0000-000000000000`;
+      const endUuid = `${cleanToken}-ffff-ffff-ffff-ffffffffffff`;
+      resQuery = resQuery.or(`and(id.gte.${startUuid},id.lte.${endUuid}),and(token.gte.${startUuid},token.lte.${endUuid})`);
     }
 
     const { data: reservation, error: resErr } = await resQuery.maybeSingle();
