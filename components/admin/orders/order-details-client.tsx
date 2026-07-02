@@ -1268,13 +1268,13 @@ export default function OrderDetailsClient({
                   disabled={isPending}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wider px-4 py-2"
                 >
-                  {isTakeaway ? t('markReady') : t('dispatch')}
+                  {(isTakeaway || order.order_type === 'dine_in') ? t('markReady') : t('dispatch')}
                 </Button>
               )}
 
               {/* Complete */}
-              {((isTakeaway && order.status === 'ready_for_pickup') ||
-                (!isTakeaway && order.status === 'out_for_delivery')) && (
+              {(((isTakeaway || order.order_type === 'dine_in') && order.status === 'ready_for_pickup') ||
+                (order.order_type === 'delivery' && order.status === 'out_for_delivery')) && (
                 <Button
                   onClick={() => setModalType('complete')}
                   disabled={isPending}

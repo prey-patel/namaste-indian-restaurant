@@ -779,13 +779,13 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                               disabled={isPending}
                               className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
                             >
-                              {isTakeaway ? t('readyButton') : t('dispatchButton')}
+                              {(isTakeaway || order.order_type === 'dine_in') ? t('readyButton') : t('dispatchButton')}
                             </Button>
                           )}
 
                           {/* Complete Button */}
-                          {((isTakeaway && order.status === 'ready_for_pickup') || 
-                            (!isTakeaway && order.status === 'out_for_delivery')) && (
+                          {(((isTakeaway || order.order_type === 'dine_in') && order.status === 'ready_for_pickup') || 
+                            (order.order_type === 'delivery' && order.status === 'out_for_delivery')) && (
                             <Button
                               onClick={() => handleOpenModal(order, 'complete')}
                               disabled={isPending}
@@ -988,13 +988,13 @@ export default function OrdersDashboard({ initialOrders, metrics, filters }: Pro
                         disabled={isPending}
                         className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1"
                       >
-                        {isTakeaway ? t('readyButton') : t('dispatchButton')}
+                        {(isTakeaway || order.order_type === 'dine_in') ? t('readyButton') : t('dispatchButton')}
                       </Button>
                     )}
 
                     {/* Complete Button */}
-                    {((isTakeaway && order.status === 'ready_for_pickup') || 
-                      (!isTakeaway && order.status === 'out_for_delivery')) && (
+                    {(((isTakeaway || order.order_type === 'dine_in') && order.status === 'ready_for_pickup') || 
+                      (order.order_type === 'delivery' && order.status === 'out_for_delivery')) && (
                       <Button
                         onClick={() => handleOpenModal(order, 'complete')}
                         disabled={isPending}
