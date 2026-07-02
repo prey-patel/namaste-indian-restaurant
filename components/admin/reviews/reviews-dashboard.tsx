@@ -196,23 +196,37 @@ export default function ReviewsDashboard({ initialReviews }: Props) {
           </div>
         </PremiumCard>
 
-        {/* Info Card */}
+        {/* Customer Satisfaction Card */}
         <PremiumCard hoverable={false} className="p-6 bg-card border-border flex flex-col justify-between text-muted-foreground">
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-muted rounded-lg text-primary">
-              <MessageSquare className="w-6 h-6 text-primary fill-current" />
+            <div className={`p-3 rounded-lg ${
+              totalCount === 0 
+                ? 'bg-muted text-muted-foreground' 
+                : (reviews.filter(r => r.rating >= 4).length / totalCount) * 100 >= 80 
+                ? 'bg-green-500/10 text-green-400' 
+                : 'bg-yellow-500/10 text-yellow-400'
+            }`}>
+              <MessageSquare className="w-6 h-6 fill-current" />
             </div>
-            <div>
-              <h3 className="font-bold text-foreground text-sm">Feedback Loop</h3>
-              <p className="text-xs text-muted-foreground/85 mt-1 leading-relaxed">
-                Order reviews are populated when customers submit stars directly on their live order status pages after food delivery/takeaway.
+            <div className="space-y-1">
+              <h3 className="font-bold text-foreground text-sm">Customer Satisfaction</h3>
+              <p className="text-xs text-muted-foreground/85 leading-relaxed">
+                Percentage of positive ratings (4 or 5 stars) out of all completed order reviews.
               </p>
             </div>
           </div>
-          <div className="pt-4 border-t border-border/10 flex justify-between items-center text-xs text-[10px] font-mono tracking-wider uppercase">
-            <span>Last Auto-Sync</span>
-            <span className="text-foreground flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-primary" /> Realtime Active
+          <div className="pt-4 border-t border-border/10 flex justify-between items-center text-xs">
+            <span className="font-semibold uppercase tracking-wider">Satisfaction Rate</span>
+            <span className={`px-2.5 py-0.5 rounded-full font-bold text-xs font-mono ${
+              totalCount === 0 
+                ? 'bg-muted text-muted-foreground' 
+                : (reviews.filter(r => r.rating >= 4).length / totalCount) * 100 >= 80 
+                ? 'bg-green-500/20 text-green-400' 
+                : 'bg-yellow-500/20 text-yellow-400'
+            }`}>
+              {totalCount > 0 
+                ? `${Math.round((reviews.filter(r => r.rating >= 4).length / totalCount) * 100)}%` 
+                : 'N/A'}
             </span>
           </div>
         </PremiumCard>
