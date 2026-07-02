@@ -44,6 +44,16 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Bypass service worker for Next.js router updates, RSC payloads, and prefetch requests
+  if (
+    request.headers.get('RSC') || 
+    request.headers.get('Next-Router-State-Tree') || 
+    request.headers.get('Next-Router-Prefetch') ||
+    url.searchParams.has('_rsc')
+  ) {
+    return;
+  }
+
   // Network-first for admin panel/KDS pages and API endpoints to ensure real-time accuracy
   if (url.pathname.startsWith('/admin') || url.pathname.startsWith('/api') || url.pathname.includes('supabase')) {
     event.respondWith(
@@ -57,8 +67,11 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => {
-          return caches.match(request);
+        .catch(async () => {
+          const cached = await caches.match(request);
+          if (cached) return cached;
+          // Propagate the rejection so the browser handles it as a standard network failure
+          throw new Error('Network connection failed');
         })
     );
     return;
@@ -75,11 +88,18 @@ self.addEventListener('fetch', (event) => {
           });
         }
         return networkResponse;
-      }).catch(() => {
-        // Silently catch fetch errors for static assets if offline
       });
 
-      return cachedResponse || fetchPromise;
+      // If we have a cached copy, return it and let the network update run in the background
+      if (cachedResponse) {
+        fetchPromise.catch(() => {
+          // Suppress background fetch errors to prevent console noise
+        });
+        return cachedResponse;
+      }
+
+      // If there is no cache copy, return the network fetch directly (propagating failure if offline)
+      return fetchPromise;
     })
   );
 });
