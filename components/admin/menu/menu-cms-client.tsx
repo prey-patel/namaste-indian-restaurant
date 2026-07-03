@@ -29,6 +29,7 @@ type MenuItem = {
   display_order: number;
   is_available: boolean;
   is_active: boolean;
+  is_chef_special?: boolean;
   description_pl?: string | null;
   description_en?: string | null;
 };
@@ -235,7 +236,14 @@ export default function MenuCmsClient({ categories, items }: MenuCmsClientProps)
                 filteredItems.map((item) => (
                   <tr key={item.id} className="hover:bg-primary/5 transition-colors">
                     <td className="px-6 py-4 font-medium text-foreground">
-                      <span>{locale === 'en' ? item.name_en : item.name_pl}</span>
+                      <div className="flex items-center gap-2">
+                        <span>{locale === 'en' ? item.name_en : item.name_pl}</span>
+                        {item.is_chef_special && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                            ✦ Signature
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">
                       {getCategoryName(item.category_id)}

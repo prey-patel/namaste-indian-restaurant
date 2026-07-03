@@ -12,6 +12,8 @@ import ContactMap from '@/components/public/contact-map';
 import MandalaWatermark from '@/components/ui/mandala-watermark';
 import ThreeDTiltCard from '@/components/ui/three-d-tilt';
 
+import { PublicMenuItem } from '@/lib/supabase/menu';
+
 type RedesignedHomeClientProps = {
   locale: string;
   address: string;
@@ -19,6 +21,7 @@ type RedesignedHomeClientProps = {
   email: string;
   coordinates?: any;
   googleMapsLink?: string;
+  signatureDishes?: PublicMenuItem[];
 };
 
 export default function RedesignedHomeClient({
@@ -28,6 +31,7 @@ export default function RedesignedHomeClient({
   email,
   coordinates,
   googleMapsLink,
+  signatureDishes,
 }: RedesignedHomeClientProps) {
   const t = useTranslations('home');
 
@@ -98,7 +102,7 @@ export default function RedesignedHomeClient({
             </p>
           </motion.div>
 
-          {/* Dishes Grid */}
+          {/* Dynamic Dishes Grid */}
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -106,101 +110,143 @@ export default function RedesignedHomeClient({
             variants={staggerContainer}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
           >
-            {/* Dish 1: Butter Chicken */}
-            <motion.div variants={scrollFadeIn} className="flex flex-col h-full">
-              <ThreeDTiltCard maxTilt={15} glareOpacity={0.15} className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-5 flex flex-col h-full justify-between transition-colors duration-300 w-full">
-                <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
-                <div className="space-y-4" style={{ transform: "translateZ(15px)", transformStyle: "preserve-3d" }}>
-                  <div className="aspect-[4/3] w-full rounded-lg relative overflow-hidden border border-primary/10 shadow-lg" style={{ transform: "translateZ(10px)" }}>
-                    <Image
-                      src="/images/butter_chicken.png"
-                      alt={t('dishButter')}
-                      fill
-                      className="object-cover scale-105 hover:scale-100 transition-transform duration-700 pointer-events-none"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
-                  </div>
-                  <h3 className="text-xl font-serif font-bold text-foreground">{t('dishButter')}</h3>
-                  <p className="text-muted-foreground/80 text-xs leading-relaxed font-sans font-light">{t('dishButterDesc')}</p>
-                </div>
-                <div className="pt-6 border-t border-primary/10 mt-6 flex justify-between items-center text-xs font-sans" style={{ transform: "translateZ(10px)" }}>
-                  <span className="text-primary tracking-wider font-extrabold uppercase">39.00 PLN</span>
-                  <span className="text-[10px] text-muted-foreground/50 italic">Signature Curry</span>
-                </div>
-              </ThreeDTiltCard>
-            </motion.div>
+            {signatureDishes && signatureDishes.length > 0 ? (
+              signatureDishes.map((dish, idx) => {
+                const title = locale === 'pl' ? dish.name_pl : dish.name_en;
+                const desc = (locale === 'pl' ? dish.description_pl : dish.description_en) || '';
+                const fallbackImg = idx === 0 ? '/images/butter_chicken.png' 
+                  : idx === 1 ? '/images/dal_makhani.png' 
+                  : idx === 2 ? '/images/chicken_biryani.png' 
+                  : '/images/garlic_naan.png';
+                const imgSrc = dish.signed_image_url || dish.image_url || fallbackImg;
 
-            {/* Dish 2: Dal Makhani */}
-            <motion.div variants={scrollFadeIn} className="flex flex-col h-full">
-              <ThreeDTiltCard maxTilt={15} glareOpacity={0.15} className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-5 flex flex-col h-full justify-between transition-colors duration-300 w-full">
-                <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
-                <div className="space-y-4" style={{ transform: "translateZ(15px)", transformStyle: "preserve-3d" }}>
-                  <div className="aspect-[4/3] w-full rounded-lg relative overflow-hidden border border-primary/10 shadow-lg" style={{ transform: "translateZ(10px)" }}>
-                    <Image
-                      src="/images/dal_makhani.png"
-                      alt={t('dishDal')}
-                      fill
-                      className="object-cover scale-105 hover:scale-100 transition-transform duration-700 pointer-events-none"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
-                  </div>
-                  <h3 className="text-xl font-serif font-bold text-foreground">{t('dishDal')}</h3>
-                  <p className="text-muted-foreground/80 text-xs leading-relaxed font-sans font-light">{t('dishDalDesc')}</p>
-                </div>
-                <div className="pt-6 border-t border-primary/10 mt-6 flex justify-between items-center text-xs font-sans" style={{ transform: "translateZ(10px)" }}>
-                  <span className="text-primary tracking-wider font-extrabold uppercase">28.00 PLN</span>
-                  <span className="text-[10px] text-muted-foreground/50 italic">Slow Cooked</span>
-                </div>
-              </ThreeDTiltCard>
-            </motion.div>
+                return (
+                  <motion.div key={dish.id} variants={scrollFadeIn} className="flex flex-col h-full">
+                    <ThreeDTiltCard maxTilt={15} glareOpacity={0.15} className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-5 flex flex-col h-full justify-between transition-colors duration-300 w-full">
+                      <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
+                      <div className="space-y-4" style={{ transform: "translateZ(15px)", transformStyle: "preserve-3d" }}>
+                        <div className="aspect-[4/3] w-full rounded-lg relative overflow-hidden border border-primary/10 shadow-lg" style={{ transform: "translateZ(10px)" }}>
+                          <Image
+                            src={imgSrc}
+                            alt={title}
+                            fill
+                            unoptimized={imgSrc.startsWith('http')}
+                            className="object-cover scale-105 hover:scale-100 transition-transform duration-700 pointer-events-none"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                        </div>
+                        <h3 className="text-xl font-serif font-bold text-foreground line-clamp-1">{title}</h3>
+                        <p className="text-muted-foreground/80 text-xs leading-relaxed font-sans font-light line-clamp-3">{desc}</p>
+                      </div>
+                      <div className="pt-6 border-t border-primary/10 mt-6 flex justify-between items-center text-xs font-sans" style={{ transform: "translateZ(10px)" }}>
+                        <span className="text-primary tracking-wider font-extrabold uppercase">{Number(dish.price).toFixed(2)} PLN</span>
+                        <span className="text-[10px] text-muted-foreground/50 italic">
+                          {dish.is_chef_special ? "Chef's Special" : "Popular"}
+                        </span>
+                      </div>
+                    </ThreeDTiltCard>
+                  </motion.div>
+                );
+              })
+            ) : (
+              <>
+                {/* Fallback Dish 1: Butter Chicken */}
+                <motion.div variants={scrollFadeIn} className="flex flex-col h-full">
+                  <ThreeDTiltCard maxTilt={15} glareOpacity={0.15} className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-5 flex flex-col h-full justify-between transition-colors duration-300 w-full">
+                    <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
+                    <div className="space-y-4" style={{ transform: "translateZ(15px)", transformStyle: "preserve-3d" }}>
+                      <div className="aspect-[4/3] w-full rounded-lg relative overflow-hidden border border-primary/10 shadow-lg" style={{ transform: "translateZ(10px)" }}>
+                        <Image
+                          src="/images/butter_chicken.png"
+                          alt={t('dishButter')}
+                          fill
+                          className="object-cover scale-105 hover:scale-100 transition-transform duration-700 pointer-events-none"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                      </div>
+                      <h3 className="text-xl font-serif font-bold text-foreground">{t('dishButter')}</h3>
+                      <p className="text-muted-foreground/80 text-xs leading-relaxed font-sans font-light">{t('dishButterDesc')}</p>
+                    </div>
+                    <div className="pt-6 border-t border-primary/10 mt-6 flex justify-between items-center text-xs font-sans" style={{ transform: "translateZ(10px)" }}>
+                      <span className="text-primary tracking-wider font-extrabold uppercase">39.00 PLN</span>
+                      <span className="text-[10px] text-muted-foreground/50 italic">Signature Curry</span>
+                    </div>
+                  </ThreeDTiltCard>
+                </motion.div>
 
-            {/* Dish 3: Chicken Biryani */}
-            <motion.div variants={scrollFadeIn} className="flex flex-col h-full">
-              <ThreeDTiltCard maxTilt={15} glareOpacity={0.15} className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-5 flex flex-col h-full justify-between transition-colors duration-300 w-full">
-                <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
-                <div className="space-y-4" style={{ transform: "translateZ(15px)", transformStyle: "preserve-3d" }}>
-                  <div className="aspect-[4/3] w-full rounded-lg relative overflow-hidden border border-primary/10 shadow-lg" style={{ transform: "translateZ(10px)" }}>
-                    <Image
-                      src="/images/chicken_biryani.png"
-                      alt={t('dishBiryani')}
-                      fill
-                      className="object-cover scale-105 hover:scale-100 transition-transform duration-700 pointer-events-none"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
-                  </div>
-                  <h3 className="text-xl font-serif font-bold text-foreground">{t('dishBiryani')}</h3>
-                  <p className="text-muted-foreground/80 text-xs leading-relaxed font-sans font-light">{t('dishBiryaniDesc')}</p>
-                </div>
-                <div className="pt-6 border-t border-primary/10 mt-6 flex justify-between items-center text-xs font-sans" style={{ transform: "translateZ(10px)" }}>
-                  <span className="text-primary tracking-wider font-extrabold uppercase">36.00 PLN</span>
-                  <span className="text-[10px] text-muted-foreground/50 italic">Basmati Masterpiece</span>
-                </div>
-              </ThreeDTiltCard>
-            </motion.div>
+                {/* Fallback Dish 2: Dal Makhani */}
+                <motion.div variants={scrollFadeIn} className="flex flex-col h-full">
+                  <ThreeDTiltCard maxTilt={15} glareOpacity={0.15} className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-5 flex flex-col h-full justify-between transition-colors duration-300 w-full">
+                    <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
+                    <div className="space-y-4" style={{ transform: "translateZ(15px)", transformStyle: "preserve-3d" }}>
+                      <div className="aspect-[4/3] w-full rounded-lg relative overflow-hidden border border-primary/10 shadow-lg" style={{ transform: "translateZ(10px)" }}>
+                        <Image
+                          src="/images/dal_makhani.png"
+                          alt={t('dishDal')}
+                          fill
+                          className="object-cover scale-105 hover:scale-100 transition-transform duration-700 pointer-events-none"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                      </div>
+                      <h3 className="text-xl font-serif font-bold text-foreground">{t('dishDal')}</h3>
+                      <p className="text-muted-foreground/80 text-xs leading-relaxed font-sans font-light">{t('dishDalDesc')}</p>
+                    </div>
+                    <div className="pt-6 border-t border-primary/10 mt-6 flex justify-between items-center text-xs font-sans" style={{ transform: "translateZ(10px)" }}>
+                      <span className="text-primary tracking-wider font-extrabold uppercase">28.00 PLN</span>
+                      <span className="text-[10px] text-muted-foreground/50 italic">Slow Cooked</span>
+                    </div>
+                  </ThreeDTiltCard>
+                </motion.div>
 
-            {/* Dish 4: Garlic Naan */}
-            <motion.div variants={scrollFadeIn} className="flex flex-col h-full">
-              <ThreeDTiltCard maxTilt={15} glareOpacity={0.15} className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-5 flex flex-col h-full justify-between transition-colors duration-300 w-full">
-                <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
-                <div className="space-y-4" style={{ transform: "translateZ(15px)", transformStyle: "preserve-3d" }}>
-                  <div className="aspect-[4/3] w-full rounded-lg relative overflow-hidden border border-primary/10 shadow-lg" style={{ transform: "translateZ(10px)" }}>
-                    <Image
-                      src="/images/garlic_naan.png"
-                      alt={t('dishNaan')}
-                      fill
-                      className="object-cover scale-105 hover:scale-100 transition-transform duration-700 pointer-events-none"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
-                  </div>
-                  <h3 className="text-xl font-serif font-bold text-foreground">{t('dishNaan')}</h3>
-                  <p className="text-muted-foreground/80 text-xs leading-relaxed font-sans font-light">{t('dishNaanDesc')}</p>
-                </div>
-                <div className="pt-6 border-t border-primary/10 mt-6 flex justify-between items-center text-xs font-sans" style={{ transform: "translateZ(10px)" }}>
-                  <span className="text-primary tracking-wider font-extrabold uppercase">12.00 PLN</span>
-                  <span className="text-[10px] text-muted-foreground/50 italic">Tandoor Clay Baked</span>
-                </div>
-              </ThreeDTiltCard>
-            </motion.div>
+                {/* Fallback Dish 3: Chicken Biryani */}
+                <motion.div variants={scrollFadeIn} className="flex flex-col h-full">
+                  <ThreeDTiltCard maxTilt={15} glareOpacity={0.15} className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-5 flex flex-col h-full justify-between transition-colors duration-300 w-full">
+                    <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
+                    <div className="space-y-4" style={{ transform: "translateZ(15px)", transformStyle: "preserve-3d" }}>
+                      <div className="aspect-[4/3] w-full rounded-lg relative overflow-hidden border border-primary/10 shadow-lg" style={{ transform: "translateZ(10px)" }}>
+                        <Image
+                          src="/images/chicken_biryani.png"
+                          alt={t('dishBiryani')}
+                          fill
+                          className="object-cover scale-105 hover:scale-100 transition-transform duration-700 pointer-events-none"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                      </div>
+                      <h3 className="text-xl font-serif font-bold text-foreground">{t('dishBiryani')}</h3>
+                      <p className="text-muted-foreground/80 text-xs leading-relaxed font-sans font-light">{t('dishBiryaniDesc')}</p>
+                    </div>
+                    <div className="pt-6 border-t border-primary/10 mt-6 flex justify-between items-center text-xs font-sans" style={{ transform: "translateZ(10px)" }}>
+                      <span className="text-primary tracking-wider font-extrabold uppercase">36.00 PLN</span>
+                      <span className="text-[10px] text-muted-foreground/50 italic">Basmati Masterpiece</span>
+                    </div>
+                  </ThreeDTiltCard>
+                </motion.div>
+
+                {/* Fallback Dish 4: Garlic Naan */}
+                <motion.div variants={scrollFadeIn} className="flex flex-col h-full">
+                  <ThreeDTiltCard maxTilt={15} glareOpacity={0.15} className="relative rounded-xl border border-primary/15 bg-slate-950/40 backdrop-blur-md p-5 flex flex-col h-full justify-between transition-colors duration-300 w-full">
+                    <div className="absolute inset-1 rounded-[10px] border border-primary/5 pointer-events-none" />
+                    <div className="space-y-4" style={{ transform: "translateZ(15px)", transformStyle: "preserve-3d" }}>
+                      <div className="aspect-[4/3] w-full rounded-lg relative overflow-hidden border border-primary/10 shadow-lg" style={{ transform: "translateZ(10px)" }}>
+                        <Image
+                          src="/images/garlic_naan.png"
+                          alt={t('dishNaan')}
+                          fill
+                          className="object-cover scale-105 hover:scale-100 transition-transform duration-700 pointer-events-none"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                      </div>
+                      <h3 className="text-xl font-serif font-bold text-foreground">{t('dishNaan')}</h3>
+                      <p className="text-muted-foreground/80 text-xs leading-relaxed font-sans font-light">{t('dishNaanDesc')}</p>
+                    </div>
+                    <div className="pt-6 border-t border-primary/10 mt-6 flex justify-between items-center text-xs font-sans" style={{ transform: "translateZ(10px)" }}>
+                      <span className="text-primary tracking-wider font-extrabold uppercase">12.00 PLN</span>
+                      <span className="text-[10px] text-muted-foreground/50 italic">Tandoor Clay Baked</span>
+                    </div>
+                  </ThreeDTiltCard>
+                </motion.div>
+              </>
+            )}
           </motion.div>
         </div>
       </section>

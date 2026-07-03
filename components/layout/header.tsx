@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { Link, usePathname } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import LanguageSwitcher from '../public/language-switcher';
@@ -103,10 +104,13 @@ export default function Header() {
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
           
           <Link href={ROUTES.home} className="flex items-center group focus-visible:ring-2 focus-visible:ring-primary rounded p-1">
-            <img
+            <Image
               src="/images/logo.png"
               alt="Namaste Logo"
+              width={120}
+              height={56}
               className="h-14 w-auto object-contain transition-transform group-hover:scale-105"
+              priority
             />
           </Link>
 
@@ -285,9 +289,11 @@ export default function Header() {
               {/* Close Button */}
               <div className="flex justify-between items-center mb-8">
                 <div className="flex items-center gap-2">
-                  <img
+                  <Image
                     src="/images/logo.png"
                     alt="Namaste Logo"
+                    width={64}
+                    height={32}
                     className="h-8 w-auto object-contain"
                   />
                   <span className="font-serif text-lg font-bold text-primary tracking-widest">MENU</span>

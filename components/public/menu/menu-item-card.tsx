@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import GoldFrame from '@/components/ui/gold-frame';
 import DietaryBadge from './dietary-badge';
@@ -204,10 +205,13 @@ export default function MenuItemCard({ item, locale }: MenuItemCardProps) {
             className="relative max-w-5xl w-full max-h-[85vh] flex items-center justify-center"
             onClick={(e) => e.stopPropagation()} // Prevent closing when clicking the image itself
           >
-            <img
+            <Image
               src={item.signed_image_url}
               alt={name}
-              className="max-w-full max-h-[85vh] object-contain rounded-md shadow-2xl border border-primary/20 animate-scale-up"
+              width={800}
+              height={600}
+              unoptimized
+              className="max-w-full max-h-[85vh] w-auto h-auto object-contain rounded-md shadow-2xl border border-primary/20 animate-scale-up"
             />
           </div>
         </div>

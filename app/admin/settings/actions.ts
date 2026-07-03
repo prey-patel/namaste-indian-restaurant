@@ -726,7 +726,7 @@ export async function uploadAlertSoundAction(formData: FormData) {
     const fileExt = file.name.split('.').pop()?.toLowerCase();
     const allowedExts = ['mp3', 'wav', 'ogg', 'aac', 'm4a', 'mp4'];
     
-    if (!allowedTypes.includes(file.type) && !allowedExts.includes(fileExt || '')) {
+    if (!allowedTypes.includes(file.type) || !allowedExts.includes(fileExt || '')) {
       return { success: false, error: 'Invalid file type. Only MP3, WAV, OGG, AAC, and M4A audio files are allowed.' };
     }
 

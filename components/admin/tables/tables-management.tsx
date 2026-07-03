@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useTransition } from 'react';
+import Image from 'next/image';
 import QRCode from 'qrcode';
 import { Button } from '@/components/ui/button';
 import PremiumCard from '@/components/ui/premium-card';
@@ -271,7 +272,7 @@ export default function TablesManagement({
           
           <div className="w-64 h-64 border-2 border-[#070B1E] p-2 flex items-center justify-center rounded-lg bg-white">
             {qrCodes[printTable.id] ? (
-              <img src={qrCodes[printTable.id]} alt={`Table ${printTable.table_number} QR`} className="w-full h-full" />
+              <Image src={qrCodes[printTable.id]} alt={`Table ${printTable.table_number} QR`} width={240} height={240} unoptimized className="w-full h-full" />
             ) : (
               <div className="text-xs">Generating QR...</div>
             )}
@@ -327,7 +328,7 @@ export default function TablesManagement({
               
               <div className="w-56 h-56 border border-[#070B1E] p-1 flex items-center justify-center rounded bg-white my-2">
                 {qrCodes[t.id] ? (
-                  <img src={qrCodes[t.id]} alt={`Table ${t.table_number} QR`} className="w-full h-full" />
+                  <Image src={qrCodes[t.id]} alt={`Table ${t.table_number} QR`} width={220} height={220} unoptimized className="w-full h-full" />
                 ) : (
                   <div className="text-xs">Generating QR...</div>
                 )}
@@ -444,7 +445,7 @@ export default function TablesManagement({
                 </div>
                 {qrCodes[t.id] && (
                   <div className="w-20 h-20 border border-border p-0.5 rounded bg-white flex-shrink-0 cursor-pointer" onClick={() => setPrintTable(t)} title="Click to view printable QR Card">
-                    <img src={qrCodes[t.id]} alt={`Table ${t.table_number} QR`} className="w-full h-full" />
+                    <Image src={qrCodes[t.id]} alt={`Table ${t.table_number} QR`} width={80} height={80} unoptimized className="w-full h-full" />
                   </div>
                 )}
               </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -390,9 +391,12 @@ export default function DineInOrderClient({
                   <PremiumCard key={item.id} hoverable={false} className="bg-[#050B1E]/40 border-primary/10 flex flex-col p-4 relative justify-between">
                     <div className="flex gap-4">
                       {item.signed_image_url && (
-                        <img
+                        <Image
                           src={item.signed_image_url}
                           alt={isPl ? item.name_pl : item.name_en}
+                          width={80}
+                          height={80}
+                          unoptimized
                           className="w-20 h-20 object-cover rounded border border-primary/5"
                         />
                       )}

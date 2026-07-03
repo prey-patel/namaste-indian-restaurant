@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import PageTransition from '@/components/ui/page-transition';
 import MandalaWatermark from '@/components/ui/mandala-watermark';
@@ -33,10 +34,13 @@ export default async function MyStatusPage({ params }: Props) {
         <div className="container mx-auto px-4 relative z-10 space-y-8 max-w-2xl">
           {/* Header */}
           <div className="space-y-3 flex flex-col items-center">
-            <img
+            <Image
               src="/images/logo.png"
               alt="Namaste Logo"
+              width={140}
+              height={64}
               className="h-16 w-auto object-contain mb-2"
+              priority
             />
             <div className="flex justify-center items-center space-x-2 text-primary">
               <div className="h-[1px] w-6 bg-primary/30" />

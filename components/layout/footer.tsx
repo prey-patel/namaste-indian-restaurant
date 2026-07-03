@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { Link } from '@/i18n/routing';
 import { getTranslations, getLocale } from 'next-intl/server';
 import { ROUTES } from '@/lib/routes/path';
@@ -38,9 +39,11 @@ export default async function Footer() {
         {/* Restaurant Contact Section */}
         <div className="flex flex-col space-y-3 text-left">
           <Link href={ROUTES.home} className="inline-block w-fit">
-            <img
+            <Image
               src="/images/logo.png"
               alt="Namaste Logo"
+              width={140}
+              height={64}
               className="h-16 w-auto object-contain hover:brightness-110 transition-all"
             />
           </Link>

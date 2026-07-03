@@ -224,3 +224,27 @@ export const getPublicMenuData = cache(async (): Promise<{
     items: resolvedItems,
   };
 });
+
+/**
+ * Fetches signature dishes (is_chef_special = true) for the home page.
+ * Returns up to 4 items with resolved signed image URLs.
+ */
+export const getSignatureDishes = cache(async (): Promise<PublicMenuItem[]> => {
+  const { items } = await getPublicMenuData();
+
+  // 1. Filter items flagged as chef special and active/available
+  const specials = items.filter(item => item.is_chef_special && item.is_available);
+
+  // 2. If we have at least 4 specials, return top 4 sorted by display order
+  if (specials.length >= 4) {
+    return specials.slice(0, 4);
+  }
+
+  // 3. Fallback: blend in popular items or available items to maintain a complete 4-dish showcase
+  const populars = items.filter(item => !specials.includes(item) && item.is_popular && item.is_available);
+  const others = items.filter(item => !specials.includes(item) && !populars.includes(item) && item.is_available);
+
+  const combined = [...specials, ...populars, ...others];
+  return combined.slice(0, 4);
+});
+

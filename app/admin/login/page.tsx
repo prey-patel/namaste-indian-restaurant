@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import LoginForm from './login-form';
 
@@ -8,10 +9,13 @@ export default function AdminLoginPage() {
       <Card className="border border-border bg-card max-w-md w-full p-6 space-y-6 shadow-2xl relative">
         <div className="absolute inset-0 bg-radial-gradient from-primary/5 to-transparent pointer-events-none rounded-lg" />
         <CardHeader className="text-center pb-2 relative z-10 flex flex-col items-center">
-          <img
+          <Image
             src="/images/logo.png"
             alt="Namaste Logo"
+            width={160}
+            height={80}
             className="h-20 w-auto object-contain mb-3"
+            priority
           />
           <CardTitle className="text-2xl font-serif font-bold text-primary tracking-wide">
             Namaste Admin

@@ -50,8 +50,16 @@ export default function RootLayout({ children }: Props) {
   return (
     <html lang="pl" className={`${playfair.variable} ${outfit.variable} ${pinyon.variable} dark`}>
       <body className="antialiased min-h-screen bg-background text-foreground flex flex-col font-sans">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:shadow-lg focus:outline-none font-bold text-xs uppercase tracking-wider"
+        >
+          Skip to main content / Przejdź do treści
+        </a>
         <PwaRegister />
-        {children}
+        <div id="main-content" className="flex-1 flex flex-col">
+          {children}
+        </div>
       </body>
     </html>
   );

@@ -185,9 +185,10 @@ function getGoogleMapsUrl(order: DeliveryOrder) {
 
 function getPaymentLabel(method: string, t: any) {
   switch (method) {
-    case 'cash': return t('card.cashOnDelivery');
-    case 'online': return t('card.onlinePayment');
-    case 'card': return t('card.cardPayment');
+    case 'cash_on_delivery': return t('card.cashOnDelivery');
+    case 'card_on_delivery': return t('card.cardPayment');
+    case 'cash_on_pickup': return t('card.cashOnDelivery');
+    case 'card_on_pickup': return t('card.cardPayment');
     default: return method;
   }
 }
@@ -219,7 +220,7 @@ function DeliveryCard({
   theme: 'dark' | 'light';
 }) {
   const [paymentChecked, setPaymentChecked] = useState(false);
-  const isCOD = order.payment_method === 'cash' && order.payment_status !== 'paid';
+  const isCOD = order.payment_method === 'cash_on_delivery' && order.payment_status !== 'paid';
   const fullAddress = getFullAddress(order);
   const distance = formatDistance(order.delivery_distance_car_meters);
   const driveTime = formatDriveTime(order.delivery_duration_car_seconds);
@@ -358,7 +359,7 @@ function DeliveryCard({
             : 'bg-white/[0.03] border-white/[0.06]'
         }`}>
           <div className="flex items-center gap-2">
-            {order.payment_method === 'cash' ? (
+            {order.payment_method === 'cash_on_delivery' ? (
               <Banknote className={`w-3.5 h-3.5 ${isLight ? 'text-amber-600/80' : 'text-amber-400/70'}`} />
             ) : (
               <CreditCard className={`w-3.5 h-3.5 ${isLight ? 'text-blue-600/80' : 'text-blue-400/70'}`} />

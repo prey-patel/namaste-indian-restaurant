@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { 
   Store, 
   Clock, 
@@ -1685,9 +1686,12 @@ export default function SettingsClient({
                         className="relative group border border-border rounded-lg overflow-hidden bg-muted/10 p-1 hover:border-primary/40 transition-all duration-300"
                       >
                         <div className="relative aspect-square w-full overflow-hidden rounded-md bg-black/40">
-                          <img
+                          <Image
                             src={img.url}
                             alt={img.alt_text_en || 'Gallery Image'}
+                            fill
+                            unoptimized
+                            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
                             className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                           />
                         </div>

@@ -54,26 +54,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-first for admin panel/KDS pages and API endpoints to ensure real-time accuracy
+  // Network-only for admin panel and API endpoints — never cache authenticated data
   if (url.pathname.startsWith('/admin') || url.pathname.startsWith('/api') || url.pathname.includes('supabase')) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const responseCopy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseCopy);
-            });
-          }
-          return response;
-        })
-        .catch(async () => {
-          const cached = await caches.match(request);
-          if (cached) return cached;
-          // Propagate the rejection so the browser handles it as a standard network failure
-          throw new Error('Network connection failed');
-        })
-    );
+    event.respondWith(fetch(request));
     return;
   }
 

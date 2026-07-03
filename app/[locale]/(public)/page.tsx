@@ -9,6 +9,7 @@ import PremiumButton from '@/components/ui/premium-button';
 import GoldFrame from '@/components/ui/gold-frame';
 import { getPublicSystemSettings } from '@/lib/supabase/settings';
 import { getSiteContent } from '@/lib/supabase/content';
+import { getSignatureDishes } from '@/lib/supabase/menu';
 import WhyChooseNamaste from '@/components/public/why-choose-namaste';
 import HeroSection from '@/components/public/hero-section';
 import { getPublicOpeningHours } from '@/lib/public/opening-hours';
@@ -40,10 +41,11 @@ export default async function HomePage({ params }: Props) {
   const t = await getTranslations('home');
   const tNav = await getTranslations('nav');
 
-  // Load public settings, CMS content, and opening hours server-side
+  // Load public settings, CMS content, opening hours, and signature dishes server-side
   const settings = await getPublicSystemSettings();
   const cmsHero = await getSiteContent('home_hero');
   const openingHoursData = await getPublicOpeningHours(locale);
+  const signatureDishes = await getSignatureDishes();
 
   // Dynamic content loading with fallback to translation dictionaries
   const heroTitle = (cmsHero as any)?.[`value_${locale}`]?.title || t('heroTitle');
@@ -148,6 +150,7 @@ export default async function HomePage({ params }: Props) {
         email={email}
         coordinates={settings.coordinates}
         googleMapsLink={settings.google_maps_link}
+        signatureDishes={signatureDishes}
       />
     </PageTransition>
   );

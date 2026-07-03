@@ -6,6 +6,18 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { sendEmailViaBrevo } from '@/lib/email/brevo';
 
 /**
+ * Escapes HTML special characters to prevent HTML injection in email templates.
+ */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
  * Validates the current admin user role (owner/manager).
  */
 async function validateAdminAccess() {
@@ -87,15 +99,15 @@ export async function replyToInquiryAction(id: string, replyText: string) {
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 12px; background-color: #ffffff;">
         <h2 style="color: #d4af37; border-bottom: 2px solid #d4af37; padding-bottom: 10px; margin-top: 0;">Reply from Namaste Indian Restaurant</h2>
-        <p>Dear ${inquiry.name},</p>
+        <p>Dear ${escapeHtml(inquiry.name)},</p>
         
-        <div style="background-color: #fafafa; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #eaeaea; color: #333; line-height: 1.6; white-space: pre-wrap;">${replyText}</div>
+        <div style="background-color: #fafafa; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #eaeaea; color: #333; line-height: 1.6; white-space: pre-wrap;">${escapeHtml(replyText)}</div>
 
         <hr style="border: 0; border-top: 1px solid #eaeaea; margin: 25px 0;" />
         
         <p style="font-size: 12px; color: #777;"><strong>Original Message:</strong></p>
         <blockquote style="font-size: 12px; color: #555; background-color: #f9f9f9; padding: 12px; border-left: 3px solid #ccc; margin: 10px 0; font-style: italic;">
-          ${inquiry.message.replace(/\n/g, '<br />')}
+          ${escapeHtml(inquiry.message).replace(/\n/g, '<br />')}
         </blockquote>
         
         <p style="font-size: 12px; color: #777; margin-top: 25px;">
