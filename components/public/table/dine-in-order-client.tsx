@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import PremiumCard from '@/components/ui/premium-card';
 import GoldSpinner from '@/components/ui/gold-spinner';
 import StatusPill from '@/components/ui/status-pill';
-import { Plus, Minus, Trash2, ShoppingBag, User, CreditCard, DollarSign, Clock, AlertTriangle, ChefHat, Check, ShoppingCart } from 'lucide-react';
+import { Plus, Minus, Trash2, ShoppingBag, User, Users, CreditCard, DollarSign, Clock, AlertTriangle, ChefHat, Check, ShoppingCart, ZoomIn, ZoomOut, Maximize2, RotateCcw, X } from 'lucide-react';
 import { createDineInOrderAction } from '@/app/[locale]/(public)/table/actions';
 import TableOrderStatus from './table-order-status';
 
@@ -103,6 +103,33 @@ export default function DineInOrderClient({
   
   // Existing session orders
   const [existingOrders, setExistingOrders] = useState<any[]>(initialSession?.existingOrders || []);
+
+  // 4. Lightbox Image Zoom state
+  const [lightboxItem, setLightboxItem] = useState<MenuItem | null>(null);
+  const [zoomScale, setZoomScale] = useState(1);
+
+  const handleZoomIn = () => setZoomScale(prev => Math.min(prev + 0.5, 3));
+  const handleZoomOut = () => setZoomScale(prev => Math.max(prev - 0.5, 1));
+  const handleResetZoom = () => setZoomScale(1);
+
+  const handleToggleZoom = () => {
+    setZoomScale(prev => (prev > 1 ? 1 : 2));
+  };
+
+  const closeLightbox = () => {
+    setLightboxItem(null);
+    setZoomScale(1);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeLightbox();
+    };
+    if (lightboxItem) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxItem]);
 
   // 4. Initialize Session from Props or LocalStorage
   useEffect(() => {
@@ -391,14 +418,23 @@ export default function DineInOrderClient({
                   <PremiumCard key={item.id} hoverable={false} className="bg-[#050B1E]/40 border-primary/10 flex flex-col p-4 relative justify-between">
                     <div className="flex gap-4">
                       {item.signed_image_url && (
-                        <Image
-                          src={item.signed_image_url}
-                          alt={isPl ? item.name_pl : item.name_en}
-                          width={80}
-                          height={80}
-                          unoptimized
-                          className="w-20 h-20 object-cover rounded border border-primary/5"
-                        />
+                        <div 
+                          className="relative w-20 h-20 flex-shrink-0 cursor-pointer group overflow-hidden rounded border border-primary/10 hover:border-primary/40 transition-colors"
+                          onClick={() => setLightboxItem(item)}
+                          title={isPl ? 'Kliknij, aby powiększyć zdjęcie' : 'Click to expand image'}
+                        >
+                          <Image
+                            src={item.signed_image_url}
+                            alt={isPl ? item.name_pl : item.name_en}
+                            width={80}
+                            height={80}
+                            unoptimized
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                            <ZoomIn className="w-5 h-5 text-primary drop-shadow-md" />
+                          </div>
+                        </div>
                       )}
                       <div className="space-y-1 text-left flex-1">
                         <div className="flex justify-between items-start gap-2">
@@ -529,6 +565,96 @@ export default function DineInOrderClient({
                     </div>
                   </PremiumCard>
                 ))}
+
+                {/* Master Consolidated Table Summary (Group Payment View) */}
+                {(() => {
+                  const consolidatedMap = new Map<string, { name: string; quantity: number; totalPrice: number }>();
+                  let grandTotal = 0;
+                  let totalItemsCount = 0;
+
+                  existingOrders.forEach((order) => {
+                    if (order.status !== 'cancelled' && order.status !== 'rejected') {
+                      grandTotal += Number(order.total_amount || 0);
+                      if (Array.isArray(order.order_items)) {
+                        order.order_items.forEach((oi: any) => {
+                          const name = isPl ? oi.item_name_pl : oi.item_name_en;
+                          const qty = Number(oi.quantity || 0);
+                          const price = Number(oi.unit_price || 0) * qty;
+                          totalItemsCount += qty;
+
+                          const existing = consolidatedMap.get(name);
+                          if (existing) {
+                            existing.quantity += qty;
+                            existing.totalPrice += price;
+                          } else {
+                            consolidatedMap.set(name, { name, quantity: qty, totalPrice: price });
+                          }
+                        });
+                      }
+                    }
+                  });
+
+                  const consolidatedItems = Array.from(consolidatedMap.values());
+                  if (consolidatedItems.length === 0) return null;
+
+                  return (
+                    <PremiumCard hoverable={false} className="bg-gradient-to-br from-[#050B1E] via-[#070D26] to-[#050B1E] border-primary/30 p-5 text-xs text-left space-y-4 shadow-xl relative overflow-hidden mt-6">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl pointer-events-none" />
+                      
+                      {/* Header */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-primary/15 pb-3">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-primary" />
+                          <h4 className="font-serif font-black tracking-wider text-primary text-sm uppercase">
+                            {isPl ? `Podsumowanie Całego Stolika #${table.table_number}` : `Table #${table.table_number} Group Summary`}
+                          </h4>
+                        </div>
+                        <span className="inline-flex items-center w-fit px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                          {isPl ? 'Płatność Zbiorcza' : 'Group Payment'}
+                        </span>
+                      </div>
+
+                      <p className="text-[11px] text-muted-foreground/70 italic">
+                        {isPl ? 'Połączone pozycje ze wszystkich zamówień przy tym stoliku (do płatności razem):' : 'Consolidated items from all orders at this table (for group payment):'}
+                      </p>
+
+                      {/* Consolidated Items List */}
+                      <div className="space-y-1.5 pt-1">
+                        {consolidatedItems.map((item, idx) => (
+                          <div key={idx} className="flex justify-between items-center py-1 border-b border-primary/5 last:border-0">
+                            <span className="font-medium text-foreground">
+                              <span className="text-primary font-mono font-bold mr-1.5">{item.quantity} x</span>
+                              {item.name}
+                            </span>
+                            <span className="font-mono font-bold text-foreground">
+                              {item.totalPrice.toFixed(2)} PLN
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Footer Totals */}
+                      <div className="flex justify-between items-center pt-3 border-t border-primary/20 mt-3 text-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
+                            {isPl ? 'Łącznie pozycji:' : 'Total items:'}
+                          </span>
+                          <span className="font-mono text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
+                            {totalItemsCount} {isPl ? 'szt.' : 'items'}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[9px] uppercase tracking-widest text-muted-foreground block">
+                            {isPl ? 'RAZEM CAŁY STOLIK' : 'TABLE GRAND TOTAL'}
+                          </span>
+                          <span className="text-base sm:text-lg font-mono font-black text-amber-400 tracking-tight">
+                            {grandTotal.toFixed(2)} PLN
+                          </span>
+                        </div>
+                      </div>
+                    </PremiumCard>
+                  );
+                })()}
               </div>
             )}
           </div>
@@ -726,6 +852,124 @@ export default function DineInOrderClient({
                 {isPl ? 'Zapisz' : 'Save'}
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Fullscreen Interactive Image Lightbox & Zoom Modal */}
+      {lightboxItem && lightboxItem.signed_image_url && (
+        <div 
+          className="fixed inset-0 z-[2000] bg-black/95 backdrop-blur-md flex flex-col items-center justify-between p-4 sm:p-6 animate-fade-in"
+          onClick={closeLightbox}
+        >
+          {/* Top Control Bar */}
+          <div 
+            className="w-full max-w-5xl flex items-center justify-between z-20 bg-black/60 backdrop-blur-md border border-white/10 rounded-xl p-3 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2">
+              <span className="font-serif font-bold text-sm sm:text-base text-primary tracking-wide line-clamp-1">
+                {isPl ? lightboxItem.name_pl : lightboxItem.name_en}
+              </span>
+              <span className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                {lightboxItem.price.toFixed(2)} PLN
+              </span>
+            </div>
+
+            {/* Zoom Controls */}
+            <div className="flex items-center gap-1 sm:gap-2">
+              <button
+                type="button"
+                onClick={handleZoomOut}
+                disabled={zoomScale <= 1}
+                className="p-2 text-white hover:text-primary disabled:opacity-30 disabled:hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-lg border border-white/10"
+                title="Zoom Out (-)"
+              >
+                <ZoomOut className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+
+              <span className="text-xs font-mono text-slate-300 w-12 text-center select-none font-bold">
+                {Math.round(zoomScale * 100)}%
+              </span>
+
+              <button
+                type="button"
+                onClick={handleZoomIn}
+                disabled={zoomScale >= 3}
+                className="p-2 text-white hover:text-primary disabled:opacity-30 disabled:hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-lg border border-white/10"
+                title="Zoom In (+)"
+              >
+                <ZoomIn className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+
+              {zoomScale > 1 && (
+                <button
+                  type="button"
+                  onClick={handleResetZoom}
+                  className="p-2 text-amber-400 hover:text-amber-300 transition-colors bg-amber-500/10 hover:bg-amber-500/20 rounded-lg border border-amber-500/20"
+                  title="Reset Zoom"
+                >
+                  <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+              )}
+
+              <div className="w-[1px] h-6 bg-white/20 mx-1" />
+
+              <button
+                type="button"
+                onClick={closeLightbox}
+                className="p-2 text-slate-300 hover:text-red-400 transition-colors bg-white/5 hover:bg-red-500/10 rounded-lg border border-white/10 hover:border-red-500/30"
+                title="Close (Esc)"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Image Display Area with Touch & Scale transform */}
+          <div 
+            className="relative flex-1 w-full max-w-5xl my-4 flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing select-none"
+            onClick={(e) => e.stopPropagation()}
+            onDoubleClick={handleToggleZoom}
+          >
+            <div 
+              className="relative w-full h-full max-h-[75vh] flex items-center justify-center transition-transform duration-300 ease-out"
+              style={{
+                transform: `scale(${zoomScale})`,
+                transformOrigin: 'center center',
+              }}
+            >
+              <Image
+                src={lightboxItem.signed_image_url}
+                alt={isPl ? lightboxItem.name_pl : lightboxItem.name_en}
+                fill
+                unoptimized
+                priority
+                className="object-contain drop-shadow-2xl pointer-events-none rounded-lg"
+              />
+            </div>
+          </div>
+
+          {/* Bottom Info Bar */}
+          <div 
+            className="w-full max-w-5xl bg-black/70 backdrop-blur-md border border-white/10 rounded-xl p-4 text-left space-y-2 text-xs text-slate-300 z-20"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+                {isPl ? 'Kliknij dwukrotnie lub użyj przycisków, aby przybliżyć' : 'Double tap or use buttons above to zoom'}
+              </span>
+              {lightboxItem.spiciness > 0 && (
+                <span className="text-red-400 font-mono font-bold">
+                  {'🌶️'.repeat(lightboxItem.spiciness)}
+                </span>
+              )}
+            </div>
+            {(locale === 'pl' ? lightboxItem.description_pl : lightboxItem.description_en) && (
+              <p className="text-slate-200 leading-relaxed font-light text-xs sm:text-sm">
+                {locale === 'pl' ? lightboxItem.description_pl : lightboxItem.description_en}
+              </p>
+            )}
           </div>
         </div>
       )}
