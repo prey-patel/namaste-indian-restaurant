@@ -41,7 +41,14 @@ export async function POST(req: NextRequest): Promise<NextResponse<DeliveryFeeRe
     req.headers.get('x-real-ip') ||
     '127.0.0.1';
 
-  const secret = process.env.ORDER_IP_HASH_SECRET || 'NamasteOrderPepper51198';
+  const secret = process.env.ORDER_IP_HASH_SECRET;
+  if (!secret) {
+    console.error('ERROR: ORDER_IP_HASH_SECRET is missing in environment!');
+    return NextResponse.json(
+      { success: false, error: 'Server configuration error.', code: 'SERVER_ERROR' },
+      { status: 500 }
+    );
+  }
   const ipHash = crypto.createHmac('sha256', secret).update(ip).digest('hex');
 
   try {

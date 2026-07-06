@@ -51,7 +51,16 @@ export async function lookupStatusAction(
     // 1. Secure Rate Limiting by Hashed IP
     const headersList = await headers();
     const ip = headersList.get('x-forwarded-for')?.split(',')[0] || headersList.get('x-real-ip') || '127.0.0.1';
-    const secret = process.env.ORDER_IP_HASH_SECRET || 'NamasteOrderPepper51198';
+    const secret = process.env.ORDER_IP_HASH_SECRET;
+    if (!secret) {
+      console.error('ERROR: ORDER_IP_HASH_SECRET is missing in environment!');
+      return {
+        success: false,
+        error: locale === 'pl'
+          ? 'Wystąpił błąd konfiguracji serwera.'
+          : 'Server configuration error.'
+      };
+    }
     const ipHash = crypto.createHmac('sha256', secret).update(ip).digest('hex');
 
     try {

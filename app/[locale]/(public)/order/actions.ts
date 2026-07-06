@@ -369,17 +369,24 @@ export async function submitOrderReviewAction(rawData: any, lang: 'pl' | 'en') {
     const headersList = await headers();
     const ip = headersList.get('x-forwarded-for')?.split(',')[0] || headersList.get('x-real-ip') || '127.0.0.1';
     const secret = process.env.ORDER_IP_HASH_SECRET;
-    if (secret) {
-      const ipHash = crypto.createHmac('sha256', secret).update(ip).digest('hex');
-      const rateCheck = await isRateLimited(ipHash, 'order_status_lookup', 15, 60);
-      if (rateCheck.limited) {
-        return {
-          success: false,
-          error: lang === 'pl' 
-            ? `Zbyt wiele żądań. Spróbuj ponownie za ${rateCheck.retryAfterSeconds} sekund.`
-            : `Rate limit exceeded. Please try again in ${rateCheck.retryAfterSeconds} seconds.`
-        };
-      }
+    if (!secret) {
+      console.error('ERROR: ORDER_IP_HASH_SECRET is missing in environment!');
+      return {
+        success: false,
+        error: lang === 'pl'
+          ? 'Wystąpił błąd konfiguracji serwera. Spróbuj ponownie później.'
+          : 'Server configuration error. Please try again later.'
+      };
+    }
+    const ipHash = crypto.createHmac('sha256', secret).update(ip).digest('hex');
+    const rateCheck = await isRateLimited(ipHash, 'order_status_lookup', 15, 60);
+    if (rateCheck.limited) {
+      return {
+        success: false,
+        error: lang === 'pl' 
+          ? `Zbyt wiele żądań. Spróbuj ponownie za ${rateCheck.retryAfterSeconds} sekund.`
+          : `Rate limit exceeded. Please try again in ${rateCheck.retryAfterSeconds} seconds.`
+      };
     }
 
     const adminClient = createAdminClient();

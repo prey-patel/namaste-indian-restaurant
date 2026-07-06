@@ -2,11 +2,11 @@ import "server-only";
 import crypto from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-/**
- * Computes the HMAC-SHA256 hash of a raw token using a secret.
- */
 function computeHash(token: string): string {
-  const secret = process.env.EMAIL_ACTION_TOKEN_SECRET || "fallback-secret-namaste-token-signing-pepper-51198";
+  const secret = process.env.EMAIL_ACTION_TOKEN_SECRET;
+  if (!secret) {
+    throw new Error("Configuration Error: EMAIL_ACTION_TOKEN_SECRET is not configured.");
+  }
   return crypto.createHmac("sha256", secret).update(token).digest("hex");
 }
 
