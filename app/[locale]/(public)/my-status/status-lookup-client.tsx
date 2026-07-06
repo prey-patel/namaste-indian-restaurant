@@ -103,9 +103,9 @@ export default function StatusLookupClient({ locale }: Props) {
         className="relative overflow-hidden bg-gradient-to-b from-[#0e1329] via-[#070b1e] to-[#040614] border border-primary/20 rounded-2xl p-6 sm:p-8 space-y-5 shadow-2xl"
       >
         {/* Gold top accent bar */}
-        <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-amber-500/60 to-transparent" />
+        <div key="gold-bar" className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-amber-500/60 to-transparent" />
 
-        <div className="space-y-1.5">
+        <div key="label-container" className="space-y-1.5">
           <label htmlFor="reference-code" className="text-[10px] uppercase tracking-widest text-amber-500/80 font-bold block">
             {locale === 'pl' ? 'Twój Kod Referencyjny' : 'Your Reference Code'}
           </label>
@@ -117,7 +117,7 @@ export default function StatusLookupClient({ locale }: Props) {
         </div>
 
         {/* Input Field */}
-        <div className="relative">
+        <div key="input-container" className="relative">
           <input
             id="reference-code"
             type="text"
@@ -135,7 +135,7 @@ export default function StatusLookupClient({ locale }: Props) {
 
         {/* Secondary Verification Input Field */}
         {requiresVerification && (
-          <div className="space-y-3 p-4 bg-amber-500/5 border border-amber-500/15 rounded-xl animate-fade-in">
+          <div key="verification-container" className="space-y-3 p-4 bg-amber-500/5 border border-amber-500/15 rounded-xl animate-fade-in">
             <div className="space-y-1">
               <label htmlFor="verification-info" className="text-[10px] uppercase tracking-widest text-amber-400 font-bold block">
                 {locale === 'pl' ? 'Dodatkowa Weryfikacja' : 'Secondary Verification'}
@@ -162,7 +162,7 @@ export default function StatusLookupClient({ locale }: Props) {
 
         {/* Error Alert */}
         {errorMsg && (
-          <div className="flex items-start gap-2.5 p-3.5 bg-red-500/8 border border-red-500/20 text-red-300/90 rounded-xl text-xs leading-relaxed">
+          <div key="error-alert" className="flex items-start gap-2.5 p-3.5 bg-red-500/8 border border-red-500/20 text-red-300/90 rounded-xl text-xs leading-relaxed">
             <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
             <span>{errorMsg}</span>
           </div>
@@ -170,6 +170,7 @@ export default function StatusLookupClient({ locale }: Props) {
 
         {/* Submit Button */}
         <button
+          key="submit-button"
           type="submit"
           disabled={isPending}
           className="w-full bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-[#070B1E] font-extrabold text-[11px] uppercase tracking-widest py-3.5 shadow-[0_0_20px_rgba(245,158,11,0.12)] hover:shadow-[0_0_30px_rgba(245,158,11,0.25)] transition-all duration-300 rounded-xl disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"

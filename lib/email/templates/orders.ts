@@ -316,6 +316,27 @@ function renderPricingSummary(data: OrderEmailData, lang: "pl" | "en"): string {
   `;
 }
 
+function getOrderTrackingSectionHtml(data: OrderEmailData): string {
+  if (!data.orderId || !data.viewUrl) return "";
+
+  const isPl = data.lang === "pl";
+  const shortId = data.orderId.substring(0, 8).toUpperCase();
+  return `
+    <div style="background-color: #FAF9F5; border: 1px solid #EAE3D2; border-radius: 8px; padding: 20px; margin: 25px 0; text-align: center;">
+      <p style="margin: 0 0 10px 0; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; color: #D4AF37;">
+        ${isPl ? "Śledzenie statusu zamówienia" : "Order Status Tracking"}
+      </p>
+      <p style="margin: 0 0 15px 0; font-size: 13px; color: #4A5568;">
+        ${isPl ? "Twój kod referencyjny:" : "Your reference code:"} <br />
+        <strong style="font-family: monospace; font-size: 14px; background-color: #EDF2F7; padding: 4px 10px; border-radius: 4px; display: inline-block; margin-top: 6px; border: 1px solid #CBD5E0; color: #1A202C;">#${shortId}</strong>
+      </p>
+      <a href="${data.viewUrl}" style="background-color: #D4AF37; color: #000000; font-weight: bold; font-size: 11px; text-decoration: none; padding: 10px 20px; border-radius: 6px; display: inline-block; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 5px;">
+        ${isPl ? "Sprawdź Status Zamówienia" : "Check Order Status"}
+      </a>
+    </div>
+  `;
+}
+
 /**
  * Customer email: Order request received.
  */
@@ -353,6 +374,7 @@ export function getOrderRequestReceivedCustomerTemplate(data: OrderEmailData): {
     <h3>${isPl ? "Podsumowanie zamówienia" : "Order Details"}</h3>
     ${renderItemsTable(data.items, data.lang || "pl")}
     ${renderPricingSummary(data, data.lang || "pl")}
+    ${getOrderTrackingSectionHtml(data)}
   `;
 
   return { subject, html: getEmailLayout(subject, body, data.restaurantContact, data.logoUrl) };
@@ -396,6 +418,7 @@ export function getOrderApprovedCustomerTemplate(data: OrderEmailData): { subjec
     <h3>${isPl ? "Zamówione pozycje" : "Items Ordered"}</h3>
     ${renderItemsTable(data.items, data.lang || "pl")}
     ${renderPricingSummary(data, data.lang || "pl")}
+    ${getOrderTrackingSectionHtml(data)}
   `;
 
   return { subject, html: getEmailLayout(subject, body, data.restaurantContact, data.logoUrl) };
@@ -432,6 +455,7 @@ export function getOrderRejectedCustomerTemplate(data: OrderEmailData): { subjec
         ? "Środki nie zostały pobrane, a płatność (jeśli dotyczy) została anulowana. Zapraszamy do kontaktu telefonicznego w celu wyjaśnienia szczegółów." 
         : "Any pending charge/authorization has been cancelled. Please contact us directly by phone if you need further assistance."
     }</p>
+    ${getOrderTrackingSectionHtml(data)}
   `;
 
   return { subject, html: getEmailLayout(subject, body, data.restaurantContact, data.logoUrl) };
@@ -469,6 +493,7 @@ export function getOrderReadyForPickupCustomerTemplate(data: OrderEmailData): { 
       <strong>${isPl ? "Metoda płatności:" : "Payment method:"}</strong> ${getPaymentMethodLabel(data.paymentMethod, data.lang || "pl")}<br />
       <strong>${isPl ? "Do zapłaty:" : "Amount due:"}</strong> ${data.totalAmount.toFixed(2)} zł
     </p>
+    ${getOrderTrackingSectionHtml(data)}
   `;
 
   return { subject, html: getEmailLayout(subject, body, data.restaurantContact, data.logoUrl) };
@@ -498,13 +523,14 @@ export function getOrderDeliveredCustomerTemplate(data: OrderEmailData): { subje
 
     <div class="divider"></div>
 
-    <p style="font-size: 11px; text-align: center; color: #718096; line-height: 1.4;">
+    <p style="font-size: 11px; text-align: center; color: #718096; line-height: 1.4; margin-bottom: 20px;">
       ${
         isPl 
           ? "Jeśli masz jakiekolwiek uwagi do swojego zamówienia, podziel się nimi dzwoniąc do nas bezpośrednio." 
           : "If you have any feedback regarding your order, please do not hesitate to contact us directly by phone."
       }
     </p>
+    ${getOrderTrackingSectionHtml(data)}
   `;
 
   return { subject, html: getEmailLayout(subject, body, data.restaurantContact, data.logoUrl) };

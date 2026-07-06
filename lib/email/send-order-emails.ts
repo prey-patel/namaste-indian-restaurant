@@ -206,6 +206,8 @@ export async function sendOrderRequestReceivedCustomerEmail(orderId: string) {
 
     const restaurantContact = await getRestaurantContactDetails(adminClient);
     const baseUrl = await getBaseUrl();
+    const lang = order.customer_language === "en" ? "en" : "pl";
+    const viewUrl = `${baseUrl}/${lang}/order/status?id=${order.id}&token=${order.token}`;
     const { subject, html } = getOrderRequestReceivedCustomerTemplate({
       orderId: order.id,
       customerName: order.customer_name,
@@ -224,7 +226,8 @@ export async function sendOrderRequestReceivedCustomerEmail(orderId: string) {
       deliveryFee: Number(order.delivery_fee),
       totalAmount: Number(order.total_amount),
       customerNotes: order.customer_notes,
-      lang: order.customer_language === "en" ? "en" : "pl",
+      lang,
+      viewUrl,
       logoUrl: `${baseUrl}/images/logo.png`,
       restaurantContact
     });
@@ -366,6 +369,8 @@ export async function sendOrderApprovedCustomerEmail(orderId: string) {
 
     const restaurantContact = await getRestaurantContactDetails(adminClient);
     const baseUrl = await getBaseUrl();
+    const lang = order.customer_language === "en" ? "en" : "pl";
+    const viewUrl = `${baseUrl}/${lang}/order/status?id=${order.id}&token=${order.token}`;
     const { subject, html } = getOrderApprovedCustomerTemplate({
       orderId: order.id,
       customerName: order.customer_name,
@@ -385,7 +390,8 @@ export async function sendOrderApprovedCustomerEmail(orderId: string) {
       totalAmount: Number(order.total_amount),
       customerNotes: order.customer_notes,
       etaMinutes,
-      lang: order.customer_language === "en" ? "en" : "pl",
+      lang,
+      viewUrl,
       logoUrl: `${baseUrl}/images/logo.png`,
       restaurantContact
     });
@@ -434,6 +440,8 @@ export async function sendOrderRejectedCustomerEmail(orderId: string) {
 
     const restaurantContact = await getRestaurantContactDetails(adminClient);
     const baseUrl = await getBaseUrl();
+    const lang = order.customer_language === "en" ? "en" : "pl";
+    const viewUrl = `${baseUrl}/${lang}/order/status?id=${order.id}&token=${order.token}`;
     const { subject, html } = getOrderRejectedCustomerTemplate({
       orderId: order.id,
       customerName: order.customer_name,
@@ -452,7 +460,8 @@ export async function sendOrderRejectedCustomerEmail(orderId: string) {
       deliveryFee: Number(order.delivery_fee),
       totalAmount: Number(order.total_amount),
       rejectionReason: order.rejection_reason,
-      lang: order.customer_language === "en" ? "en" : "pl",
+      lang,
+      viewUrl,
       logoUrl: `${baseUrl}/images/logo.png`,
       restaurantContact
     });
@@ -504,6 +513,8 @@ export async function sendOrderReadyForPickupCustomerEmail(orderId: string) {
 
     const restaurantContact = await getRestaurantContactDetails(adminClient);
     const baseUrl = await getBaseUrl();
+    const lang = order.customer_language === "en" ? "en" : "pl";
+    const viewUrl = `${baseUrl}/${lang}/order/status?id=${order.id}&token=${order.token}`;
     const { subject, html } = getOrderReadyForPickupCustomerTemplate({
       orderId: order.id,
       customerName: order.customer_name,
@@ -520,7 +531,8 @@ export async function sendOrderReadyForPickupCustomerEmail(orderId: string) {
       packagingTotal: Number(order.packaging_total),
       deliveryFee: Number(order.delivery_fee),
       totalAmount: Number(order.total_amount),
-      lang: order.customer_language === "en" ? "en" : "pl",
+      lang,
+      viewUrl,
       logoUrl: `${baseUrl}/images/logo.png`,
       restaurantContact
     });
@@ -572,6 +584,8 @@ export async function sendOrderDeliveredCustomerEmail(orderId: string) {
 
     const restaurantContact = await getRestaurantContactDetails(adminClient);
     const baseUrl = await getBaseUrl();
+    const lang = order.customer_language === "en" ? "en" : "pl";
+    const viewUrl = `${baseUrl}/${lang}/order/status?id=${order.id}&token=${order.token}`;
     const { subject, html } = getOrderDeliveredCustomerTemplate({
       orderId: order.id,
       customerName: order.customer_name,
@@ -588,7 +602,8 @@ export async function sendOrderDeliveredCustomerEmail(orderId: string) {
       packagingTotal: Number(order.packaging_total),
       deliveryFee: Number(order.delivery_fee),
       totalAmount: Number(order.total_amount),
-      lang: order.customer_language === "en" ? "en" : "pl",
+      lang,
+      viewUrl,
       logoUrl: `${baseUrl}/images/logo.png`,
       restaurantContact
     });
