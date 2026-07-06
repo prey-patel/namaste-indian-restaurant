@@ -4,38 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import crypto from 'crypto';
 import { z } from 'zod';
-
-/**
- * Checks if the current user is authenticated and has owner or manager roles.
- */
-async function validateAdminAccess() {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    throw new Error('Unauthorized: Unauthenticated user');
-  }
-
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('role, is_active')
-    .eq('id', user.id)
-    .single();
-
-  if (profileError || !profile) {
-    throw new Error('Unauthorized: Admin profile not found');
-  }
-
-  if (!profile.is_active) {
-    throw new Error('Unauthorized: Admin account is inactive');
-  }
-
-  if (profile.role !== 'owner' && profile.role !== 'manager') {
-    throw new Error('Unauthorized: Insufficient permissions');
-  }
-
-  return user.id;
-}
+import { validateAdminAccess } from '@/lib/auth/guards';
 
 export async function createTableAction(tableNumber: number, capacity: number, section: string, notes?: string | null) {
   try {

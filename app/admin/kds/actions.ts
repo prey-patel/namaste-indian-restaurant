@@ -2,40 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
-
-/**
- * Validates that the current user is authenticated and has an active
- * owner, manager, or kitchen role. Staff and public are blocked.
- */
-async function validateKdsAccess() {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    throw new Error('Unauthorized: Unauthenticated user');
-  }
-
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('role, is_active')
-    .eq('id', user.id)
-    .single();
-
-  if (profileError || !profile) {
-    throw new Error('Unauthorized: Profile not found');
-  }
-
-  if (!profile.is_active) {
-    throw new Error('Unauthorized: Account is inactive');
-  }
-
-  const allowedRoles = ['owner', 'manager', 'kitchen'];
-  if (!allowedRoles.includes(profile.role)) {
-    throw new Error('Unauthorized: Insufficient permissions for KDS');
-  }
-
-  return { userId: user.id, role: profile.role };
-}
+import { validateKdsAccess } from '@/lib/auth/guards';
 
 /**
  * Kitchen action: Start preparing an order.

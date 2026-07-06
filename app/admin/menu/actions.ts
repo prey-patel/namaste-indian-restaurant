@@ -5,40 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { categoryFormSchema, menuItemFormSchema } from '@/lib/validation/admin-menu';
 import { z } from 'zod';
 import { getImageSignedUrl } from '@/lib/supabase/menu';
-
-/**
- * Checks if the current request is authenticated and has owner or manager roles.
- * Returns the current authenticated user's ID.
- */
-async function validateAdminAccess() {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    throw new Error('Unauthorized: Unauthenticated user');
-  }
-
-  // Fetch role and active status from public.profiles
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('role, is_active')
-    .eq('id', user.id)
-    .single();
-
-  if (profileError || !profile) {
-    throw new Error('Unauthorized: Admin profile not found');
-  }
-
-  if (!profile.is_active) {
-    throw new Error('Unauthorized: Admin account is inactive');
-  }
-
-  if (profile.role !== 'owner' && profile.role !== 'manager') {
-    throw new Error('Unauthorized: Insufficient permissions');
-  }
-
-  return user.id;
-}
+import { validateAdminAccess } from '@/lib/auth/guards';
 
 // Helper to revalidate all menu pages and tags
 function revalidateMenu() {

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendEmailViaBrevo } from '@/lib/email/brevo';
+import { validateAdminAccess } from '@/lib/auth/guards';
 
 /**
  * Escapes HTML special characters to prevent HTML injection in email templates.
@@ -15,38 +16,6 @@ function escapeHtml(str: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
-}
-
-/**
- * Validates the current admin user role (owner/manager).
- */
-async function validateAdminAccess() {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    throw new Error('Unauthorized: Unauthenticated user');
-  }
-
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('id, role, is_active')
-    .eq('id', user.id)
-    .single();
-
-  if (profileError || !profile) {
-    throw new Error('Unauthorized: Admin profile not found');
-  }
-
-  if (!profile.is_active) {
-    throw new Error('Unauthorized: Admin account is inactive');
-  }
-
-  if (profile.role !== 'owner' && profile.role !== 'manager') {
-    throw new Error('Unauthorized: Insufficient permissions');
-  }
-
-  return profile;
 }
 
 /**
@@ -80,7 +49,7 @@ export async function updateInquiryStatusAction(id: string, status: 'read' | 'ar
  */
 export async function replyToInquiryAction(id: string, replyText: string) {
   try {
-    const adminProfile = await validateAdminAccess();
+    const adminId = await validateAdminAccess();
     const supabase = await createClient();
 
     // 1. Fetch original inquiry
@@ -137,7 +106,7 @@ export async function replyToInquiryAction(id: string, replyText: string) {
         status: 'replied',
         admin_reply: replyText,
         replied_at: new Date().toISOString(),
-        replied_by: adminProfile.id
+        replied_by: adminId
       })
       .eq('id', id);
 
@@ -160,7 +129,7 @@ export async function replyToInquiryAction(id: string, replyText: string) {
           subject: emailSubject,
           brevo_message_id: brevoResult.messageId || null,
           status: 'sent',
-          metadata: { admin_id: adminProfile.id },
+          metadata: { admin_id: adminId },
           sent_at: new Date().toISOString()
         });
     } catch (logErr) {

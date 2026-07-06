@@ -8,73 +8,7 @@ import {
   sendOrderReadyForPickupCustomerEmail,
   sendOrderDeliveredCustomerEmail
 } from '@/lib/email/send-order-emails';
-
-
-/**
- * Checks if the current request is authenticated and has owner or manager roles.
- */
-async function validateAdminAccess() {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    throw new Error('Unauthorized: Unauthenticated user');
-  }
-
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('role, is_active')
-    .eq('id', user.id)
-    .single();
-
-  if (profileError || !profile) {
-    throw new Error('Unauthorized: Admin profile not found');
-  }
-
-  if (!profile.is_active) {
-    throw new Error('Unauthorized: Admin account is inactive');
-  }
-
-  if (profile.role !== 'owner' && profile.role !== 'manager') {
-    throw new Error('Unauthorized: Insufficient permissions');
-  }
-
-  return user.id;
-}
-
-/**
- * Checks if the current request is authenticated and has owner, manager, or staff roles.
- * Used for delivery-related actions that staff (delivery drivers) can perform.
- */
-async function validateDeliveryAccess() {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    throw new Error('Unauthorized: Unauthenticated user');
-  }
-
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('role, is_active')
-    .eq('id', user.id)
-    .single();
-
-  if (profileError || !profile) {
-    throw new Error('Unauthorized: Profile not found');
-  }
-
-  if (!profile.is_active) {
-    throw new Error('Unauthorized: Account is inactive');
-  }
-
-  const allowedRoles = ['owner', 'manager', 'staff'];
-  if (!allowedRoles.includes(profile.role)) {
-    throw new Error('Unauthorized: Insufficient permissions');
-  }
-
-  return user.id;
-}
+import { validateAdminAccess, validateDeliveryAccess } from '@/lib/auth/guards';
 
 /**
  * Helper to fetch an order by ID.
