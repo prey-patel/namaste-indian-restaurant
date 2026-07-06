@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import crypto from 'crypto';
+import { z } from 'zod';
 
 /**
  * Checks if the current user is authenticated and has owner or manager roles.
@@ -67,9 +68,18 @@ export async function createTableAction(tableNumber: number, capacity: number, s
   }
 }
 
-export async function updateTableAction(id: string, updates: { table_number?: number; capacity?: number; section?: string; notes?: string | null; is_active?: boolean }) {
+const UpdateTableSchema = z.object({
+  table_number: z.number().int().positive().optional(),
+  capacity: z.number().int().positive().optional(),
+  section: z.string().max(50).optional(),
+  notes: z.string().max(500).nullable().optional(),
+  is_active: z.boolean().optional()
+});
+
+export async function updateTableAction(id: string, rawUpdates: unknown) {
   try {
     await validateAdminAccess();
+    const updates = UpdateTableSchema.parse(rawUpdates);
     const supabase = await createClient();
 
     const { error } = await supabase
