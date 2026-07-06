@@ -60,10 +60,10 @@ export async function createReservationRequestAction(rawData: z.infer<typeof res
     }
 
     // 3. Past Date / Time Validation
-    // Parse target date/time in Europe/Warsaw
-    const targetDateTime = new Date(`${data.reservation_date}T${data.reservation_time}:00+01:00`); // CEST/CET baseline
-    const now = new Date();
-    if (targetDateTime < now) {
+    // Compare target reservation date & time against current local time in Europe/Warsaw
+    const nowInWarsaw = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Warsaw' }));
+    const targetDateTime = new Date(`${data.reservation_date}T${data.reservation_time}:00`);
+    if (targetDateTime < nowInWarsaw) {
       return {
         success: false,
         error: data.source_language === 'pl'

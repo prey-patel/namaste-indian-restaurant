@@ -3,22 +3,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { geocodeAddressGoogle, calculateRouteGoogle } from '@/lib/delivery/google-maps';
 import { geocodeRestaurantAddress } from '@/lib/delivery/distance';
 
-// Rate limit: max 30 lookups per minute per IP (generous for real-time typing debounce)
-const RATE_LIMIT_WINDOW_MS = 60_000;
-const RATE_LIMIT_MAX = 30;
-const ipHitMap = new Map<string, { count: number; resetAt: number }>();
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const entry = ipHitMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    ipHitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return true; // allowed
-  }
-  if (entry.count >= RATE_LIMIT_MAX) return false; // blocked
-  entry.count++;
-  return true;
-}
+import crypto from 'crypto';
+import { isRateLimited } from '@/lib/security/rate-limit';
 
 export interface DeliveryFeeResult {
   success: true;
@@ -49,17 +35,26 @@ function normaliseAction(raw: string): 'allow' | 'contact' | 'block' {
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse<DeliveryFeeResponse>> {
-  // 1. Rate limiting by IP
+  // 1. Persistent DB Rate limiting by hashed IP
   const ip =
     req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     req.headers.get('x-real-ip') ||
-    'unknown';
+    '127.0.0.1';
 
-  if (!checkRateLimit(ip)) {
-    return NextResponse.json(
-      { success: false, error: 'Too many requests. Please wait a moment.', code: 'RATE_LIMITED' },
-      { status: 429 }
-    );
+  const secret = process.env.ORDER_IP_HASH_SECRET || 'NamasteOrderPepper51198';
+  const ipHash = crypto.createHmac('sha256', secret).update(ip).digest('hex');
+
+  try {
+    const rateCheck = await isRateLimited(ipHash, 'order_status_lookup', 30, 60); // max 30 lookups per minute
+    if (rateCheck.limited) {
+      return NextResponse.json(
+        { success: false, error: 'Too many requests. Please wait a moment.', code: 'RATE_LIMITED' },
+        { status: 429 }
+      );
+    }
+  } catch (rateErr) {
+    console.error('[/api/delivery-fee] Rate check error:', rateErr);
+    // Continue gracefully if DB rate limiting is temporarily unavailable
   }
 
   // 2. Parse + validate request body
