@@ -58,9 +58,12 @@ export async function savePushSubscription(
 }
 
 /**
- * Deactivates or removes a push subscription by its endpoint.
+ * Deactivates or removes a push subscription by its endpoint and verifies owner user_id.
  */
-export async function removePushSubscription(endpoint: string): Promise<{ success: boolean; error?: string }> {
+export async function removePushSubscription(
+  endpoint: string,
+  userId: string
+): Promise<{ success: boolean; error?: string }> {
   const adminClient = createAdminClient();
 
   try {
@@ -70,7 +73,8 @@ export async function removePushSubscription(endpoint: string): Promise<{ succes
         is_active: false,
         updated_at: new Date().toISOString()
       })
-      .eq('endpoint', endpoint);
+      .eq('endpoint', endpoint)
+      .eq('user_id', userId); // Enforce endpoint ownership
 
     if (error) {
       console.error('Failed to deactivate push subscription:', error);

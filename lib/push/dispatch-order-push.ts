@@ -130,7 +130,7 @@ export async function dispatchOrderPush(
         const isDefunct = err.statusCode === 410 || err.statusCode === 404;
         if (isDefunct) {
           console.log(`[Push Dispatch] Subscription for user ${recipientUserId} is defunct (status ${err.statusCode}). Deactivating.`);
-          await removePushSubscription(sub.endpoint);
+          await removePushSubscription(sub.endpoint, recipientUserId);
         }
 
         // Update log with failure

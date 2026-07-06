@@ -29,6 +29,11 @@ async function validateUserAccess() {
     throw new Error('Unauthorized: Account is inactive');
   }
 
+  const allowedRoles = ['owner', 'manager', 'kitchen', 'staff'];
+  if (!allowedRoles.includes(profile.role)) {
+    throw new Error('Unauthorized: Insufficient permissions');
+  }
+
   return { userId: user.id, role: profile.role };
 }
 
@@ -56,8 +61,8 @@ export async function subscribeToPushAction(
  */
 export async function unsubscribeFromPushAction(endpoint: string) {
   try {
-    await validateUserAccess();
-    return await removePushSubscription(endpoint);
+    const { userId } = await validateUserAccess();
+    return await removePushSubscription(endpoint, userId);
   } catch (err: any) {
     console.error('unsubscribeFromPushAction error:', err);
     return { success: false, error: err.message || 'Authentication required' };
