@@ -11,12 +11,13 @@ export async function GET() {
     const latencyMs = Date.now() - startTime;
 
     if (error) {
+      console.error('❌ Health check database query failed:', error);
       return NextResponse.json(
         {
           status: 'degraded',
           timestamp: new Date().toISOString(),
           database: 'disconnected',
-          error: error.message,
+          error: 'Database connection check failed',
           latencyMs,
         },
         { status: 503 }
@@ -34,12 +35,13 @@ export async function GET() {
       { status: 200 }
     );
   } catch (err: any) {
+    console.error('❌ Health check caught unexpected error:', err);
     return NextResponse.json(
       {
         status: 'unhealthy',
         timestamp: new Date().toISOString(),
         database: 'error',
-        error: err.message || 'Unknown error',
+        error: 'Health check caught unexpected error',
       },
       { status: 500 }
     );

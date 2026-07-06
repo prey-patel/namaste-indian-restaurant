@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendEmailViaBrevo } from '@/lib/email/brevo';
 import { validateAdminAccess } from '@/lib/auth/guards';
+import { z } from 'zod';
 
 /**
  * Escapes HTML special characters to prevent HTML injection in email templates.
@@ -33,7 +34,7 @@ export async function updateInquiryStatusAction(id: string, status: 'read' | 'ar
 
     if (error) {
       console.error('Failed to update inquiry status:', error);
-      throw new Error('Database update failed');
+      return { success: false, error: error.message };
     }
 
     revalidatePath('/admin/inquiries', 'page');
@@ -50,6 +51,7 @@ export async function updateInquiryStatusAction(id: string, status: 'read' | 'ar
 export async function replyToInquiryAction(id: string, replyText: string) {
   try {
     const adminId = await validateAdminAccess();
+    const validatedReplyText = z.string().min(1, 'Reply content cannot be empty').max(5000, 'Reply exceeds maximum length').parse(replyText);
     const supabase = await createClient();
 
     // 1. Fetch original inquiry
@@ -70,7 +72,7 @@ export async function replyToInquiryAction(id: string, replyText: string) {
         <h2 style="color: #d4af37; border-bottom: 2px solid #d4af37; padding-bottom: 10px; margin-top: 0;">Reply from Namaste Indian Restaurant</h2>
         <p>Dear ${escapeHtml(inquiry.name)},</p>
         
-        <div style="background-color: #fafafa; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #eaeaea; color: #333; line-height: 1.6; white-space: pre-wrap;">${escapeHtml(replyText)}</div>
+        <div style="background-color: #fafafa; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #eaeaea; color: #333; line-height: 1.6; white-space: pre-wrap;">${escapeHtml(validatedReplyText)}</div>
 
         <hr style="border: 0; border-top: 1px solid #eaeaea; margin: 25px 0;" />
         
@@ -104,7 +106,7 @@ export async function replyToInquiryAction(id: string, replyText: string) {
       .from('contact_inquiries')
       .update({
         status: 'replied',
-        admin_reply: replyText,
+        admin_reply: validatedReplyText,
         replied_at: new Date().toISOString(),
         replied_by: adminId
       })

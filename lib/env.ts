@@ -7,24 +7,37 @@ const envSchemaBase = z.object({
   BREVO_API_KEY: z.string().optional(),
   ORDER_IP_HASH_SECRET: z.string().optional(),
   EMAIL_ACTION_TOKEN_SECRET: z.string().optional(),
+  CONTACT_IP_HASH_SECRET: z.string().optional(),
+  RESERVATION_IP_HASH_SECRET: z.string().optional(),
+  GOOGLE_MAPS_API_KEY: z.string().optional(),
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
+  ADMIN_NOTIFICATION_EMAIL: z.string().optional(),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 });
 
 const envSchema = envSchemaBase.superRefine((data, ctx) => {
   if (data.NODE_ENV === 'production') {
-    if (!data.ORDER_IP_HASH_SECRET) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'ORDER_IP_HASH_SECRET is required in production',
-        path: ['ORDER_IP_HASH_SECRET']
-      });
-    }
-    if (!data.EMAIL_ACTION_TOKEN_SECRET) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'EMAIL_ACTION_TOKEN_SECRET is required in production',
-        path: ['EMAIL_ACTION_TOKEN_SECRET']
-      });
+    const requiredKeys: (keyof z.infer<typeof envSchemaBase>)[] = [
+      'ORDER_IP_HASH_SECRET',
+      'EMAIL_ACTION_TOKEN_SECRET',
+      'CONTACT_IP_HASH_SECRET',
+      'RESERVATION_IP_HASH_SECRET',
+      'BREVO_API_KEY',
+      'GOOGLE_MAPS_API_KEY',
+      'NEXT_PUBLIC_VAPID_PUBLIC_KEY',
+      'VAPID_PRIVATE_KEY',
+      'ADMIN_NOTIFICATION_EMAIL',
+      'SUPABASE_SERVICE_ROLE_KEY'
+    ];
+    for (const key of requiredKeys) {
+      if (!data[key]) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `${String(key)} is required in production`,
+          path: [key]
+        });
+      }
     }
   }
 });
