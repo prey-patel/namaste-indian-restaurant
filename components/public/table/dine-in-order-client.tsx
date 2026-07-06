@@ -100,6 +100,15 @@ export default function DineInOrderClient({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [idempotencyKey, setIdempotencyKey] = useState(() => {
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.randomUUID) {
+      return window.crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  });
   
   // Existing session orders
   const [existingOrders, setExistingOrders] = useState<any[]>(initialSession?.existingOrders || []);
@@ -234,12 +243,24 @@ export default function DineInOrderClient({
         menu_item_id: i.menuItem.id,
         quantity: i.quantity,
         customer_notes: i.customerNotes || null
-      }))
+      })),
+      idempotency_key: idempotencyKey
     };
 
     try {
       const res = await createDineInOrderAction(payload);
       if (res.success && res.id) {
+        // Reset idempotency key for the next order in the session
+        setIdempotencyKey(() => {
+          if (typeof window !== 'undefined' && window.crypto && window.crypto.randomUUID) {
+            return window.crypto.randomUUID();
+          }
+          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+          });
+        });
+
         // Save session locally
         const newSession = {
           id: res.tableSessionId || '',

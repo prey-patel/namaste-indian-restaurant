@@ -243,7 +243,8 @@ export async function createOrderRequestAction(rawData: any) {
       route_provider: pricingResult.isDeliveryFeeCalculated ? 'google_routes_v2' : 'unresolved',
       geocoding_status: pricingResult.isDeliveryFeeCalculated ? 'success' : 'pending',
       customer_language: data.source_language,
-      admin_notes: `Browser: ${userAgent.substring(0, 100)}`
+      admin_notes: `Browser: ${userAgent.substring(0, 100)}`,
+      idempotency_key: data.idempotency_key || null
     };
 
     if (data.order_type === 'delivery') {
@@ -260,6 +261,28 @@ export async function createOrderRequestAction(rawData: any) {
       .single();
 
     if (orderError || !newOrder) {
+      if (orderError?.code === '23505' && data.idempotency_key) {
+        const { data: existingOrder } = await adminClient
+          .from('orders')
+          .select('id, token, items_subtotal, packaging_total, delivery_fee, total_amount, order_type')
+          .eq('idempotency_key', data.idempotency_key)
+          .maybeSingle();
+
+        if (existingOrder) {
+          return {
+            success: true,
+            id: existingOrder.id,
+            token: existingOrder.token,
+            itemsSubtotal: Number(existingOrder.items_subtotal),
+            packagingTotal: Number(existingOrder.packaging_total),
+            deliveryFee: Number(existingOrder.delivery_fee),
+            totalAmount: Number(existingOrder.total_amount),
+            orderType: existingOrder.order_type,
+            deliveryZoneAction: pricingResult.deliveryZoneAction
+          };
+        }
+      }
+
       console.error('Database order insert error:', orderError);
       return {
         success: false,

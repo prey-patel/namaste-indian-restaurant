@@ -256,7 +256,8 @@ export async function createDineInOrderAction(rawData: any) {
       table_session_id: tableSessionId,
       customer_language: data.source_language,
       approved_at: nowStr,
-      admin_notes: `Table ordering from Table ${table.table_number}. Browser: ${userAgent.substring(0, 100)}`
+      admin_notes: `Table ordering from Table ${table.table_number}. Browser: ${userAgent.substring(0, 100)}`,
+      idempotency_key: data.idempotency_key || null
     };
 
     const { data: newOrder, error: orderError } = await adminClient
@@ -266,6 +267,28 @@ export async function createDineInOrderAction(rawData: any) {
       .single();
 
     if (orderError || !newOrder) {
+      if (orderError?.code === '23505' && data.idempotency_key) {
+        const { data: existingOrder } = await adminClient
+          .from('orders')
+          .select('id, token, items_subtotal, total_amount, order_type')
+          .eq('idempotency_key', data.idempotency_key)
+          .maybeSingle();
+
+        if (existingOrder) {
+          return {
+            success: true,
+            id: existingOrder.id,
+            token: existingOrder.token,
+            itemsSubtotal: Number(existingOrder.items_subtotal),
+            packagingTotal: 0,
+            deliveryFee: 0,
+            totalAmount: Number(existingOrder.total_amount),
+            orderType: existingOrder.order_type,
+            deliveryZoneAction: null
+          };
+        }
+      }
+
       console.error('Database dine-in order insert error:', orderError);
       return {
         success: false,

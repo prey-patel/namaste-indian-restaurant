@@ -34,6 +34,7 @@ export const orderRequestSchema = z.object({
   items: z.array(orderItemSchema).min(1, 'At least 1 item must be added to the basket'),
   consent: z.boolean().refine(val => val === true, 'Consent is required to submit an order'),
   source_language: z.enum(['pl', 'en']),
+  idempotency_key: z.string().uuid().optional().nullable()
 })
 .refine((data) => {
   if (data.order_type !== 'dine_in') {

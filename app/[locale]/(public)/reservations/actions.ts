@@ -188,12 +188,29 @@ export async function createReservationRequestAction(rawData: z.infer<typeof res
         consent_accepted_at: new Date().toISOString(),
         privacy_policy_version: data.privacy_policy_version,
         // Save metadata like source language & user-agent (no raw IP)
-        admin_notes: `Language: ${data.source_language}. Browser: ${userAgent.substring(0, 100)}`
+        admin_notes: `Language: ${data.source_language}. Browser: ${userAgent.substring(0, 100)}`,
+        idempotency_key: data.idempotency_key || null
       })
       .select('id, token')
       .single();
 
     if (insertError || !newReservation) {
+      if (insertError?.code === '23505' && data.idempotency_key) {
+        const { data: existingRes } = await adminClient
+          .from('reservations')
+          .select('id, token')
+          .eq('idempotency_key', data.idempotency_key)
+          .maybeSingle();
+
+        if (existingRes) {
+          return {
+            success: true,
+            id: existingRes.id,
+            token: existingRes.token
+          };
+        }
+      }
+
       console.error('Database insert error in createReservationRequestAction:', insertError);
       return {
         success: false,

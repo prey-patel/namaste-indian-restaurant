@@ -18,4 +18,5 @@ export const reservationRequestSchema = z.object({
   consent: z.boolean().refine(val => val === true, 'Consent is required to submit a reservation'),
   privacy_policy_version: z.string().min(1, 'Privacy policy version is required'),
   source_language: z.enum(['pl', 'en']),
+  idempotency_key: z.string().uuid().optional().nullable()
 });
