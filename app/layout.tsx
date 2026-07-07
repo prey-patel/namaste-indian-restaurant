@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { Playfair_Display, Outfit, Pinyon_Script } from 'next/font/google';
 import PwaRegister from '@/components/pwa-register';
+import DomSafetyPatch from '@/components/common/dom-safety-patch';
 import './globals.css';
 
 const playfair = Playfair_Display({
@@ -48,8 +49,9 @@ type Props = {
 
 export default function RootLayout({ children }: Props) {
   return (
-    <html lang="pl" className={`${playfair.variable} ${outfit.variable} ${pinyon.variable} dark`}>
-      <body className="antialiased min-h-screen bg-background text-foreground flex flex-col font-sans">
+    <html lang="pl" className={`${playfair.variable} ${outfit.variable} ${pinyon.variable} dark`} suppressHydrationWarning>
+      <body className="antialiased min-h-screen bg-background text-foreground flex flex-col font-sans" suppressHydrationWarning>
+        <DomSafetyPatch />
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:shadow-lg focus:outline-none font-bold text-xs uppercase tracking-wider"
@@ -64,3 +66,4 @@ export default function RootLayout({ children }: Props) {
     </html>
   );
 }
+
