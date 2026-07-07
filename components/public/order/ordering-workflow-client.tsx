@@ -916,6 +916,7 @@ export default function OrderingWorkflowClient({
                   {/* Delivery Address (only shown if delivery is selected) */}
                   {orderType === 'delivery' && (
                     <div className="space-y-4 pt-4 border-t border-primary/10">
+                      <DeliveryHoursCard delivery={deliveryHours} />
                       <h3 className="text-sm font-bold uppercase tracking-wider text-primary">
                         {t('addressHeader')}
                       </h3>
@@ -1013,18 +1014,17 @@ export default function OrderingWorkflowClient({
             </div>
 
             {/* Right Column: Checkout summary & place order (4 cols) */}
-            <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-28 space-y-4 text-left">
-              {orderType === 'delivery' && (
-                <DeliveryHoursCard delivery={deliveryHours} />
-              )}
+            <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-28 space-y-6 text-left animate-fade-in">
+              <div className="flex justify-between items-end h-[36px]">
+                <h2 className="text-2xl font-serif font-bold text-primary tracking-wide">
+                  {locale === 'pl' ? 'Podsumowanie' : 'Summary'}
+                </h2>
+                <span className="text-xs bg-primary/20 text-primary border border-primary/30 px-2.5 py-1 rounded-full font-mono font-bold select-none mb-1">
+                  {basket.reduce((sum, i) => sum + i.quantity, 0)} {locale === 'pl' ? 'szt.' : 'items'}
+                </span>
+              </div>
               
-              <PremiumCard hoverable={false} className="border-primary/20 bg-[#050B1E]/60 p-6 space-y-6">
-                <h3 className="text-lg font-serif font-bold text-primary border-b border-primary/20 pb-2 flex items-center justify-between">
-                  <span>{locale === 'pl' ? 'Podsumowanie' : 'Cart Summary'}</span>
-                  <span className="text-xs bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono">
-                    {basket.reduce((sum, i) => sum + i.quantity, 0)}
-                  </span>
-                </h3>
+              <PremiumCard hoverable={false} className="border-primary/20 bg-[#050B1E]/60 p-6 space-y-6 mt-0">
 
                 {/* Listing cart items */}
                 <div className="space-y-3 max-h-[30vh] overflow-y-auto pr-1">
