@@ -360,7 +360,7 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
       </div>
 
       {/* Two Column KDS Grid */}
-      <div className={`grid grid-cols-1 md:grid-cols-2 gap-5 ${
+      <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 ${
         isFullscreen ? 'px-6 pb-6' : ''
       }`}>
         {/* Column 1: New / Confirmed */}
@@ -381,18 +381,20 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
               <p className="text-sm">{t('noNewOrders')}</p>
             </div>
           ) : (
-            newOrders.map(order => (
-              <KdsOrderCard
-                key={order.id}
-                order={order}
-                onStartPreparing={handleStartPreparing}
-                onMarkReady={handleMarkReady}
-                isPending={isPending}
-                isNew={newOrderIds.has(order.id)}
-                isUnseen={unseenOrderIds.has(order.id)}
-                theme={theme}
-              />
-            ))
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              {newOrders.map(order => (
+                <KdsOrderCard
+                  key={order.id}
+                  order={order}
+                  onStartPreparing={handleStartPreparing}
+                  onMarkReady={handleMarkReady}
+                  isPending={isPending}
+                  isNew={newOrderIds.has(order.id)}
+                  isUnseen={unseenOrderIds.has(order.id)}
+                  theme={theme}
+                />
+              ))}
+            </div>
           )}
         </div>
 
@@ -414,17 +416,19 @@ export default function KdsBoard({ initialOrders, userRole }: Props) {
               <p className="text-sm">{t('noPreparingOrders')}</p>
             </div>
           ) : (
-            preparingOrders.map(order => (
-              <KdsOrderCard
-                key={order.id}
-                order={order}
-                onStartPreparing={handleStartPreparing}
-                onMarkReady={handleMarkReady}
-                isPending={isPending}
-                isUnseen={unseenOrderIds.has(order.id)}
-                theme={theme}
-              />
-            ))
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              {preparingOrders.map(order => (
+                <KdsOrderCard
+                  key={order.id}
+                  order={order}
+                  onStartPreparing={handleStartPreparing}
+                  onMarkReady={handleMarkReady}
+                  isPending={isPending}
+                  isUnseen={unseenOrderIds.has(order.id)}
+                  theme={theme}
+                />
+              ))}
+            </div>
           )}
         </div>
 
