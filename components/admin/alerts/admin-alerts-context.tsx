@@ -17,7 +17,10 @@ const AdminAlertsContext = createContext<AdminAlertsContextType | undefined>(und
 
 export function AdminAlertsProvider({ children }: { children: ReactNode }) {
   const [pendingCount, setPendingCount] = useState(0);
-  const [soundSetting, setSoundSetting] = useState<string>('alarm-drum-bass');
+  const [soundSetting, setSoundSetting] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'alarm-drum-bass';
+    return localStorage.getItem('admin_notification_sound') || 'alarm-drum-bass';
+  });
   const { soundEnabled, toggleSound, unlockAudio, audioState, hasUnlockedInSession } = useAdminOrderAlerts(pendingCount, soundSetting);
 
   useEffect(() => {
@@ -46,6 +49,7 @@ export function AdminAlertsProvider({ children }: { children: ReactNode }) {
           .single();
         if (!error && data && data.value) {
           setSoundSetting(data.value);
+          localStorage.setItem('admin_notification_sound', data.value);
         }
       } catch (err) {
         console.error('[Admin Alerts Context] Failed to fetch sound setting:', err);
@@ -76,7 +80,9 @@ export function AdminAlertsProvider({ children }: { children: ReactNode }) {
         { event: '*', schema: 'public', table: 'system_settings', filter: 'key=eq.admin_notification_sound' },
         (payload) => {
           if (payload.new && (payload.new as any).value) {
-            setSoundSetting((payload.new as any).value);
+            const val = (payload.new as any).value;
+            setSoundSetting(val);
+            localStorage.setItem('admin_notification_sound', val);
           }
         }
       )
