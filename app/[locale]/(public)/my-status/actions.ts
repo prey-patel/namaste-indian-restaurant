@@ -126,7 +126,7 @@ export async function lookupStatusAction(
     // 3. Search in reservations table (id or token)
     let resQuery = adminClient
       .from('reservations')
-      .select('id, token, email, phone');
+      .select('id, token, customer_email, customer_phone');
 
     if (isUuid) {
       resQuery = resQuery.or(`id.eq.${token},token.eq.${token}`);
@@ -148,7 +148,7 @@ export async function lookupStatusAction(
             type: 'reservation'
           };
         }
-        const verified = verifyContactInfo(emailOrPhone, reservation.email, reservation.phone);
+        const verified = verifyContactInfo(emailOrPhone, reservation.customer_email, reservation.customer_phone);
         if (!verified) {
           return {
             success: false,

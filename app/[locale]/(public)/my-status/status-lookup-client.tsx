@@ -178,13 +178,15 @@ export default function StatusLookupClient({ locale }: Props) {
           {isPending ? (
             <>
               <span className="w-3.5 h-3.5 border-2 border-[#070B1E]/60 border-t-[#070B1E] rounded-full animate-spin" />
-              {locale === 'pl' ? 'Weryfikacja...' : 'Verifying...'}
+              <span>{locale === 'pl' ? 'Weryfikacja...' : 'Verifying...'}</span>
             </>
           ) : (
             <>
-              {requiresVerification 
-                ? (locale === 'pl' ? 'Potwierdź i Sprawdź' : 'Confirm & Check')
-                : (locale === 'pl' ? 'Sprawdź Status' : 'Check Status')}
+              <span>
+                {requiresVerification 
+                  ? (locale === 'pl' ? 'Potwierdź i Sprawdź' : 'Confirm & Check')
+                  : (locale === 'pl' ? 'Sprawdź Status' : 'Check Status')}
+              </span>
               <ArrowRight className="w-3.5 h-3.5" />
             </>
           )}
