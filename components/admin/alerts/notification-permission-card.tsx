@@ -111,40 +111,40 @@ export default function NotificationPermissionCard({
   };
 
   return (
-    <div className="bg-card border border-border p-6 rounded-lg shadow-sm max-w-xl font-sans">
-      <div className="flex items-center space-x-3 mb-4">
-        <ShieldCheck className="w-5 h-5 text-primary" />
-        <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">
+    <div className="bg-card border border-border p-3 sm:p-4 rounded-lg shadow-sm max-w-lg font-sans">
+      <div className="flex items-center space-x-2 mb-2.5">
+        <ShieldCheck className="w-4 h-4 text-primary" />
+        <h2 className="text-xs font-bold uppercase tracking-wider text-foreground">
           {alertType === 'admin' ? 'Order Alerts Center' : 'Kitchen Alerts Center'}
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* In-app Audio Controls */}
         <button
           onClick={handleAudioEnableClick}
-          className={`flex items-center justify-between p-4 rounded border transition-all duration-300 ${
+          className={`flex items-center justify-between p-2.5 rounded border transition-all duration-300 ${
             soundEnabled
               ? 'bg-primary/10 border-primary text-primary'
               : 'bg-muted/30 border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground'
           }`}
         >
           <div className="flex flex-col items-start text-left">
-            <span className="text-xs font-bold uppercase tracking-wide">
+            <span className="text-[10px] font-bold uppercase tracking-wide">
               {alertType === 'admin' ? 'Looping Sound' : 'One-time Sound'}
             </span>
-            <span className="text-[10px] opacity-75 mt-0.5">
+            <span className="text-[9px] opacity-75 mt-0.5">
               {soundEnabled ? 'Enabled on this tab' : 'Disabled / Blocked'}
             </span>
           </div>
-          {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+          {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
         </button>
 
         {/* Web Push Controls */}
         <button
           onClick={handleTogglePush}
           disabled={!pushSupported || isLoading}
-          className={`flex items-center justify-between p-4 rounded border transition-all duration-300 ${
+          className={`flex items-center justify-between p-2.5 rounded border transition-all duration-300 ${
             !pushSupported
               ? 'bg-muted/10 border-dashed border-border opacity-50 cursor-not-allowed text-muted-foreground'
               : pushEnabled
@@ -153,8 +153,8 @@ export default function NotificationPermissionCard({
           }`}
         >
           <div className="flex flex-col items-start text-left">
-            <span className="text-xs font-bold uppercase tracking-wide">Web Push Alerts</span>
-            <span className="text-[10px] opacity-75 mt-0.5">
+            <span className="text-[10px] font-bold uppercase tracking-wide">Web Push Alerts</span>
+            <span className="text-[9px] opacity-75 mt-0.5">
               {!pushSupported
                 ? 'Unsupported on device'
                 : pushEnabled
@@ -162,7 +162,7 @@ export default function NotificationPermissionCard({
                 : 'Offline / Background alerts'}
             </span>
           </div>
-          {pushEnabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+          {pushEnabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
         </button>
       </div>
 
