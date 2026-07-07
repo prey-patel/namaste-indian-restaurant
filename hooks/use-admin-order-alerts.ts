@@ -45,6 +45,7 @@ export function useAdminOrderAlerts(pendingCount: number, soundSetting: string =
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isLeader, setIsLeader] = useState(true);
   const [isVisible, setIsVisible] = useState(true);
+  const [audioState, setAudioState] = useState<AudioContextState>('suspended');
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const decodedBufferRef = useRef<AudioBuffer | null>(null);
@@ -391,11 +392,21 @@ export function useAdminOrderAlerts(pendingCount: number, soundSetting: string =
 
   const unlockAudio = async () => {
     if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      ctx.onstatechange = () => {
+        setAudioState(ctx.state);
+      };
+      audioContextRef.current = ctx;
+      setAudioState(ctx.state);
     }
     const ctx = audioContextRef.current;
     if (ctx.state === 'suspended') {
-      ctx.resume();
+      try {
+        await ctx.resume();
+        setAudioState(ctx.state);
+      } catch (err) {
+        console.error('[Audio Alerts] AudioContext resume failed:', err);
+      }
     }
 
     // Trigger load and decode of the sound setting if needed
@@ -444,6 +455,7 @@ export function useAdminOrderAlerts(pendingCount: number, soundSetting: string =
     soundEnabled,
     toggleSound,
     unlockAudio,
-    isLeader
+    isLeader,
+    audioState
   };
 }

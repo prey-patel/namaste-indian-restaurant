@@ -7,6 +7,7 @@ import AdminTopbar from './admin-topbar';
 import RealtimeTableListener from '@/components/common/realtime-table-listener';
 import { useScreenWakeLock } from '@/hooks/use-screen-wake-lock';
 import { AdminAlertsProvider } from '@/components/admin/alerts/admin-alerts-context';
+import { AutoplayUnlockOverlay } from '@/components/admin/alerts/autoplay-unlock-overlay';
 import { useAdminPushRegister } from '@/hooks/use-admin-push-register';
 
 export default function AdminLayoutClient({ children }: { children: ReactNode }) {
@@ -86,6 +87,7 @@ export default function AdminLayoutClient({ children }: { children: ReactNode })
 
   return (
     <AdminAlertsProvider>
+      <AutoplayUnlockOverlay />
       <div 
         className="flex w-full min-h-screen admin-theme bg-background text-foreground notranslate relative"
         translate="no"

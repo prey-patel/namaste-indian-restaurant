@@ -9,6 +9,7 @@ interface AdminAlertsContextType {
   toggleSound: () => void;
   unlockAudio: () => void;
   pendingCount: number;
+  audioState: AudioContextState;
 }
 
 const AdminAlertsContext = createContext<AdminAlertsContextType | undefined>(undefined);
@@ -16,7 +17,7 @@ const AdminAlertsContext = createContext<AdminAlertsContextType | undefined>(und
 export function AdminAlertsProvider({ children }: { children: ReactNode }) {
   const [pendingCount, setPendingCount] = useState(0);
   const [soundSetting, setSoundSetting] = useState<string>('alarm-drum-bass');
-  const { soundEnabled, toggleSound, unlockAudio } = useAdminOrderAlerts(pendingCount, soundSetting);
+  const { soundEnabled, toggleSound, unlockAudio, audioState } = useAdminOrderAlerts(pendingCount, soundSetting);
 
   useEffect(() => {
     const supabase = createClient();
@@ -87,7 +88,7 @@ export function AdminAlertsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AdminAlertsContext.Provider value={{ soundEnabled, toggleSound, unlockAudio, pendingCount }}>
+    <AdminAlertsContext.Provider value={{ soundEnabled, toggleSound, unlockAudio, pendingCount, audioState }}>
       {children}
     </AdminAlertsContext.Provider>
   );
