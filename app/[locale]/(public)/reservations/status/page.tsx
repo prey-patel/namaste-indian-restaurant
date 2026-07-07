@@ -185,7 +185,7 @@ export default async function ReservationStatusPage({ params, searchParams }: Pr
             {locale === 'pl' ? 'Twoja Rezerwacja' : 'Your Reservation'}
           </h1>
           <p className="text-xs text-muted-foreground/60 font-mono select-all">
-            ID: {id}
+            {locale === 'pl' ? 'Kod rezerwacji' : 'Reservation Code'}: #{token?.substring(0, 8).toUpperCase()}
           </p>
         </div>
       </section>

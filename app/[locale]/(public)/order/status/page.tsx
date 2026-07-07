@@ -217,7 +217,7 @@ export default async function OrderStatusPage({ params, searchParams }: Props) {
             {locale === 'pl' ? 'Twoje Zamówienie' : 'Your Order'}
           </h1>
           <p className="text-xs text-muted-foreground/60 font-mono select-all">
-            ID: {id}
+            {locale === 'pl' ? 'Kod referencyjny' : 'Reference Code'}: #{id?.substring(0, 8).toUpperCase()}
           </p>
         </div>
       </section>
