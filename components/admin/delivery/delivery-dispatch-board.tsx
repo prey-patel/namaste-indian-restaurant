@@ -531,7 +531,6 @@ export default function DeliveryDispatchBoard({
   const [isConnected, setIsConnected] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [soundEnabled, setSoundEnabled] = useState(true);
   const [mobileTab, setMobileTab] = useState<'ready' | 'transit' | 'delivered'>('ready');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
@@ -552,7 +551,6 @@ export default function DeliveryDispatchBoard({
   // Track new order arrivals for highlight animation
   const knownOrderIdsRef = useRef<Set<string>>(new Set(initialOrders.map(o => o.id)));
   const [newOrderIds, setNewOrderIds] = useState<Set<string>>(new Set());
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Initialize theme from localStorage
   useEffect(() => {
@@ -561,14 +559,6 @@ export default function DeliveryDispatchBoard({
       if (storedTheme) {
         setTheme(storedTheme);
       }
-    }
-  }, []);
-
-  // Initialize audio for new order alerts
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      audioRef.current = new Audio('/alarm.mp3');
-      audioRef.current.volume = 0.6;
     }
   }, []);
 
@@ -671,10 +661,6 @@ export default function DeliveryDispatchBoard({
         }
       });
 
-      if (brand.size > 0 && soundEnabled && audioRef.current) {
-        audioRef.current.play().catch(() => {});
-      }
-
       if (brand.size > 0) {
         setNewOrderIds(brand);
         setTimeout(() => setNewOrderIds(new Set()), 5000);
@@ -690,7 +676,7 @@ export default function DeliveryDispatchBoard({
       console.error('[Delivery Dashboard] Fetch error:', err);
       setErrorMessage(t('errors.loadFailed'));
     }
-  }, [soundEnabled, t]);
+  }, [t]);
 
   // ─── Realtime Subscription ──────────────────────────────────────────
   useEffect(() => {
@@ -859,18 +845,6 @@ export default function DeliveryDispatchBoard({
             {isLight ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4 text-amber-400" />}
           </button>
 
-          {/* Sound Toggle */}
-          <button
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className={`p-2.5 rounded-lg transition-colors border ${
-              soundEnabled
-                ? (isLight ? 'bg-emerald-50 border-emerald-200/50 text-emerald-700 shadow-sm' : 'bg-emerald-500/15 border-emerald-500/20 text-emerald-400')
-                : (isLight ? 'bg-white border-slate-200 text-slate-400 hover:bg-slate-100 shadow-sm' : 'bg-white/[0.04] border-white/[0.06] text-white/30 hover:bg-white/[0.08]')
-            }`}
-            aria-label="Toggle sound"
-          >
-            {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-          </button>
 
           {/* Connection Status */}
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${
