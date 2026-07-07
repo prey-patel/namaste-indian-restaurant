@@ -17,14 +17,21 @@ const AdminAlertsContext = createContext<AdminAlertsContextType | undefined>(und
 
 export function AdminAlertsProvider({ children }: { children: ReactNode }) {
   const [pendingCount, setPendingCount] = useState(0);
-  const [soundSetting, setSoundSetting] = useState<string>(() => {
-    if (typeof window === 'undefined') return 'alarm-drum-bass';
-    return localStorage.getItem('admin_notification_sound') || 'alarm-drum-bass';
-  });
+  const [soundSetting, setSoundSetting] = useState<string>('alarm-drum-bass');
   const { soundEnabled, toggleSound, unlockAudio, audioState, hasUnlockedInSession } = useAdminOrderAlerts(pendingCount, soundSetting);
 
   useEffect(() => {
     const supabase = createClient();
+
+    // Load cached sound setting immediately on client mount
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('admin_notification_sound');
+        if (cached) {
+          setSoundSetting(cached);
+        }
+      } catch (e) {}
+    }
 
     const fetchPendingCount = async () => {
       try {

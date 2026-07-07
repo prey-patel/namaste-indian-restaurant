@@ -46,10 +46,18 @@ export function useAdminOrderAlerts(pendingCount: number, soundSetting: string =
   const [isLeader, setIsLeader] = useState(true);
   const [isVisible, setIsVisible] = useState(true);
   const [audioState, setAudioState] = useState<AudioContextState>('suspended');
-  const [hasUnlockedInSession, setHasUnlockedInSession] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return sessionStorage.getItem('admin_audio_unlocked_session') === 'true';
-  });
+  const [hasUnlockedInSession, setHasUnlockedInSession] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const unlocked = sessionStorage.getItem('admin_audio_unlocked_session') === 'true';
+        if (unlocked) {
+          setHasUnlockedInSession(true);
+        }
+      } catch (e) {}
+    }
+  }, []);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const decodedBufferRef = useRef<AudioBuffer | null>(null);
