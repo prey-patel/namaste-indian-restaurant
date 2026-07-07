@@ -153,6 +153,23 @@
   animation: pulse-once 1.5s ease-out 1;
 }
 
+/* Slide-in and slide-up animations for cart drawer */
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.animate-slide-up {
+  animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* Respect user prefers-reduced-motion configuration */
 @media (prefers-reduced-motion: reduce) {
   * {

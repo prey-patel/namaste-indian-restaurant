@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import PremiumCard from '@/components/ui/premium-card';
 import GoldSpinner from '@/components/ui/gold-spinner';
 import StatusPill from '@/components/ui/status-pill';
-import { Plus, Minus, Trash2, ShoppingBag, MapPin, Phone, User, Mail, CreditCard, DollarSign, Clock } from 'lucide-react';
+import { Plus, Minus, Trash2, ShoppingBag, MapPin, Phone, User, Mail, CreditCard, DollarSign, Clock, ArrowLeft, X } from 'lucide-react';
 import { type ServiceStatusInfo } from '@/lib/public/opening-hours';
 import DeliveryHoursCard from '@/components/public/opening-hours/delivery-hours-card';
 
@@ -102,6 +102,11 @@ export default function OrderingWorkflowClient({
   const defaultOrderType = operationalStatus.takeaway_enabled ? 'takeaway' : 'delivery';
   const [orderType, setOrderType] = useState<'delivery' | 'takeaway'>(defaultOrderType);
 
+  // Workflow Step State ('menu' | 'checkout')
+  const [workflowStep, setWorkflowStep] = useState<'menu' | 'checkout'>('menu');
+  // State for side drawer cart (desktop & mobile)
+  const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
+
   // Form Fields State
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -117,7 +122,6 @@ export default function OrderingWorkflowClient({
 
   // Basket State
   const [basket, setBasket] = useState<BasketItem[]>([]);
-  const [mobileCartOpen, setMobileCartOpen] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
   // Submission & Message States
@@ -654,659 +658,547 @@ export default function OrderingWorkflowClient({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative max-w-6xl mx-auto font-sans">
-      
-      {/* Left Column: Catalog & Details form (8 cols) */}
-      <div className="lg:col-span-7 xl:col-span-8 space-y-8">
-        
-        {/* Menu Catalog Section */}
-        <section className="space-y-6">
-          <h2 className="text-2xl font-serif font-bold text-primary tracking-wide">
-            {locale === 'pl' ? 'Karta Dań' : 'Menu Selection'}
-          </h2>
+    <div className="w-full relative font-sans">
+      {workflowStep === 'menu' ? (
+        // ================= MENU CATALOG STEP =================
+        <div className="w-full space-y-8 animate-fade-in">
+          {/* Menu Catalog Section */}
+          <section className="space-y-6 text-left">
+            <h2 className="text-2xl font-serif font-bold text-primary tracking-wide">
+              {locale === 'pl' ? 'Karta Dań' : 'Menu Selection'}
+            </h2>
 
-          {/* Category Filter Pills */}
-          <div className="flex items-center gap-3 overflow-x-auto pb-4 pt-1 no-scrollbar select-none scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
-            <button
-              onClick={() => setSelectedCategoryId(null)}
-              className={`px-5 py-2.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all duration-300 whitespace-nowrap cursor-pointer ${
-                selectedCategoryId === null
-                  ? 'bg-primary text-[#050B1E] border border-primary shadow-[0_0_12px_rgba(212,175,55,0.25)]'
-                  : 'border border-primary/20 hover:border-primary/50 text-slate-300 bg-[#070B1E]/40 hover:bg-primary/5'
-              }`}
-            >
-              {locale === 'pl' ? 'Wszystkie kategorie' : 'All Categories'}
-            </button>
+            {/* Category Filter Pills */}
+            <div className="flex items-center gap-3 overflow-x-auto pb-4 pt-1 no-scrollbar select-none scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
+              <button
+                onClick={() => setSelectedCategoryId(null)}
+                className={`px-5 py-2.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all duration-300 whitespace-nowrap cursor-pointer ${
+                  selectedCategoryId === null
+                    ? 'bg-primary text-[#050B1E] border border-primary shadow-[0_0_12px_rgba(212,175,55,0.25)]'
+                    : 'border border-primary/20 hover:border-primary/50 text-slate-300 bg-[#070B1E]/40 hover:bg-primary/5'
+                }`}
+              >
+                {locale === 'pl' ? 'Wszystkie kategorie' : 'All Categories'}
+              </button>
 
-            {categories.map((category) => {
-              const isSelected = selectedCategoryId === category.id;
-              const categoryItems = getItemsByCategory(category.id);
-              if (categoryItems.length === 0) return null;
-
-              return (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedCategoryId(category.id)}
-                  className={`px-5 py-2.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all duration-300 whitespace-nowrap cursor-pointer ${
-                    isSelected
-                      ? 'bg-primary text-[#050B1E] border border-primary shadow-[0_0_12px_rgba(212,175,55,0.25)]'
-                      : 'border border-primary/20 hover:border-primary/50 text-slate-300 bg-[#070B1E]/40 hover:bg-primary/5'
-                  }`}
-                >
-                  {locale === 'pl' ? category.name_pl : category.name_en}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="space-y-10">
-            {categories
-              .filter((category) => selectedCategoryId === null || category.id === selectedCategoryId)
-              .map((category) => {
+              {categories.map((category) => {
+                const isSelected = selectedCategoryId === category.id;
                 const categoryItems = getItemsByCategory(category.id);
                 if (categoryItems.length === 0) return null;
 
-              return (
-                <div key={category.id} className="space-y-4">
-                  <h3 className="text-lg font-serif font-bold text-foreground border-b border-primary/15 pb-1">
+                return (
+                  <button
+                    key={category.id}
+                    onClick={() => setSelectedCategoryId(category.id)}
+                    className={`px-5 py-2.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all duration-300 whitespace-nowrap cursor-pointer ${
+                      isSelected
+                        ? 'bg-primary text-[#050B1E] border border-primary shadow-[0_0_12px_rgba(212,175,55,0.25)]'
+                        : 'border border-primary/20 hover:border-primary/50 text-slate-300 bg-[#070B1E]/40 hover:bg-primary/5'
+                    }`}
+                  >
                     {locale === 'pl' ? category.name_pl : category.name_en}
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {categoryItems.map((item) => {
-                      const basketQty = basket.find(b => b.menuItem.id === item.id)?.quantity || 0;
-                      return (
-                        <div 
-                          key={item.id} 
-                          className="bg-[#050B1E] border border-primary/10 rounded-lg p-4 flex gap-4 hover:border-primary/25 transition-colors relative"
-                        >
-                          {/* Image preview (placeholder if missing) */}
-                          <div className="w-20 h-20 bg-[#070B1E] border border-primary/15 rounded overflow-hidden flex-shrink-0 flex items-center justify-center">
-                            {item.signed_image_url ? (
-                              /* eslint-disable-next-line @next/next/no-img-element */
-                              <img 
-                                src={item.signed_image_url} 
-                                alt={locale === 'pl' ? item.name_pl : item.name_en} 
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <ShoppingBag className="w-6 h-6 text-primary/30" />
-                            )}
-                          </div>
+                  </button>
+                );
+              })}
+            </div>
 
-                          {/* Info */}
-                          <div className="flex-1 flex flex-col justify-between text-left space-y-1">
-                            <div>
-                              <div className="flex justify-between items-start gap-1">
-                                <h4 className="font-semibold text-foreground text-sm">
-                                  {locale === 'pl' ? item.name_pl : item.name_en}
-                                </h4>
-                                <span className="text-xs text-primary font-bold whitespace-nowrap">
-                                  {item.price.toFixed(2)} PLN
-                                </span>
-                              </div>
-                              <p className="text-[10px] text-muted-foreground/85 line-clamp-2 leading-relaxed font-light pt-0.5">
-                                {locale === 'pl' ? item.description_pl : item.description_en}
-                              </p>
-                            </div>
+            <div className="space-y-10">
+              {categories
+                .filter((category) => selectedCategoryId === null || category.id === selectedCategoryId)
+                .map((category) => {
+                  const categoryItems = getItemsByCategory(category.id);
+                  if (categoryItems.length === 0) return null;
 
-                            {/* Spiciness Level & Add Button */}
-                            <div className="flex justify-between items-center pt-2">
-                              {/* Spiciness dots */}
-                              <div className="flex gap-0.5">
-                                {Array.from({ length: item.spiciness }).map((_, i) => (
-                                  <span key={i} className="text-red-500 text-[10px]" title="Spiciness">🌶️</span>
-                                ))}
+                  return (
+                    <div key={category.id} className="space-y-4">
+                      <h3 className="text-lg font-serif font-bold text-foreground border-b border-primary/15 pb-1">
+                        {locale === 'pl' ? category.name_pl : category.name_en}
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {categoryItems.map((item) => {
+                          const basketQty = basket.find(b => b.menuItem.id === item.id)?.quantity || 0;
+                          return (
+                            <div 
+                              key={item.id} 
+                              className="bg-[#050B1E] border border-primary/10 rounded-lg p-4 flex gap-4 hover:border-primary/25 transition-colors relative"
+                            >
+                              {/* Image preview (placeholder if missing) */}
+                              <div className="w-20 h-20 bg-[#070B1E] border border-primary/15 rounded overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                {item.signed_image_url ? (
+                                  /* eslint-disable-next-line @next/next/no-img-element */
+                                  <img 
+                                    src={item.signed_image_url} 
+                                    alt={locale === 'pl' ? item.name_pl : item.name_en} 
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <ShoppingBag className="w-6 h-6 text-primary/30" />
+                                )}
                               </div>
 
-                              {/* Quantity indicator or Add button */}
-                              {basketQty > 0 ? (
-                                <div className="flex items-center gap-2.5 bg-primary/15 border border-primary/30 px-2 py-0.5 rounded-full text-xs">
-                                  <button 
-                                    onClick={() => handleDecreaseQuantity(item.id)}
-                                    className="text-primary hover:text-white font-bold p-0.5 focus:outline-none"
-                                    aria-label="Decrease quantity"
-                                  >
-                                    <Minus className="w-3.5 h-3.5" />
-                                  </button>
-                                  <span className="font-bold text-foreground min-w-[12px] text-center">{basketQty}</span>
-                                  <button 
-                                    onClick={() => handleAddToBasket(item)}
-                                    className="text-primary hover:text-white font-bold p-0.5 focus:outline-none"
-                                    aria-label="Increase quantity"
-                                  >
-                                    <Plus className="w-3.5 h-3.5" />
-                                  </button>
+                              {/* Info */}
+                              <div className="flex-1 flex flex-col justify-between text-left space-y-1">
+                                <div>
+                                  <div className="flex justify-between items-start gap-1">
+                                    <h4 className="font-semibold text-foreground text-sm">
+                                      {locale === 'pl' ? item.name_pl : item.name_en}
+                                    </h4>
+                                    <span className="text-xs text-primary font-bold whitespace-nowrap">
+                                      {item.price.toFixed(2)} PLN
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-muted-foreground/85 line-clamp-2 leading-relaxed font-light pt-0.5">
+                                    {locale === 'pl' ? item.description_pl : item.description_en}
+                                  </p>
                                 </div>
-                              ) : (
-                                <button
-                                  onClick={() => handleAddToBasket(item)}
-                                  className="border border-primary/20 bg-primary/5 hover:bg-primary/15 hover:border-primary/40 text-primary font-bold text-[10px] uppercase tracking-wider py-1 px-3 rounded transition-colors"
-                                >
-                                  + {locale === 'pl' ? 'Dodaj' : 'Add'}
-                                </button>
-                              )}
+
+                                {/* Spiciness Level & Add Button */}
+                                <div className="flex justify-between items-center pt-2">
+                                  {/* Spiciness dots */}
+                                  <div className="flex gap-0.5">
+                                    {Array.from({ length: item.spiciness }).map((_, i) => (
+                                      <span key={i} className="text-red-500 text-[10px]" title="Spiciness">🌶️</span>
+                                    ))}
+                                  </div>
+
+                                  {/* Quantity indicator or Add button */}
+                                  {basketQty > 0 ? (
+                                    <div className="flex items-center gap-2.5 bg-primary/15 border border-primary/30 px-2 py-0.5 rounded-full text-xs">
+                                      <button 
+                                        onClick={() => handleDecreaseQuantity(item.id)}
+                                        className="text-primary hover:text-white font-bold p-0.5 focus:outline-none"
+                                        aria-label="Decrease quantity"
+                                      >
+                                        <Minus className="w-3.5 h-3.5" />
+                                      </button>
+                                      <span className="font-bold text-foreground min-w-[12px] text-center">{basketQty}</span>
+                                      <button 
+                                        onClick={() => handleAddToBasket(item)}
+                                        className="text-primary hover:text-white font-bold p-0.5 focus:outline-none"
+                                        aria-label="Increase quantity"
+                                      >
+                                        <Plus className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleAddToBasket(item)}
+                                      className="border border-primary/20 bg-primary/5 hover:bg-primary/15 hover:border-primary/40 text-primary font-bold text-[10px] uppercase tracking-wider py-1 px-3 rounded transition-colors"
+                                    >
+                                      + {locale === 'pl' ? 'Dodaj' : 'Add'}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* Checkout Details Form */}
-        <section className="space-y-6 pt-6 border-t border-primary/15">
-          <h2 className="text-2xl font-serif font-bold text-primary tracking-wide">
-            {t('detailsHeader')}
-          </h2>
-
-          <form onSubmit={handleSubmitOrder} className="space-y-5 bg-[#050B1E] p-6 sm:p-8 border border-primary/20 rounded-lg text-left">
-            {error && (
-              <div className="p-3 text-xs bg-red-500/10 border border-red-500/30 rounded text-red-400 text-center leading-relaxed">
-                {error}
-              </div>
-            )}
-
-            {/* Order Type Tabs */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                {t('typeLabel')}
-              </label>
-              <div className="grid grid-cols-2 gap-2 p-1 bg-[#070B1E] border border-primary/10 rounded-md">
-                <button
-                  type="button"
-                  disabled={!operationalStatus.takeaway_enabled}
-                  onClick={() => setOrderType('takeaway')}
-                  className={`py-2 text-xs font-bold uppercase tracking-wider rounded transition-colors ${
-                    orderType === 'takeaway' 
-                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md' 
-                      : 'text-muted-foreground hover:text-foreground hover:bg-primary/5'
-                  } ${!operationalStatus.takeaway_enabled ? 'opacity-40 cursor-not-allowed' : ''}`}
-                >
-                  {t('takeaway')} {!operationalStatus.takeaway_enabled && `(${locale === 'pl' ? 'Wyłączone' : 'Disabled'})`}
-                </button>
-                <button
-                  type="button"
-                  disabled={!operationalStatus.delivery_enabled}
-                  onClick={() => setOrderType('delivery')}
-                  className={`py-2 text-xs font-bold uppercase tracking-wider rounded transition-colors ${
-                    orderType === 'delivery' 
-                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md' 
-                      : 'text-muted-foreground hover:text-foreground hover:bg-primary/5'
-                  } ${!operationalStatus.delivery_enabled ? 'opacity-40 cursor-not-allowed' : ''}`}
-                >
-                  {t('delivery')} {!operationalStatus.delivery_enabled && `(${locale === 'pl' ? 'Wyłączone' : 'Disabled'})`}
-                </button>
-              </div>
-            </div>
-
-            {/* Customer Contact Details */}
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label htmlFor="customer_name" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-primary" />
-                  {t('nameLabel')} *
-                </label>
-                <input
-                  id="customer_name"
-                  type="text"
-                  required
-                  placeholder="Jan Kowalski"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/35"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label htmlFor="customer_phone" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
-                    <Phone className="w-3.5 h-3.5 text-primary" />
-                    {t('phoneLabel')} *
-                  </label>
-                  <input
-                    id="customer_phone"
-                    type="tel"
-                    required
-                    placeholder="+48 123 456 789"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/35"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="customer_email" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
-                    <Mail className="w-3.5 h-3.5 text-primary" />
-                    {t('emailLabel')} *
-                  </label>
-                  <input
-                    id="customer_email"
-                    type="email"
-                    required
-                    placeholder="jan.kowalski@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/35"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Delivery address (rendered only if Delivery is selected) */}
-            {orderType === 'delivery' && (
-              <div className="space-y-4 pt-4 border-t border-primary/10">
-                <div className="lg:hidden">
-                  <DeliveryHoursCard delivery={deliveryHours} />
-                </div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-primary">
-                  {t('addressHeader')}
-                </h3>
-                
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="col-span-2 space-y-1.5">
-                    <label htmlFor="street_address" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-primary" />
-                      {t('streetLabel')} *
-                    </label>
-                    <input
-                      id="street_address"
-                      type="text"
-                      required={orderType === 'delivery'}
-                      placeholder="ul. Warszawska 1/3"
-                      value={streetAddress}
-                      onChange={(e) => setStreetAddress(e.target.value)}
-                      className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/35"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label htmlFor="apartment" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                      {t('apartmentLabel')}
-                    </label>
-                    <input
-                      id="apartment"
-                      type="text"
-                      placeholder="12"
-                      value={apartment}
-                      onChange={(e) => setApartment(e.target.value)}
-                      className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/35"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label htmlFor="postal_code" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                      {t('postalCodeLabel')} *
-                    </label>
-                    <input
-                      id="postal_code"
-                      type="text"
-                      required={orderType === 'delivery'}
-                      placeholder="06-400"
-                      value={postalCode}
-                      onChange={(e) => setPostalCode(e.target.value)}
-                      className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/35"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label htmlFor="city" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                      {t('cityLabel')} *
-                    </label>
-                    <input
-                      id="city"
-                      type="text"
-                      required={orderType === 'delivery'}
-                      placeholder="Ciechanów"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/35"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Payment Methods */}
-            <div className="space-y-3 pt-4 border-t border-primary/10">
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
-                <CreditCard className="w-3.5 h-3.5 text-primary" />
-                {t('paymentHeader')}
-              </label>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {orderType === 'takeaway' ? (
-                  <>
-                    <label className="flex items-center gap-3 p-3 bg-[#070B1E] border border-primary/10 rounded cursor-pointer hover:border-primary/30 select-none">
-                      <input
-                        type="radio"
-                        name="payment_method"
-                        value="cash_on_pickup"
-                        checked={paymentMethod === 'cash_on_pickup'}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
-                        className="h-4 w-4 border-primary/20 bg-primary/10 text-primary focus:ring-primary/45"
-                      />
-                      <span className="text-xs font-semibold text-foreground flex items-center gap-1">
-                        <DollarSign className="w-3.5 h-3.5 text-primary" />
-                        {t('cash_on_pickup')}
-                      </span>
-                    </label>
-
-                    <label className="flex items-center gap-3 p-3 bg-[#070B1E] border border-primary/10 rounded cursor-pointer hover:border-primary/30 select-none">
-                      <input
-                        type="radio"
-                        name="payment_method"
-                        value="card_on_pickup"
-                        checked={paymentMethod === 'card_on_pickup'}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
-                        className="h-4 w-4 border-primary/20 bg-primary/10 text-primary focus:ring-primary/45"
-                      />
-                      <span className="text-xs font-semibold text-foreground flex items-center gap-1">
-                        <CreditCard className="w-3.5 h-3.5 text-primary" />
-                        {t('card_on_pickup')}
-                      </span>
-                    </label>
-                  </>
-                ) : (
-                  <>
-                    <label className="flex items-center gap-3 p-3 bg-[#070B1E] border border-primary/10 rounded cursor-pointer hover:border-primary/30 select-none">
-                      <input
-                        type="radio"
-                        name="payment_method"
-                        value="cash_on_delivery"
-                        checked={paymentMethod === 'cash_on_delivery'}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
-                        className="h-4 w-4 border-primary/20 bg-primary/10 text-primary focus:ring-primary/45"
-                      />
-                      <span className="text-xs font-semibold text-foreground flex items-center gap-1">
-                        <DollarSign className="w-3.5 h-3.5 text-primary" />
-                        {t('cash_on_delivery')}
-                      </span>
-                    </label>
-
-                    <label className="flex items-center gap-3 p-3 bg-[#070B1E] border border-primary/10 rounded cursor-pointer hover:border-primary/30 select-none">
-                      <input
-                        type="radio"
-                        name="payment_method"
-                        value="card_on_delivery"
-                        checked={paymentMethod === 'card_on_delivery'}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
-                        className="h-4 w-4 border-primary/20 bg-primary/10 text-primary focus:ring-primary/45"
-                      />
-                      <span className="text-xs font-semibold text-foreground flex items-center gap-1">
-                        <CreditCard className="w-3.5 h-3.5 text-primary" />
-                        {t('card_on_delivery')}
-                      </span>
-                    </label>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Special notes */}
-            <div className="space-y-1.5 pt-2">
-              <label htmlFor="order_notes" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                {t('notesLabel')}
-              </label>
-              <textarea
-                id="order_notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={3}
-                placeholder={locale === 'pl' ? 'np. alergia na orzechy, sos na boku' : 'e.g. nut allergy, sauce on the side'}
-                className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary/35 resize-none"
-              />
-            </div>
-
-            {/* Minimum order value warning */}
-            {isBelowMinimumOrder && (
-              <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-200 rounded text-xs space-y-1 font-sans">
-                <p className="font-bold flex items-center gap-1.5 text-red-400">
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
-                  {locale === 'pl' ? 'Wymagana minimalna wartość zamówienia' : 'Minimum order value required'}
-                </p>
-                <p className="text-[10px] text-red-300 font-light leading-normal">
-                  {locale === 'pl'
-                    ? `Minimalna wartość zamówienia dla dostawy to ${deliveryMinimumOrderValue.toFixed(2)} PLN (bez kosztów dostawy). Do pełnej kwoty brakuje ${(deliveryMinimumOrderValue - itemsSubtotal).toFixed(2)} PLN.`
-                    : `The minimum order value for delivery is ${deliveryMinimumOrderValue.toFixed(2)} PLN (excluding delivery charge). You need ${(deliveryMinimumOrderValue - itemsSubtotal).toFixed(2)} PLN more.`}
-                </p>
-              </div>
-            )}
-
-            {/* Offline notice & Submission notice */}
-            <div className="p-3 bg-primary/5 border border-primary/15 rounded text-xs space-y-1.5 text-primary/80">
-              <p className="font-semibold">{t('noOnlinePayment')}</p>
-              <p className="text-[10px] italic leading-normal font-sans font-light">
-                {t('pendingNotice')}
-              </p>
-            </div>
-
-            <Button
-              type="submit"
-              disabled={loading || basket.length === 0 || (orderType === 'delivery' && !deliveryHours.isOpen) || isBelowMinimumOrder || !!isDeliveryBlocked}
-              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold tracking-wide uppercase text-xs py-3"
-            >
-              {loading ? <GoldSpinner size="sm" /> : t('submitButton')}
-            </Button>
-          </form>
-        </section>
-
-      </div>
-
-      {/* Right Column: Sticky Basket (4 cols on desktop) */}
-      <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-28 hidden lg:block space-y-4 text-left">
-        {orderType === 'delivery' && (
-          <DeliveryHoursCard delivery={deliveryHours} />
-        )}
-        <PremiumCard hoverable={false} className="border-primary/20 bg-[#050B1E]/60 p-6 space-y-6">
-          <h3 className="text-lg font-serif font-bold text-primary border-b border-primary/20 pb-2 flex items-center justify-between">
-            <span>{t('basketHeader')}</span>
-            <span className="text-xs bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono">
-              {basket.reduce((sum, i) => sum + i.quantity, 0)}
-            </span>
-          </h3>
-
-          {basket.length === 0 ? (
-            <p className="text-xs text-muted-foreground/60 italic py-6 text-center">
-              {t('emptyBasket')}
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {/* Basket list */}
-              <div className="space-y-4 max-h-[35vh] overflow-y-auto pr-1">
-                {basket.map((item) => (
-                  <div key={item.menuItem.id} className="space-y-1.5 pb-3 border-b border-primary/5 text-xs">
-                    <div className="flex justify-between items-start gap-1">
-                      <div className="font-medium text-foreground">
-                        {locale === 'pl' ? item.menuItem.name_pl : item.menuItem.name_en}
-                      </div>
-                      <div className="font-bold text-primary">
-                        {(item.menuItem.price * item.quantity).toFixed(2)} PLN
+                          );
+                        })}
                       </div>
                     </div>
+                  );
+                })}
+            </div>
+          </section>
+        </div>
+      ) : (
+        // ================= CHECKOUT STEP =================
+        <div className="space-y-6 animate-fade-in text-left">
+          {/* Back to menu button */}
+          <button 
+            onClick={() => setWorkflowStep('menu')}
+            className="flex items-center gap-2 text-xs font-extrabold text-primary uppercase tracking-wider hover:text-white transition-colors cursor-pointer focus:outline-none"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {locale === 'pl' ? 'Wróć do karty dań' : 'Back to menu'}
+          </button>
 
-                    <div className="flex justify-between items-center">
-                      {/* Quantity adjuster */}
-                      <div className="flex items-center gap-2 bg-primary/5 border border-primary/15 px-2 py-0.5 rounded-full">
-                        <button 
-                          onClick={() => handleDecreaseQuantity(item.menuItem.id)}
-                          className="text-primary hover:text-white p-0.5"
-                          title="Reduce"
-                        >
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <span className="font-bold font-mono text-[10px] text-foreground w-4 text-center">{item.quantity}</span>
-                        <button 
-                          onClick={() => handleAddToBasket(item.menuItem)}
-                          className="text-primary hover:text-white p-0.5"
-                          title="Increase"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
-                      </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative max-w-6xl mx-auto">
+            {/* Left Column: Form details (8 cols) */}
+            <div className="lg:col-span-7 xl:col-span-8 space-y-6">
+              <section className="space-y-6">
+                <h2 className="text-2xl font-serif font-bold text-primary tracking-wide">
+                  {t('detailsHeader')}
+                </h2>
 
-                      {/* Remove button */}
-                      <button 
-                        onClick={() => setBasket(prev => prev.filter(i => i.menuItem.id !== item.menuItem.id))}
-                        className="text-muted-foreground/45 hover:text-red-400 p-1 rounded transition-colors"
-                        title="Remove Item"
+                <form id="checkout-form" onSubmit={handleSubmitOrder} className="space-y-5 bg-[#050B1E] p-6 sm:p-8 border border-primary/20 rounded-lg text-left">
+                  {error && (
+                    <div className="p-3 text-xs bg-red-500/10 border border-red-500/30 rounded text-red-400 text-center leading-relaxed">
+                      {error}
+                    </div>
+                  )}
+
+                  {/* Order Type Tabs */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                      {t('typeLabel')}
+                    </label>
+                    <div className="grid grid-cols-2 gap-2 p-1 bg-[#070B1E] border border-primary/10 rounded-md">
+                      <button
+                        type="button"
+                        disabled={!operationalStatus.takeaway_enabled}
+                        onClick={() => setOrderType('takeaway')}
+                        className={`py-2 text-xs font-bold uppercase tracking-wider rounded transition-colors ${
+                          orderType === 'takeaway' 
+                            ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md' 
+                            : 'text-muted-foreground hover:text-foreground hover:bg-primary/5'
+                        } ${!operationalStatus.takeaway_enabled ? 'opacity-40 cursor-not-allowed' : ''}`}
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        {t('takeaway')} {!operationalStatus.takeaway_enabled && `(${locale === 'pl' ? 'Wyłączone' : 'Disabled'})`}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!operationalStatus.delivery_enabled}
+                        onClick={() => setOrderType('delivery')}
+                        className={`py-2 text-xs font-bold uppercase tracking-wider rounded transition-colors ${
+                          orderType === 'delivery' 
+                            ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md' 
+                            : 'text-muted-foreground hover:text-foreground hover:bg-primary/5'
+                        } ${!operationalStatus.delivery_enabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+                      >
+                        {t('delivery')} {!operationalStatus.delivery_enabled && `(${locale === 'pl' ? 'Wyłączone' : 'Disabled'})`}
                       </button>
                     </div>
+                  </div>
 
-                    {/* Item Notes */}
-                    <input
-                      type="text"
-                      placeholder={t('itemNotePlaceholder')}
-                      value={item.customerNotes}
-                      onChange={(e) => handleUpdateItemNotes(item.menuItem.id, e.target.value)}
-                      className="w-full bg-[#070B1E] border border-primary/5 rounded px-2 py-1 text-[10px] text-muted-foreground/80 focus:outline-none focus:border-primary/25 placeholder:text-muted-foreground/35"
+                  {/* Customer Contact Details */}
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label htmlFor="customer_name" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                        <User className="w-3.5 h-3.5 text-primary" />
+                        {t('nameLabel')} *
+                      </label>
+                      <input
+                        id="customer_name"
+                        type="text"
+                        required
+                        placeholder="Jan Kowalski"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/35"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label htmlFor="customer_phone" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                          <Phone className="w-3.5 h-3.5 text-primary" />
+                          {t('phoneLabel')} *
+                        </label>
+                        <input
+                          id="customer_phone"
+                          type="tel"
+                          required
+                          placeholder="+48 123 456 789"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/35"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label htmlFor="customer_email" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                          <Mail className="w-3.5 h-3.5 text-primary" />
+                          {t('emailLabel')} *
+                        </label>
+                        <input
+                          id="customer_email"
+                          type="email"
+                          required
+                          placeholder="jan.kowalski@email.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/35"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Delivery Address (only shown if delivery is selected) */}
+                  {orderType === 'delivery' && (
+                    <div className="space-y-4 pt-4 border-t border-primary/10">
+                      <h3 className="text-sm font-bold uppercase tracking-wider text-primary">
+                        {t('addressHeader')}
+                      </h3>
+                      
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="col-span-2 space-y-1.5">
+                          <label htmlFor="street_address" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                            <MapPin className="w-3.5 h-3.5 text-primary" />
+                            {t('streetLabel')} *
+                          </label>
+                          <input
+                            id="street_address"
+                            type="text"
+                            required={orderType === 'delivery'}
+                            placeholder="ul. Warszawska 1/3"
+                            value={streetAddress}
+                            onChange={(e) => setStreetAddress(e.target.value)}
+                            className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/35"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label htmlFor="apartment" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                            {t('apartmentLabel')}
+                          </label>
+                          <input
+                            id="apartment"
+                            type="text"
+                            placeholder="12"
+                            value={apartment}
+                            onChange={(e) => setApartment(e.target.value)}
+                            className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/35"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label htmlFor="postal_code" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                            {t('postalCodeLabel')} *
+                          </label>
+                          <input
+                            id="postal_code"
+                            type="text"
+                            required={orderType === 'delivery'}
+                            placeholder="06-400"
+                            value={postalCode}
+                            onChange={(e) => setPostalCode(e.target.value)}
+                            className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/35"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label htmlFor="city" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                            {t('cityLabel')} *
+                          </label>
+                          <input
+                            id="city"
+                            type="text"
+                            required={orderType === 'delivery'}
+                            placeholder="Ciechanów"
+                            value={city}
+                            onChange={(e) => setCity(e.target.value)}
+                            className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary/35"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Special instructions notes */}
+                  <div className="space-y-1.5 pt-2 border-t border-primary/10">
+                    <label htmlFor="order_notes" className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                      {t('notesLabel')}
+                    </label>
+                    <textarea
+                      id="order_notes"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      rows={3}
+                      placeholder={locale === 'pl' ? 'np. sos na boku, bez kolendry' : 'e.g. sauce on side, no cilantro'}
+                      className="w-full bg-[#070B1E] border border-primary/10 rounded px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary/35 resize-none"
                     />
                   </div>
-                ))}
-              </div>
 
-              {/* Totals */}
-              <div className="pt-2 space-y-2 text-xs border-t border-primary/10">
-                <div className="flex justify-between text-muted-foreground">
-                  <span>{t('subtotal')}</span>
-                  <span>{itemsSubtotal.toFixed(2)} PLN</span>
+                  {/* Non-payment informational notices */}
+                  <div className="p-3 bg-primary/5 border border-primary/15 rounded text-xs space-y-1.5 text-primary/80">
+                    <p className="font-semibold">{t('noOnlinePayment')}</p>
+                    <p className="text-[10px] italic leading-normal font-sans font-light">
+                      {t('pendingNotice')}
+                    </p>
+                  </div>
+                </form>
+              </section>
+            </div>
+
+            {/* Right Column: Checkout summary & place order (4 cols) */}
+            <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-28 space-y-4 text-left">
+              {orderType === 'delivery' && (
+                <DeliveryHoursCard delivery={deliveryHours} />
+              )}
+              
+              <PremiumCard hoverable={false} className="border-primary/20 bg-[#050B1E]/60 p-6 space-y-6">
+                <h3 className="text-lg font-serif font-bold text-primary border-b border-primary/20 pb-2 flex items-center justify-between">
+                  <span>{locale === 'pl' ? 'Podsumowanie' : 'Cart Summary'}</span>
+                  <span className="text-xs bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-mono">
+                    {basket.reduce((sum, i) => sum + i.quantity, 0)}
+                  </span>
+                </h3>
+
+                {/* Listing cart items */}
+                <div className="space-y-3 max-h-[30vh] overflow-y-auto pr-1">
+                  {basket.map((item) => (
+                    <div key={item.menuItem.id} className="text-xs pb-3 border-b border-primary/5 space-y-1">
+                      <div className="flex justify-between items-start gap-1">
+                        <div className="font-medium text-foreground">
+                          <span className="font-bold text-primary mr-1.5">{item.quantity}×</span>
+                          {locale === 'pl' ? item.menuItem.name_pl : item.menuItem.name_en}
+                        </div>
+                        <span className="font-mono text-foreground font-semibold">
+                          {(item.menuItem.price * item.quantity).toFixed(2)} PLN
+                        </span>
+                      </div>
+                      {item.customerNotes && (
+                        <p className="text-[10px] text-muted-foreground/60 italic leading-tight pl-5">
+                          &ldquo;{item.customerNotes}&rdquo;
+                        </p>
+                      )}
+                    </div>
+                  ))}
                 </div>
 
-                {packagingTotal > 0 && (
+                {/* Surcharge & totals details */}
+                <div className="space-y-2.5 text-xs pt-1">
                   <div className="flex justify-between text-muted-foreground">
-                    <span>{t('packagingFee')}</span>
-                    <span>{packagingTotal.toFixed(2)} PLN</span>
+                    <span>{t('subtotal')}</span>
+                    <span className="font-mono">{itemsSubtotal.toFixed(2)} PLN</span>
                   </div>
-                )}
 
-                {orderType === 'delivery' && (
-                  <div className="flex justify-between items-start gap-1">
-                    <span className="flex flex-col text-muted-foreground">
-                      <span>{t('deliveryFee')}</span>
-                      {deliveryFeeInfo && !deliveryFeeInfo.loading && !deliveryFeeInfo.error && (
-                        <span className="text-[9px] text-primary/75 leading-tight">
-                          {deliveryFeeInfo.distanceKm.toFixed(1)} km &bull; ~{deliveryFeeInfo.durationMinutes} min
+                  {packagingTotal > 0 && (
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>{t('packagingFee')}</span>
+                      <span className="font-mono">{packagingTotal.toFixed(2)} PLN</span>
+                    </div>
+                  )}
+
+                  {orderType === 'delivery' && (
+                    <div className="flex justify-between items-start gap-1">
+                      <span className="flex flex-col text-muted-foreground">
+                        <span>{t('deliveryFee')}</span>
+                        {deliveryFeeInfo && !deliveryFeeInfo.loading && !deliveryFeeInfo.error && (
+                          <span className="text-[9px] text-primary/75 leading-tight">
+                            {deliveryFeeInfo.distanceKm.toFixed(1)} km &bull; ~{deliveryFeeInfo.durationMinutes} min
+                          </span>
+                        )}
+                      </span>
+
+                      {!deliveryFeeInfo || (!deliveryFeeInfo.loading && !deliveryFeeInfo.error && !deliveryFeeInfo.action) ? (
+                        <span className="text-primary font-bold italic">{t('deliveryFeeTbd')}</span>
+                      ) : deliveryFeeInfo.loading ? (
+                        <span className="text-primary/60 italic text-[10px] animate-pulse">
+                          {locale === 'pl' ? 'Obliczam...' : 'Calculating...'}
+                        </span>
+                      ) : deliveryFeeInfo.error ? (
+                        <span className="text-primary font-bold italic">{t('deliveryFeeTbd')}</span>
+                      ) : deliveryFeeInfo.action === 'block' ? (
+                        <span className="text-red-400 font-medium text-[10px]">
+                          {locale === 'pl' ? 'Poza zasięgiem' : 'Out of range'}
+                        </span>
+                      ) : deliveryFeeInfo.action === 'contact' ? (
+                        <span className="text-amber-400 font-medium italic text-[10px]">
+                          {locale === 'pl' ? 'Do ustalenia' : 'To confirm'}
+                        </span>
+                      ) : (
+                        <span className="text-primary font-bold">
+                          {deliveryFeeInfo.fee === 0 ? (locale === 'pl' ? 'Bezpłatna' : 'Free') : `${deliveryFeeInfo.fee.toFixed(2)} PLN`}
                         </span>
                       )}
+                    </div>
+                  )}
+
+                  {/* Delivery routing info */}
+                  {orderType === 'delivery' && deliveryFeeInfo && !deliveryFeeInfo.loading && (
+                    <>
+                      {/* Routing errors */}
+                      {deliveryFeeInfo.error && deliveryFeeInfo.errorCode !== 'NO_ZONE' && (
+                        <div className="p-2 bg-amber-500/10 border border-amber-500/25 text-amber-300 rounded text-[10px] leading-normal">
+                          {deliveryFeeInfo.error}
+                        </div>
+                      )}
+
+                      {/* Out of zone */}
+                      {(deliveryFeeInfo.errorCode === 'NO_ZONE' || (!deliveryFeeInfo.error && deliveryFeeInfo.action === 'block')) && (
+                        <div className="p-3 bg-red-500/10 border border-red-500/25 text-red-200 rounded text-[10px] leading-relaxed space-y-1.5">
+                          <p className="font-bold text-red-300">
+                            {locale === 'pl' ? 'Nie dostarczamy pod ten adres.' : 'We cannot deliver to this address.'}
+                          </p>
+                          <p>
+                            {locale === 'pl' ? 'Zadzwoń: ' : 'Call us: '}
+                            <a href={`tel:${restaurantInfo.phone}`} className="font-bold text-primary underline">
+                              {restaurantInfo.phone}
+                            </a>
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Contact zone */}
+                      {!deliveryFeeInfo.error && deliveryFeeInfo.action === 'contact' && (
+                        <div className="p-2.5 bg-amber-500/10 border border-amber-500/25 text-amber-200 rounded text-[10px] leading-relaxed space-y-1">
+                          <p className="font-bold text-amber-300">
+                            {locale === 'pl' ? 'Dostawa do potwierdzenia' : 'Delivery needs confirmation'}
+                          </p>
+                          <p>
+                            {locale === 'pl'
+                              ? 'Skontaktuj się z nami w celu potwierdzenia dostawy.'
+                              : 'Please contact the restaurant regarding delivery.'}
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  <div className="flex justify-between text-foreground font-bold text-sm pt-2 border-t border-primary/15">
+                    <span>
+                      {orderType === 'delivery' ? t('estimatedTotal') : t('finalTotal')}
                     </span>
-
-                    {!deliveryFeeInfo || (!deliveryFeeInfo.loading && !deliveryFeeInfo.error && !deliveryFeeInfo.action) ? (
-                      <span className="text-primary font-medium italic">{t('deliveryFeeTbd')}</span>
-                    ) : deliveryFeeInfo.loading ? (
-                      <span className="text-primary/60 italic text-[10px] animate-pulse">
-                        {locale === 'pl' ? 'Obliczam...' : 'Calculating...'}
-                      </span>
-                    ) : deliveryFeeInfo.error ? (
-                      <span className="text-primary font-medium italic">{t('deliveryFeeTbd')}</span>
-                    ) : deliveryFeeInfo.action === 'block' ? (
-                      <span className="text-red-400 font-medium text-[10px]">
-                        {locale === 'pl' ? 'Poza zasięgiem' : 'Out of range'}
-                      </span>
-                    ) : deliveryFeeInfo.action === 'contact' ? (
-                      <span className="text-amber-400 font-medium italic text-[10px]">
-                        {locale === 'pl' ? 'Do ustalenia' : 'To confirm'}
-                      </span>
-                    ) : (
-                      <span className="text-primary font-bold">
-                        {deliveryFeeInfo.fee === 0 ? (locale === 'pl' ? 'Bezpłatna' : 'Free') : `${deliveryFeeInfo.fee.toFixed(2)} PLN`}
-                      </span>
-                    )}
+                    <span className="text-primary font-mono font-black text-base">
+                      {estimatedTotal.toFixed(2)} PLN
+                    </span>
                   </div>
-                )}
-
-                {/* Delivery zone info messages */}
-                {orderType === 'delivery' && deliveryFeeInfo && !deliveryFeeInfo.loading && (
-                  <>
-                    {/* Generic geocoding / routing errors */}
-                    {deliveryFeeInfo.error && deliveryFeeInfo.errorCode !== 'NO_ZONE' && (
-                      <div className="p-2 bg-amber-500/10 border border-amber-500/25 text-amber-300 rounded text-[10px] leading-normal">
-                        {deliveryFeeInfo.error}
-                      </div>
-                    )}
-
-                    {/* Address outside all delivery zones */}
-                    {(deliveryFeeInfo.errorCode === 'NO_ZONE' || (!deliveryFeeInfo.error && deliveryFeeInfo.action === 'block')) && (
-                      <div className="p-3 bg-red-500/10 border border-red-500/25 text-red-200 rounded text-[10px] leading-relaxed space-y-1.5">
-                        <p className="font-bold text-red-300">
-                          {locale === 'pl'
-                            ? 'Nie dostarczamy pod ten adres.'
-                            : 'We cannot deliver to this address.'}
-                        </p>
-                        <p>
-                          {locale === 'pl' ? 'Zadzwoń do nas: ' : 'Call us: '}
-                          <a href={`tel:${restaurantInfo.phone}`} className="font-bold text-primary underline">
-                            {restaurantInfo.phone}
-                          </a>
-                        </p>
-                        <p>
-                          <Link href={`/${locale}/contact`} className="text-primary/80 underline">
-                            {locale === 'pl' ? 'Odwiedź stronę kontaktową →' : 'Visit our contact page →'}
-                          </Link>
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Contact restaurant zone */}
-                    {!deliveryFeeInfo.error && deliveryFeeInfo.action === 'contact' && (
-                      <div className="p-2.5 bg-amber-500/10 border border-amber-500/25 text-amber-200 rounded text-[10px] leading-relaxed space-y-1">
-                        <p className="font-bold text-amber-300">
-                          {locale === 'pl' ? 'Dostawa do potwierdzenia' : 'Delivery needs confirmation'}
-                        </p>
-                        <p>
-                          {locale === 'pl'
-                            ? 'Skontaktuj się z restauracją w sprawie dostawy.'
-                            : 'Please contact the restaurant regarding delivery.'}
-                        </p>
-                        <p>
-                          <a href={`tel:${restaurantInfo.phone}`} className="font-bold text-primary underline">
-                            {restaurantInfo.phone}
-                          </a>
-                        </p>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                <div className="flex justify-between text-foreground font-bold text-sm pt-2 border-t border-primary/15">
-                  <span>
-                    {orderType === 'delivery' ? t('estimatedTotal') : t('finalTotal')}
-                  </span>
-                  <span className="text-primary">
-                    {estimatedTotal.toFixed(2)} PLN
-                  </span>
                 </div>
 
+                {/* Below minimum order alert */}
                 {isBelowMinimumOrder && (
-                  <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 text-red-200 rounded text-xs space-y-1">
+                  <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-200 rounded text-xs space-y-1">
                     <p className="font-bold flex items-center gap-1.5 text-red-400">
                       <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
                       {locale === 'pl' ? 'Dostawa od ' : 'Delivery from '}{deliveryMinimumOrderValue.toFixed(2)} PLN
                     </p>
-                    <p className="text-[10px] text-red-300 font-light leading-normal font-sans">
+                    <p className="text-[10px] text-red-300 font-light leading-normal">
                       {locale === 'pl'
                         ? `Do dostawy brakuje ${(deliveryMinimumOrderValue - itemsSubtotal).toFixed(2)} PLN.`
                         : `Add ${(deliveryMinimumOrderValue - itemsSubtotal).toFixed(2)} PLN more to order.`}
                     </p>
                   </div>
                 )}
-              </div>
-            </div>
-          )}
-        </PremiumCard>
-      </div>
 
-      {/* Floating Bottom Drawer for Mobile View */}
-      {basket.length > 0 && (
+                {/* Place Order submit trigger */}
+                <Button
+                  type="submit"
+                  form="checkout-form"
+                  disabled={loading || basket.length === 0 || (orderType === 'delivery' && !deliveryHours.isOpen) || isBelowMinimumOrder || !!isDeliveryBlocked}
+                  className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold tracking-wide uppercase text-xs py-3.5 shadow-md hover:shadow-lg transition-all rounded-xl"
+                >
+                  {loading ? <GoldSpinner size="sm" /> : t('submitButton')}
+                </Button>
+              </PremiumCard>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Cart Button for Desktop (lg viewports only) */}
+      {workflowStep === 'menu' && basket.length > 0 && (
+        <button
+          onClick={() => setCartDrawerOpen(true)}
+          className="hidden lg:flex fixed bottom-8 right-8 z-40 w-16 h-16 rounded-full bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-[#070B1E] items-center justify-center shadow-[0_4px_20px_rgba(245,158,11,0.35)] hover:shadow-[0_8px_30px_rgba(245,158,11,0.5)] transition-all duration-300 transform hover:scale-110 active:scale-95 group focus:outline-none"
+          aria-label="Open cart"
+        >
+          <div className="relative">
+            <ShoppingBag className="w-6 h-6 text-[#070B1E]" />
+            <span className="absolute -top-3.5 -right-3.5 bg-red-600 text-white font-black font-sans text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-[#050B1E] shadow-md group-hover:scale-110 transition-transform">
+              {basket.reduce((sum, item) => sum + item.quantity, 0)}
+            </span>
+          </div>
+        </button>
+      )}
+
+      {/* Sticky Bottom Bar for Mobile Viewports */}
+      {workflowStep === 'menu' && basket.length > 0 && (
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#050B1E] border-t border-primary/20 shadow-2xl p-4 flex justify-between items-center gap-4">
           <div className="text-left">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground block">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground block font-bold">
               {t('basketHeader')} ({basket.reduce((sum, i) => sum + i.quantity, 0)})
             </span>
             <span className="text-sm font-bold text-primary font-mono">
@@ -1315,8 +1207,8 @@ export default function OrderingWorkflowClient({
           </div>
 
           <Button 
-            onClick={() => setMobileCartOpen(true)}
-            className="bg-primary hover:bg-primary/95 text-white font-bold text-xs uppercase tracking-wider px-5 py-2.5 flex items-center gap-1.5 shadow"
+            onClick={() => setCartDrawerOpen(true)}
+            className="bg-primary hover:bg-primary/95 text-[#050B1E] font-black text-xs uppercase tracking-wider px-5 py-2.5 flex items-center gap-1.5 shadow"
           >
             <ShoppingBag className="w-4 h-4" />
             {locale === 'pl' ? 'Zobacz koszyk' : 'View basket'}
@@ -1324,211 +1216,156 @@ export default function OrderingWorkflowClient({
         </div>
       )}
 
-      {/* Mobile Drawer Modal */}
-      {mobileCartOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center lg:hidden">
-          <div className="w-full bg-[#050B1E] border-t border-primary/20 rounded-t-xl overflow-hidden max-h-[85vh] flex flex-col animate-slide-up">
+      {/* Slide-over Side Drawer Cart (Desktop & Mobile viewports) */}
+      {cartDrawerOpen && (
+        <div className="fixed inset-0 z-50 overflow-hidden font-sans">
+          {/* Backdrop Overlay */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
+            onClick={() => setCartDrawerOpen(false)}
+          />
+          
+          {/* Sliding Cart Panel */}
+          <div className="absolute inset-y-0 right-0 max-w-md w-full bg-gradient-to-b from-[#0e1329] via-[#070b1e] to-[#040614] border-l border-primary/20 shadow-2xl z-50 flex flex-col animate-slide-in-right">
             {/* Header */}
             <div className="p-4 border-b border-primary/10 flex justify-between items-center bg-primary/5">
-              <h3 className="text-sm font-serif font-bold text-primary uppercase tracking-wider">
-                {t('basketHeader')} ({basket.reduce((sum, i) => sum + i.quantity, 0)})
-              </h3>
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="w-4 h-4 text-primary" />
+                <h3 className="text-sm font-serif font-bold text-primary uppercase tracking-wider">
+                  {t('basketHeader')} ({basket.reduce((sum, i) => sum + i.quantity, 0)})
+                </h3>
+              </div>
               <button 
-                onClick={() => setMobileCartOpen(false)}
-                className="text-muted-foreground hover:text-foreground font-bold text-sm focus:outline-none"
+                onClick={() => setCartDrawerOpen(false)}
+                className="text-muted-foreground hover:text-foreground p-1 hover:bg-white/5 rounded-full transition-colors focus:outline-none"
+                aria-label="Close cart"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* List */}
-            <div className="p-4 overflow-y-auto flex-1 space-y-4 text-left">
-              {basket.map((item) => (
-                <div key={item.menuItem.id} className="space-y-1.5 pb-3 border-b border-primary/5 text-xs">
-                  <div className="flex justify-between items-start gap-1">
-                    <div className="font-semibold text-foreground text-sm">
-                      {locale === 'pl' ? item.menuItem.name_pl : item.menuItem.name_en}
+            {/* Cart Items List */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              {basket.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center space-y-3 py-12">
+                  <ShoppingBag className="w-12 h-12 text-muted-foreground/30 animate-pulse" />
+                  <p className="text-xs text-muted-foreground/60 italic">
+                    {t('emptyBasket')}
+                  </p>
+                </div>
+              ) : (
+                basket.map((item) => (
+                  <div key={item.menuItem.id} className="space-y-2 pb-4 border-b border-primary/5 text-xs text-left">
+                    <div className="flex justify-between items-start gap-3">
+                      <div className="font-semibold text-foreground text-sm">
+                        {locale === 'pl' ? item.menuItem.name_pl : item.menuItem.name_en}
+                      </div>
+                      <div className="font-mono font-bold text-primary text-sm whitespace-nowrap">
+                        {(item.menuItem.price * item.quantity).toFixed(2)} PLN
+                      </div>
                     </div>
-                    <div className="font-bold text-primary text-sm whitespace-nowrap">
-                      {(item.menuItem.price * item.quantity).toFixed(2)} PLN
+                    
+                    <p className="text-[10px] text-muted-foreground/70 font-light leading-normal line-clamp-2">
+                      {locale === 'pl' ? item.menuItem.description_pl : item.menuItem.description_en}
+                    </p>
+
+                    <div className="flex justify-between items-center pt-1.5 gap-2">
+                      {/* Quantity Selector */}
+                      <div className="flex items-center gap-2.5 bg-primary/10 border border-primary/25 px-2.5 py-0.5 rounded-full">
+                        <button 
+                          type="button"
+                          onClick={() => handleDecreaseQuantity(item.menuItem.id)}
+                          className="text-primary hover:text-white p-0.5 transition-colors focus:outline-none"
+                          title="Reduce"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="font-bold font-mono text-xs text-foreground w-4 text-center">{item.quantity}</span>
+                        <button 
+                          type="button"
+                          onClick={() => handleAddToBasket(item.menuItem)}
+                          className="text-primary hover:text-white p-0.5 transition-colors focus:outline-none"
+                          title="Increase"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {/* Custom note for this item */}
+                      <input
+                        type="text"
+                        placeholder={t('itemNotePlaceholder')}
+                        value={item.customerNotes}
+                        onChange={(e) => handleUpdateItemNotes(item.menuItem.id, e.target.value)}
+                        className="flex-1 bg-[#070B1E] border border-primary/10 rounded px-2.5 py-1 text-[10px] text-foreground focus:outline-none focus:border-primary/30"
+                      />
                     </div>
                   </div>
+                ))
+              )}
+            </div>
 
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2.5 bg-primary/10 border border-primary/25 px-2.5 py-0.5 rounded-full">
-                      <button 
-                        onClick={() => handleDecreaseQuantity(item.menuItem.id)}
-                        className="text-primary hover:text-white p-0.5"
-                      >
-                        <Minus className="w-3.5 h-3.5" />
-                      </button>
-                      <span className="font-bold font-mono text-xs text-foreground w-4 text-center">{item.quantity}</span>
-                      <button 
-                        onClick={() => handleAddToBasket(item.menuItem)}
-                        className="text-primary hover:text-white p-0.5"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-
-                    <button 
-                      onClick={() => setBasket(prev => prev.filter(i => i.menuItem.id !== item.menuItem.id))}
-                      className="text-muted-foreground/50 hover:text-red-400 p-1"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <input
-                    type="text"
-                    placeholder={t('itemNotePlaceholder')}
-                    value={item.customerNotes}
-                    onChange={(e) => handleUpdateItemNotes(item.menuItem.id, e.target.value)}
-                    className="w-full bg-[#070B1E] border border-primary/10 rounded px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary/25"
-                  />
-                </div>
-              ))}
-
-              {/* Totals */}
-              <div className="pt-2 space-y-2.5 text-xs">
-                <div className="flex justify-between text-muted-foreground">
-                  <span>{t('subtotal')}</span>
-                  <span>{itemsSubtotal.toFixed(2)} PLN</span>
-                </div>
-
-                {packagingTotal > 0 && (
+            {/* Cart drawer footer (totals & checkout trigger) */}
+            {basket.length > 0 && (
+              <div className="p-4 border-t border-primary/10 bg-[#070b1e]/90 space-y-4">
+                <div className="space-y-2 text-xs text-left">
                   <div className="flex justify-between text-muted-foreground">
-                    <span>{t('packagingFee')}</span>
-                    <span>{packagingTotal.toFixed(2)} PLN</span>
+                    <span>{t('subtotal')}</span>
+                    <span className="font-mono">{itemsSubtotal.toFixed(2)} PLN</span>
                   </div>
-                )}
-
-                {orderType === 'delivery' && (
-                  <div className="flex justify-between items-start gap-1">
-                    <span className="flex flex-col text-muted-foreground">
+                  {packagingTotal > 0 && (
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>{t('packagingFee')}</span>
+                      <span className="font-mono">{packagingTotal.toFixed(2)} PLN</span>
+                    </div>
+                  )}
+                  {orderType === 'delivery' && (
+                    <div className="flex justify-between text-muted-foreground">
                       <span>{t('deliveryFee')}</span>
-                      {deliveryFeeInfo && !deliveryFeeInfo.loading && !deliveryFeeInfo.error && (
-                        <span className="text-[9px] text-primary/75 leading-tight">
-                          {deliveryFeeInfo.distanceKm.toFixed(1)} km &bull; ~{deliveryFeeInfo.durationMinutes} min
-                        </span>
+                      {deliveryFeeInfo?.loading ? (
+                        <span className="text-primary animate-pulse">...</span>
+                      ) : deliveryFeeInfo?.error ? (
+                        <span className="text-amber-500 font-medium italic">{t('deliveryFeeTbd')}</span>
+                      ) : (
+                        <span className="font-mono">{liveDeliveryFee.toFixed(2)} PLN</span>
                       )}
-                    </span>
-
-                    {!deliveryFeeInfo || (!deliveryFeeInfo.loading && !deliveryFeeInfo.error && !deliveryFeeInfo.action) ? (
-                      <span className="text-primary font-bold italic">{t('deliveryFeeTbd')}</span>
-                    ) : deliveryFeeInfo.loading ? (
-                      <span className="text-primary/60 italic text-[10px] animate-pulse">
-                        {locale === 'pl' ? 'Obliczam...' : 'Calculating...'}
-                      </span>
-                    ) : deliveryFeeInfo.error ? (
-                      <span className="text-primary font-bold italic">{t('deliveryFeeTbd')}</span>
-                    ) : deliveryFeeInfo.action === 'block' ? (
-                      <span className="text-red-400 font-medium text-[10px]">
-                        {locale === 'pl' ? 'Poza zasięgiem' : 'Out of range'}
-                      </span>
-                    ) : deliveryFeeInfo.action === 'contact' ? (
-                      <span className="text-amber-400 font-medium italic text-[10px]">
-                        {locale === 'pl' ? 'Do ustalenia' : 'To confirm'}
-                      </span>
-                    ) : (
-                      <span className="text-primary font-bold">
-                        {deliveryFeeInfo.fee === 0 ? (locale === 'pl' ? 'Bezpłatna' : 'Free') : `${deliveryFeeInfo.fee.toFixed(2)} PLN`}
-                      </span>
-                    )}
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between text-foreground font-bold text-sm pt-2 border-t border-primary/10">
+                    <span>{t('estimatedTotal')}</span>
+                    <span className="text-primary font-mono font-black">{estimatedTotal.toFixed(2)} PLN</span>
                   </div>
-                )}
-
-                {/* Delivery zone info messages */}
-                {orderType === 'delivery' && deliveryFeeInfo && !deliveryFeeInfo.loading && (
-                  <>
-                    {/* Generic errors */}
-                    {deliveryFeeInfo.error && deliveryFeeInfo.errorCode !== 'NO_ZONE' && (
-                      <div className="p-2 bg-amber-500/10 border border-amber-500/25 text-amber-300 rounded text-[10px]">
-                        {deliveryFeeInfo.error}
-                      </div>
-                    )}
-
-                    {/* Address outside all zones */}
-                    {(deliveryFeeInfo.errorCode === 'NO_ZONE' || (!deliveryFeeInfo.error && deliveryFeeInfo.action === 'block')) && (
-                      <div className="p-3 bg-red-500/10 border border-red-500/25 text-red-200 rounded text-[10px] leading-relaxed space-y-1.5">
-                        <p className="font-bold text-red-300">
-                          {locale === 'pl'
-                            ? 'Nie dostarczamy pod ten adres.'
-                            : 'We cannot deliver to this address.'}
-                        </p>
-                        <p>
-                          {locale === 'pl' ? 'Zadzwoń: ' : 'Call us: '}
-                          <a href={`tel:${restaurantInfo.phone}`} className="font-bold text-primary underline">
-                            {restaurantInfo.phone}
-                          </a>
-                        </p>
-                        <p>
-                          <Link href={`/${locale}/contact`} className="text-primary/80 underline">
-                            {locale === 'pl' ? 'Strona kontaktowa →' : 'Contact page →'}
-                          </Link>
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Contact zone */}
-                    {!deliveryFeeInfo.error && deliveryFeeInfo.action === 'contact' && (
-                      <div className="p-2.5 bg-amber-500/10 border border-amber-500/25 text-amber-200 rounded text-[10px] leading-relaxed space-y-1">
-                        <p className="font-bold text-amber-300">
-                          {locale === 'pl' ? 'Dostawa do potwierdzenia' : 'Delivery needs confirmation'}
-                        </p>
-                        <p>
-                          {locale === 'pl'
-                            ? 'Zadzwoń, żebyśmy mogli potwierdzić dostawę.'
-                            : 'Call us to confirm delivery to your area.'}
-                        </p>
-                        <p>
-                          <a href={`tel:${restaurantInfo.phone}`} className="font-bold text-primary underline">
-                            {restaurantInfo.phone}
-                          </a>
-                        </p>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                <div className="flex justify-between text-foreground font-bold text-sm pt-2 border-t border-primary/15">
-                  <span>
-                    {orderType === 'delivery' ? t('estimatedTotal') : t('finalTotal')}
-                  </span>
-                  <span className="text-primary">
-                    {estimatedTotal.toFixed(2)} PLN
-                  </span>
                 </div>
 
                 {isBelowMinimumOrder && (
-                  <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 text-red-200 rounded text-xs space-y-1">
+                  <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-200 rounded text-xs text-left space-y-1 font-sans">
                     <p className="font-bold flex items-center gap-1.5 text-red-400">
                       <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
                       {locale === 'pl' ? 'Dostawa od ' : 'Delivery from '}{deliveryMinimumOrderValue.toFixed(2)} PLN
                     </p>
-                    <p className="text-[10px] text-red-300 font-light leading-normal font-sans">
+                    <p className="text-[10px] text-red-300 font-light leading-normal">
                       {locale === 'pl'
                         ? `Do dostawy brakuje ${(deliveryMinimumOrderValue - itemsSubtotal).toFixed(2)} PLN.`
                         : `Add ${(deliveryMinimumOrderValue - itemsSubtotal).toFixed(2)} PLN more to order.`}
                     </p>
                   </div>
                 )}
-              </div>
-            </div>
 
-            {/* Bottom Actions */}
-            <div className="p-4 border-t border-primary/10 bg-[#070B1E] flex gap-3">
-              <Button 
-                onClick={() => setMobileCartOpen(false)}
-                className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs uppercase tracking-wider py-2.5"
-              >
-                {locale === 'pl' ? 'Wróć do zamawiania' : 'Continue checkout'}
-              </Button>
-            </div>
+                <Button 
+                  onClick={() => {
+                    setCartDrawerOpen(false);
+                    setWorkflowStep('checkout');
+                  }}
+                  className="w-full bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-[#070B1E] font-black text-xs uppercase tracking-wider py-3 shadow-[0_4px_15px_rgba(245,158,11,0.15)] hover:shadow-[0_6px_20px_rgba(245,158,11,0.3)] transition-all duration-300 rounded-xl"
+                >
+                  {locale === 'pl' ? 'Przejdź do kasy' : 'Go to checkout'}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}
-
     </div>
   );
 }
