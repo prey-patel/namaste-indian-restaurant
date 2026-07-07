@@ -5,10 +5,10 @@ import { Volume2, Play } from 'lucide-react';
 import { useAdminAlerts } from './admin-alerts-context';
 
 export function AutoplayUnlockOverlay() {
-  const { audioState, soundEnabled, unlockAudio } = useAdminAlerts();
+  const { audioState, soundEnabled, unlockAudio, hasUnlockedInSession } = useAdminAlerts();
 
-  // Only show if sound is enabled and the browser has suspended the AudioContext
-  if (!soundEnabled || audioState !== 'suspended') {
+  // Only show if sound is enabled, audio is suspended, and the user hasn't unlocked it in this session yet
+  if (!soundEnabled || audioState !== 'suspended' || hasUnlockedInSession) {
     return null;
   }
 

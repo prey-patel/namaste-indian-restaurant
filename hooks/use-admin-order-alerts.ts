@@ -46,6 +46,10 @@ export function useAdminOrderAlerts(pendingCount: number, soundSetting: string =
   const [isLeader, setIsLeader] = useState(true);
   const [isVisible, setIsVisible] = useState(true);
   const [audioState, setAudioState] = useState<AudioContextState>('suspended');
+  const [hasUnlockedInSession, setHasUnlockedInSession] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return sessionStorage.getItem('admin_audio_unlocked_session') === 'true';
+  });
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const decodedBufferRef = useRef<AudioBuffer | null>(null);
@@ -409,6 +413,14 @@ export function useAdminOrderAlerts(pendingCount: number, soundSetting: string =
       }
     }
 
+    // Mark as unlocked in the current session
+    try {
+      sessionStorage.setItem('admin_audio_unlocked_session', 'true');
+      setHasUnlockedInSession(true);
+    } catch (e) {
+      // Ignore storage errors in private browsing/unsupported environs
+    }
+
     // Trigger load and decode of the sound setting if needed
     if (
       soundSetting !== 'digital-beeps' &&
@@ -456,6 +468,7 @@ export function useAdminOrderAlerts(pendingCount: number, soundSetting: string =
     toggleSound,
     unlockAudio,
     isLeader,
-    audioState
+    audioState,
+    hasUnlockedInSession
   };
 }
