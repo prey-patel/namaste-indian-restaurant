@@ -66,29 +66,37 @@ export function useKdsAlerts(currentOrders: KdsOrderSimple[]) {
       // High-pitched premium double service bell chime (alert name: kds-new-order-alert)
       const now = ctx.currentTime;
       
-      // Ding 1
-      const osc1 = ctx.createOscillator();
-      const gain1 = ctx.createGain();
-      osc1.connect(gain1);
-      gain1.connect(ctx.destination);
-      osc1.frequency.setValueAtTime(880, now); // A5 note
-      osc1.type = 'sine';
-      gain1.gain.setValueAtTime(0.2, now);
-      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-      osc1.start(now);
-      osc1.stop(now + 0.4);
+      // Helper function to play a single resonant chord strike
+      const triggerStrike = (timeOffset: number, decayDuration: number, strikeVolume: number) => {
+        const strikeTime = now + timeOffset;
+        const notes = [
+          { freq: 523.25, type: 'triangle' as const, volCoeff: 0.35 }, // C5 Carrier
+          { freq: 659.25, type: 'sine' as const, volCoeff: 0.25 },     // E5 Harmonizer
+          { freq: 783.99, type: 'sine' as const, volCoeff: 0.25 },     // G5 Accent
+          { freq: 1046.50, type: 'sine' as const, volCoeff: 0.15 }     // C6 Ringing High
+        ];
 
-      // Ding 2 (slightly higher, offset by 0.12s)
-      const osc2 = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.connect(gain2);
-      gain2.connect(ctx.destination);
-      osc2.frequency.setValueAtTime(1100, now + 0.12); // C#6 note
-      osc2.type = 'sine';
-      gain2.gain.setValueAtTime(0.2, now + 0.12);
-      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.52);
-      osc2.start(now + 0.12);
-      osc2.stop(now + 0.52);
+        notes.forEach(({ freq, type, volCoeff }) => {
+          const osc = ctx.createOscillator();
+          const gainNode = ctx.createGain();
+          osc.connect(gainNode);
+          gainNode.connect(ctx.destination);
+          
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, strikeTime);
+          
+          gainNode.gain.setValueAtTime(strikeVolume * volCoeff, strikeTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, strikeTime + decayDuration);
+          
+          osc.start(strikeTime);
+          osc.stop(strikeTime + decayDuration + 0.1);
+        });
+      };
+
+      // Play 3 loud strikes (triple service bell) lasting over 3.5 seconds total
+      triggerStrike(0, 1.2, 0.7);    // Strike 1
+      triggerStrike(0.4, 1.2, 0.7);  // Strike 2
+      triggerStrike(0.8, 2.7, 0.9);  // Strike 3 (long ring-out tail)
 
     } catch (err) {
       console.error('[KDS Alerts] Failed to play kitchen chime:', err);
