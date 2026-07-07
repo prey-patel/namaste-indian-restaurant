@@ -4,12 +4,12 @@ const withNextIntl = createNextIntlPlugin();
 
 const cspHeader = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com",
-  "connect-src 'self' https://*.supabase.co https://maps.googleapis.com https://api.websub.co",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://vercel.live",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://maps.googleapis.com https://api.websub.co https://vercel.live wss://vercel.live",
   "img-src 'self' data: https://*.supabase.co https://maps.gstatic.com https://*.googleapis.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
-  "frame-src 'self'",
+  "frame-src 'self' https://vercel.live",
   "object-src 'none'",
 ].join('; ');
 
