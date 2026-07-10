@@ -4,10 +4,10 @@ const withNextIntl = createNextIntlPlugin();
 
 const cspHeader = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://vercel.live https://translate.googleapis.com https://translate.google.com https://*.pa.googleapis.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://vercel.live https://translate.googleapis.com https://translate.google.com https://*.pa.googleapis.com https://unpkg.com",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://maps.googleapis.com https://api.websub.co https://vercel.live wss://vercel.live https://translate.googleapis.com",
-  "img-src 'self' data: https://*.supabase.co https://maps.gstatic.com https://*.googleapis.com https://www.gstatic.com https://translate.google.com",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.gstatic.com https://translate.googleapis.com",
+  "img-src 'self' data: https://*.supabase.co https://maps.gstatic.com https://*.googleapis.com https://www.gstatic.com https://translate.google.com https://*.tile.openstreetmap.org https://unpkg.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.gstatic.com https://translate.googleapis.com https://unpkg.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "frame-src 'self' https://vercel.live https://translate.google.com",
   "worker-src 'self' blob:",
