@@ -418,6 +418,8 @@
     }
   },
   "order": {
+    "featuredTitle": "Chef's Recommendations",
+    "featuredSubtitle": "Signature recipes and guest favorites handpicked by our culinary team",
     "title": "Order Online",
     "subtitle": "Request takeaway or delivery from Namaste",
     "pendingNotice": "Note: Your order request is not automatically confirmed. The restaurant will review and confirm your request.",

@@ -122,7 +122,7 @@ export default function OrderingWorkflowClient({
 
   // Basket State
   const [basket, setBasket] = useState<BasketItem[]>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>('featured');
 
   // Submission & Message States
   const [loading, setLoading] = useState(false);
@@ -657,6 +657,8 @@ export default function OrderingWorkflowClient({
     );
   }
 
+  const featuredItems = items.filter(item => item.is_chef_special || item.is_popular);
+
   return (
     <div className="w-full relative font-sans">
       {workflowStep === 'menu' ? (
@@ -671,6 +673,17 @@ export default function OrderingWorkflowClient({
             {/* Category Filter Pills */}
             <div className="flex items-center gap-3 overflow-x-auto pb-4 pt-1 no-scrollbar select-none scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0">
               <button
+                onClick={() => setSelectedCategoryId('featured')}
+                className={`px-5 py-2.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all duration-300 whitespace-nowrap cursor-pointer ${
+                  selectedCategoryId === 'featured'
+                    ? 'bg-amber-500 text-[#050B1E] border border-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.35)] font-black'
+                    : 'border border-amber-500/20 hover:border-amber-500/50 text-amber-300 bg-[#070B1E]/40 hover:bg-amber-500/5'
+                }`}
+              >
+                ⭐ {locale === 'pl' ? 'Rekomendacje' : 'Recommendations'}
+              </button>
+
+              <button
                 onClick={() => setSelectedCategoryId(null)}
                 className={`px-5 py-2.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all duration-300 whitespace-nowrap cursor-pointer ${
                   selectedCategoryId === null
@@ -683,7 +696,10 @@ export default function OrderingWorkflowClient({
 
               {categories.map((category) => {
                 const isSelected = selectedCategoryId === category.id;
-                const categoryItems = getItemsByCategory(category.id);
+                let categoryItems = getItemsByCategory(category.id);
+                if (selectedCategoryId === 'featured') {
+                  categoryItems = categoryItems.filter(item => item.is_chef_special || item.is_popular);
+                }
                 if (categoryItems.length === 0) return null;
 
                 return (
@@ -702,11 +718,128 @@ export default function OrderingWorkflowClient({
               })}
             </div>
 
+            {/* Featured Horizontal Recommendations Carousel */}
+            {selectedCategoryId === 'featured' && featuredItems.length > 0 && (
+              <div className="space-y-4 pt-2">
+                <div className="text-left space-y-1">
+                  <h3 className="text-lg font-serif font-black uppercase tracking-wider text-amber-400">
+                    {t('featuredTitle')}
+                  </h3>
+                  <p className="text-xs text-muted-foreground/80 leading-relaxed max-w-2xl font-light">
+                    {t('featuredSubtitle')}
+                  </p>
+                </div>
+
+                {/* Horizontal scroll container */}
+                <div className="flex gap-4 overflow-x-auto pb-4 pt-1 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth select-none">
+                  {featuredItems.map((item) => {
+                    const basketQty = basket.find(b => b.menuItem.id === item.id)?.quantity || 0;
+                    return (
+                      <div 
+                        key={`carousel-${item.id}`}
+                        className="w-72 sm:w-80 flex-shrink-0 bg-gradient-to-br from-[#0c122c] via-[#050b1e] to-[#0f111a] border border-amber-500/30 rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden shadow-[0_0_15px_rgba(245,158,11,0.05)] hover:border-amber-500/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.12)] transition-all duration-300"
+                      >
+                        {/* Shimmer sweep effect */}
+                        <div className="shimmer-sweep rounded-2xl" />
+
+                        {/* Top: Image and Badges */}
+                        <div className="relative aspect-[16/10] w-full rounded-xl overflow-hidden bg-[#070B1E] border border-amber-500/10 mb-3 flex items-center justify-center z-10">
+                          {item.signed_image_url ? (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img 
+                              src={item.signed_image_url} 
+                              alt={locale === 'pl' ? item.name_pl : item.name_en} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <ShoppingBag className="w-10 h-10 text-amber-500/20" />
+                          )}
+                          
+                          {/* Badges Overlay */}
+                          <div className="absolute top-2 left-2 flex flex-wrap gap-1.5 z-10">
+                            {item.is_chef_special && (
+                              <span className="bg-amber-500 text-[#050B1E] text-[8px] font-sans font-black uppercase tracking-wider px-2 py-0.5 rounded-full border border-amber-400 flex items-center gap-1 shadow-md">
+                                👨‍🍳 {locale === 'pl' ? 'Specjał Szefa' : "Chef's Special"}
+                              </span>
+                            )}
+                            {item.is_popular && (
+                              <span className="bg-red-500 text-white text-[8px] font-sans font-black uppercase tracking-wider px-2 py-0.5 rounded-full border border-red-400 flex items-center gap-1 shadow-md">
+                                🔥 {locale === 'pl' ? 'Popularne' : 'Popular'}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Middle: Item Details */}
+                        <div className="space-y-1 text-left flex-1 flex flex-col justify-between relative z-10">
+                          <div>
+                            <div className="flex justify-between items-start gap-2">
+                              <h4 className="font-serif font-bold text-amber-100 text-sm sm:text-base line-clamp-1">
+                                {locale === 'pl' ? item.name_pl : item.name_en}
+                              </h4>
+                              <span className="text-xs sm:text-sm text-amber-400 font-mono font-black whitespace-nowrap">
+                                {item.price.toFixed(2)} PLN
+                              </span>
+                            </div>
+                            <p className="text-[10px] sm:text-xs text-muted-foreground/85 line-clamp-2 leading-relaxed font-light mt-1">
+                              {locale === 'pl' ? item.description_pl : item.description_en}
+                            </p>
+                          </div>
+
+                          {/* Bottom: Action bar */}
+                          <div className="flex justify-between items-center pt-3 border-t border-amber-500/10 mt-3">
+                            <div className="flex gap-0.5">
+                              {Array.from({ length: item.spiciness }).map((_, i) => (
+                                <span key={i} className="text-red-500 text-[10px]" title="Spiciness">🌶️</span>
+                              ))}
+                              {item.is_vegetarian && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 self-center ml-1" title="Vegetarian" />
+                              )}
+                            </div>
+
+                            {basketQty > 0 ? (
+                              <div className="flex items-center bg-[#070B1E] border border-amber-500/30 rounded-full px-1 py-0.5 shadow-inner">
+                                <button
+                                  onClick={() => handleDecreaseQuantity(item.id)}
+                                  className="p-1 text-muted-foreground hover:text-foreground cursor-pointer focus:outline-none"
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </button>
+                                <span className="px-2 text-xs font-bold text-foreground font-mono">
+                                  {basketQty}
+                                </span>
+                                <button
+                                  onClick={() => handleAddToBasket(item)}
+                                  className="p-1 text-muted-foreground hover:text-foreground cursor-pointer focus:outline-none"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => handleAddToBasket(item)}
+                                className="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-[#070B1E] rounded-full text-xs font-black uppercase tracking-wider shadow-[0_0_8px_rgba(245,158,11,0.15)] hover:shadow-[0_0_15px_rgba(245,158,11,0.3)] transition-all duration-300 cursor-pointer"
+                              >
+                                {locale === 'pl' ? 'Dodaj' : 'Add'}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-10">
               {categories
-                .filter((category) => selectedCategoryId === null || category.id === selectedCategoryId)
+                .filter((category) => selectedCategoryId === null || selectedCategoryId === 'featured' || category.id === selectedCategoryId)
                 .map((category) => {
-                  const categoryItems = getItemsByCategory(category.id);
+                  let categoryItems = getItemsByCategory(category.id);
+                  if (selectedCategoryId === 'featured') {
+                    categoryItems = categoryItems.filter(item => item.is_chef_special || item.is_popular);
+                  }
                   if (categoryItems.length === 0) return null;
 
                   return (
@@ -717,13 +850,21 @@ export default function OrderingWorkflowClient({
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {categoryItems.map((item) => {
                           const basketQty = basket.find(b => b.menuItem.id === item.id)?.quantity || 0;
+                          const isSpotlight = item.is_chef_special || item.is_popular;
                           return (
                             <div 
                               key={item.id} 
-                              className="bg-[#050B1E] border border-primary/10 rounded-lg p-4 flex gap-4 hover:border-primary/25 transition-colors relative"
+                              className={`bg-[#050B1E] border rounded-lg p-4 flex gap-4 transition-all duration-300 relative overflow-hidden ${
+                                isSpotlight 
+                                  ? 'bg-gradient-to-br from-[#0c122c] via-[#050b1e] to-[#0f111a] border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.06)] hover:border-amber-500/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.12)]' 
+                                  : 'border-primary/10 hover:border-primary/25'
+                              }`}
                             >
+                              {/* Shimmer sweep effect */}
+                              {isSpotlight && <div className="shimmer-sweep rounded-lg" />}
+
                               {/* Image preview (placeholder if missing) */}
-                              <div className="w-20 h-20 bg-[#070B1E] border border-primary/15 rounded overflow-hidden flex-shrink-0 flex items-center justify-center">
+                              <div className={`w-20 h-20 bg-[#070B1E] border rounded overflow-hidden flex-shrink-0 flex items-center justify-center relative z-10 ${isSpotlight ? 'border-amber-500/20' : 'border-primary/15'}`}>
                                 {item.signed_image_url ? (
                                   /* eslint-disable-next-line @next/next/no-img-element */
                                   <img 
@@ -732,18 +873,32 @@ export default function OrderingWorkflowClient({
                                     className="w-full h-full object-cover"
                                   />
                                 ) : (
-                                  <ShoppingBag className="w-6 h-6 text-primary/30" />
+                                  <ShoppingBag className={`w-6 h-6 ${isSpotlight ? 'text-amber-500/30' : 'text-primary/30'}`} />
                                 )}
+
+                                {/* Overlay Badge on Image */}
+                                <div className="absolute top-1 left-1 flex flex-col gap-0.5 pointer-events-none z-10">
+                                  {item.is_chef_special && (
+                                    <span className="bg-amber-500 text-[#050B1E] text-[7px] font-black uppercase px-1 py-0.5 rounded shadow">
+                                      👨‍🍳
+                                    </span>
+                                  )}
+                                  {item.is_popular && (
+                                    <span className="bg-red-500 text-white text-[7px] font-black uppercase px-1 py-0.5 rounded shadow">
+                                      🔥
+                                    </span>
+                                  )}
+                                </div>
                               </div>
 
                               {/* Info */}
-                              <div className="flex-1 flex flex-col justify-between text-left space-y-1">
+                              <div className="flex-1 flex flex-col justify-between text-left space-y-1 relative z-10">
                                 <div>
                                   <div className="flex justify-between items-start gap-1">
-                                    <h4 className="font-semibold text-foreground text-sm">
+                                    <h4 className={`font-semibold text-sm ${isSpotlight ? 'text-amber-100 font-serif font-bold' : 'text-foreground'}`}>
                                       {locale === 'pl' ? item.name_pl : item.name_en}
                                     </h4>
-                                    <span className="text-xs text-primary font-bold whitespace-nowrap">
+                                    <span className={`text-xs font-bold whitespace-nowrap ${isSpotlight ? 'text-amber-400 font-mono font-black' : 'text-primary'}`}>
                                       {item.price.toFixed(2)} PLN
                                     </span>
                                   </div>
@@ -759,33 +914,40 @@ export default function OrderingWorkflowClient({
                                     {Array.from({ length: item.spiciness }).map((_, i) => (
                                       <span key={i} className="text-red-500 text-[10px]" title="Spiciness">🌶️</span>
                                     ))}
+                                    {item.is_vegetarian && (
+                                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 self-center ml-1" title="Vegetarian" />
+                                    )}
                                   </div>
 
                                   {/* Quantity indicator or Add button */}
                                   {basketQty > 0 ? (
-                                    <div className="flex items-center gap-2.5 bg-primary/15 border border-primary/30 px-2 py-0.5 rounded-full text-xs">
+                                    <div className={`flex items-center gap-2.5 border px-2 py-0.5 rounded-full text-xs ${isSpotlight ? 'bg-amber-500/10 border-amber-500/30' : 'bg-primary/15 border-primary/30'}`}>
                                       <button 
                                         onClick={() => handleDecreaseQuantity(item.id)}
-                                        className="text-primary hover:text-white font-bold p-0.5 focus:outline-none"
+                                        className={`font-bold p-0.5 focus:outline-none cursor-pointer ${isSpotlight ? 'text-amber-400 hover:text-white' : 'text-primary hover:text-white'}`}
                                         aria-label="Decrease quantity"
                                       >
-                                        <Minus className="w-3.5 h-3.5" />
+                                        <Minus className="w-3 h-3" />
                                       </button>
-                                      <span className="font-bold text-foreground min-w-[12px] text-center">{basketQty}</span>
+                                      <span className="font-bold text-foreground min-w-[12px] text-center font-mono">{basketQty}</span>
                                       <button 
                                         onClick={() => handleAddToBasket(item)}
-                                        className="text-primary hover:text-white font-bold p-0.5 focus:outline-none"
+                                        className={`font-bold p-0.5 focus:outline-none cursor-pointer ${isSpotlight ? 'text-amber-400 hover:text-white' : 'text-primary hover:text-white'}`}
                                         aria-label="Increase quantity"
                                       >
-                                        <Plus className="w-3.5 h-3.5" />
+                                        <Plus className="w-3 h-3" />
                                       </button>
                                     </div>
                                   ) : (
-                                    <button
+                                    <button 
                                       onClick={() => handleAddToBasket(item)}
-                                      className="border border-primary/20 bg-primary/5 hover:bg-primary/15 hover:border-primary/40 text-primary font-bold text-[10px] uppercase tracking-wider py-1 px-3 rounded transition-colors"
+                                      className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-all focus:outline-none cursor-pointer ${
+                                        isSpotlight 
+                                          ? 'bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-[#070B1E]' 
+                                          : 'bg-primary/10 hover:bg-primary/20 text-primary hover:text-white border border-primary/20'
+                                      }`}
                                     >
-                                      + {locale === 'pl' ? 'Dodaj' : 'Add'}
+                                      {locale === 'pl' ? 'Dodaj' : 'Add'}
                                     </button>
                                   )}
                                 </div>

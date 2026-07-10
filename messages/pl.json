@@ -418,6 +418,8 @@
     }
   },
   "order": {
+    "featuredTitle": "Rekomendacje Szefa Kuchni",
+    "featuredSubtitle": "Popisowe receptury i ulubione potrawy gości wybrane przez nasz zespół kulinarny",
     "title": "Zamów Online",
     "subtitle": "Zamów jedzenie na wynos lub z dostawą z restauracji Namaste",
     "pendingNotice": "Uwaga: Zamówienie nie jest potwierdzane automatycznie. Restauracja musi zweryfikować i zatwierdzić Twoje zgłoszenie.",
