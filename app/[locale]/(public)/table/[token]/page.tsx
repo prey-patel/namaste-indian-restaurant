@@ -112,14 +112,36 @@ export default async function TableOrderingPage({ params }: Props) {
 
   return (
     <PageTransition>
-      <section className="relative overflow-hidden bg-[#070B1E] py-8 text-center border-b border-primary/15">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] bg-primary/5 rounded-full blur-[80px] pointer-events-none" />
-        <div className="max-w-3xl mx-auto px-4 relative z-10 space-y-2">
-          <h1 className="text-2xl sm:text-3xl font-serif font-black tracking-wide text-foreground">
-            {t('dine_in')} - {locale === 'pl' ? `Stolik ${table.table_number}` : `Table ${table.table_number}`}
-          </h1>
-          <p className="text-xs text-muted-foreground/80 font-light leading-relaxed max-w-md mx-auto">
-            {table.section ? `${locale === 'pl' ? 'Sekcja' : 'Section'}: ${table.section}` : ''}
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#090D24] to-[#05091C] py-10 text-center border-b border-primary/15">
+        {/* Ambient glow backgrounds */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute -top-12 -left-12 w-48 h-48 bg-amber-500/5 rounded-full blur-[60px] pointer-events-none" />
+        
+        <div className="max-w-3xl mx-auto px-4 relative z-10 space-y-4">
+          {/* Table Badge and Section Indicator */}
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span className="inline-flex items-center px-3.5 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 text-[10px] font-black uppercase tracking-widest shadow-[0_0_12px_rgba(245,158,11,0.15)]">
+              {locale === 'pl' ? `Stolik ${table.table_number}` : `Table ${table.table_number}`}
+            </span>
+            {table.section && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-muted-foreground text-[9px] font-semibold uppercase tracking-wider">
+                {locale === 'pl' ? `Sala: ${table.section}` : `Section: ${table.section}`}
+              </span>
+            )}
+          </div>
+
+          {/* Title */}
+          <div className="space-y-1">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-black tracking-wide bg-gradient-to-r from-foreground via-amber-100 to-foreground bg-clip-text text-transparent uppercase">
+              {t('dine_in')}
+            </h1>
+            <div className="w-12 h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent mx-auto mt-2" />
+          </div>
+
+          <p className="text-[11px] text-muted-foreground/60 font-light leading-relaxed max-w-sm mx-auto">
+            {locale === 'pl' 
+              ? 'Wybierz ulubione dania z naszego menu i złóż zamówienie bezpośrednio do swojego stolika.' 
+              : 'Browse our menu, add your favorites, and place your order directly to your table.'}
           </p>
         </div>
       </section>

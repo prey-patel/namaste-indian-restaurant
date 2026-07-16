@@ -418,6 +418,7 @@
     }
   },
   "order": {
+    "dine_in": "Zamówienie do stolika",
     "featuredTitle": "Rekomendacje Szefa Kuchni",
     "featuredSubtitle": "Popisowe receptury i ulubione potrawy gości wybrane przez nasz zespół kulinarny",
     "title": "Zamów Online",
