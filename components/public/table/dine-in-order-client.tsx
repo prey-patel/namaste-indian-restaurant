@@ -427,6 +427,17 @@ export default function DineInOrderClient({
               ⭐ {isPl ? 'Rekomendacje' : 'Recommendations'}
             </button>
 
+            <button
+              onClick={() => setSelectedCategoryId('all')}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-full transition-all flex-shrink-0 cursor-pointer ${
+                selectedCategoryId === 'all'
+                  ? 'bg-primary text-primary-foreground font-black'
+                  : 'bg-[#070B1E] border border-primary/10 text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {isPl ? 'Wszystkie' : 'All Categories'}
+            </button>
+
             {categories.map((category) => {
               let categoryItems = getItemsByCategory(category.id);
               if (selectedCategoryId === 'featured') {
@@ -576,7 +587,7 @@ export default function DineInOrderClient({
           {selectedCategoryId && (
             <div className="space-y-8">
               {categories
-                .filter((category) => selectedCategoryId === 'featured' ? true : category.id === selectedCategoryId)
+                .filter((category) => (selectedCategoryId === 'featured' || selectedCategoryId === 'all') ? true : category.id === selectedCategoryId)
                 .map((category) => {
                   let categoryItems = getItemsByCategory(category.id);
                   if (selectedCategoryId === 'featured') {
@@ -586,7 +597,7 @@ export default function DineInOrderClient({
 
                   return (
                     <div key={`cat-section-${category.id}`} className="space-y-4 text-left">
-                      {selectedCategoryId === 'featured' && (
+                      {(selectedCategoryId === 'featured' || selectedCategoryId === 'all') && (
                         <h4 className="text-sm font-serif font-black uppercase tracking-wider text-primary border-b border-primary/10 pb-1.5">
                           {isPl ? category.name_pl : category.name_en}
                         </h4>
